@@ -2,7 +2,7 @@ load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 load("@rules_deb//distroless:defs.bzl", "flatten", "group", "passwd")
 load("@tar.bzl", "tar", "mutate")
 load("@aspect_rules_py//py/unstable:defs.bzl", "py_venv_binary")
-load(":site_packages.bzl", "site_packages")
+load("@sonic_build_infra//python:site_packages.bzl", "site_packages")
 
 site_packages(
     name = "site-packages",
@@ -111,10 +111,10 @@ flatten(
 
         # Transitives
         "@bookworm//libhiredis-dev",
-        "@bookworm//libnl-3-dev",
-        "@bookworm//libnl-genl-3-dev",
-        "@bookworm//libnl-route-3-dev",
-        "@bookworm//libnl-nf-3-dev",
+        "@libnl3//:libnl-3-dev_pkg",
+        "@libnl3//:libnl-genl-3-dev_pkg",
+        "@libnl3//:libnl-route-3-dev_pkg",
+        "@libnl3//:libnl-nf-3-dev_pkg",
         "@bookworm//libboost-dev",
         "@bookworm//libboost-serialization-dev",
         "@bookworm//uuid-dev",

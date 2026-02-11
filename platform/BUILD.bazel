@@ -1,3 +1,1 @@
-
-# TODO BL: Tighten when we create platforms.
 exports_files(glob(["**/*"]))

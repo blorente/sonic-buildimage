@@ -37,6 +37,7 @@ tar(
     visibility = ["//visibility:public"],
 )
 
+# TODO(bazel-ready): Implement tests
 # Tests require libyang Python bindings and YANG model files which are not
 # available in the standalone Bazel build. Tests are excluded from the default
 # build and can be run using the original pytest setup.

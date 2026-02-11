@@ -31,11 +31,11 @@ site_packages(
     mutate = mutate(
         strip_prefix = "install",
         package_dir = "./usr",
-        awk_script = "//dockers/docker-base-bookworm:mutate.awk",
+        awk_script = "@sonic_bazel_common//:mutate_python_packages",
     )
 )
 
-# TODO: Unported, we don't support arm64 yet
+# TODO(bazel-ready): Unported, we don't support arm64 yet
 #
 # {% if ( CONFIGURED_ARCH == "armhf" or CONFIGURED_ARCH == "arm64" ) %}
 # # Fix for gcc/python/iputils-ping not found in arm docker
@@ -52,13 +52,10 @@ site_packages(
 # RUN apt-get remove -y gcc
 # {% endif %}
 
-# # TODO: enable asan when we figure out what dbg is going to look like
+# # TODO(bazel-ready): enable asan when we figure out what dbg is going to look like
 # ifeq ($(ENABLE_ASAN), y)
 # $(DOCKER_ORCHAGENT)_DEPENDS += $(SWSS_DBG)
 # endif
-
-# # Clean up
-# RUN apt-get purge -y build-essential python3-dev
 
 tar(
   name = "source_files",
@@ -73,7 +70,6 @@ tar(
     "buffermgrd.sh",
     "//files:scripts/arp_update",
     "//files:build_templates/arp_update_vars.j2",
-    # TODO: Not sure if these files are meant to be from here
     "//files:image_config/constants/constants.yml",
     "@sonic_swss_common//sonic-db-cli:sonic-db-cli",
   ],
@@ -89,7 +85,6 @@ tar(
     "./usr/bin/arp_update type=file content=$(location //files:scripts/arp_update)",
     "./usr/share/sonic/templates/arp_update_vars.j2 type=file content=$(location //files:build_templates/arp_update_vars.j2)",
 
-    # TODO: Not sure if these files are meant to be from here
     "./etc/sonic/constants.yml type=file content=$(location //files:image_config/constants/constants.yml)",
     "./usr/bin/sonic-db-cli type=file content=$(location @sonic_swss_common//sonic-db-cli:sonic-db-cli)",
   ],
@@ -107,7 +102,7 @@ tar(
   )
 )
 
-# TODO: handle asan enablement
+# TODO(bazel-ready): handle asan enablement
 genrule(
   name = "run_cfggen",
   tools = ["@sonic_config_engine//:sonic-cfggen-bin"],
@@ -128,15 +123,22 @@ tar(
   ],
 )
 
-# TODO: We probably wnat to represent this with an alias and a `select`, 
-# and allow the individual implementations to live in `//platforms`.
-tar(
+alias(
   name = "per_platform_files",
+  actual = select({
+      "@sonic_build_infra//:platform_vs": ":per_platform_files_vs",
+      # TODO(bazel-ready): Swap to @platforms//:incompatible when we support a good number of asic manufacturers.
+      "//conditions:default": ":per_platform_files_vs",
+  }),
+)
+
+tar(
+  name = "per_platform_files_vs",
   srcs = [
-    "//platform:vs/docker-sonic-vs/database_config.json",
+    "//platform/vs/docker-sonic-vs:database_config.json",
   ],
   mtree = [
-    "./var/run/redis/sonic-db/database_config.json type=file contents=$(location //platform:vs/docker-sonic-vs/database_config.json)",
+    "./var/run/redis/sonic-db/database_config.json type=file contents=$(location //platform/vs/docker-sonic-vs:database_config.json)",
   ],
 )
 
@@ -158,9 +160,6 @@ oci_image(
     entrypoint = ["/usr/bin/docker-init.sh"],
     visibility = ["//visibility:public"]
 )
-
-# $(DOCKER_ORCHAGENT)_BASE_IMAGE_FILES += swssloglevel:/usr/bin/swssloglevel
-# $(DOCKER_ORCHAGENT)_FILES += $(ARP_UPDATE_SCRIPT) $(ARP_UPDATE_VARS_TEMPLATE)
 
 oci_load(
     name = "load",

@@ -1,8 +1,10 @@
 # Projects that have their own MODULE.bazel files
-src/sonic-py-common
-src/sonic-supervisord-utilities
+src/libnl3
 src/libyang3
-src/sonic-yang-mgmt
 src/libyang3-py3
 src/sonic-config-engine
+src/sonic-py-common
+src/sonic-supervisord-utilities
+src/sonic-sysmgr
+src/sonic-yang-mgmt
 

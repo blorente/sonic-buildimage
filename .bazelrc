@@ -2,8 +2,9 @@
 common --registry=https://raw.githubusercontent.com/aspect-build/bazel-central-registry/aspect_rules_py-v1.7.1
 common --registry=https://bcr.bazel.build
 
-common --@pip//venv=default
 common --@rules_python//python/config_settings:python_version=3.11
+
+common --@pip//venv=default
 common --per_file_copt=.*external.*@-w
 common --cxxopt=-std=c++17 --host_cxxopt=-std=c++17
 common --features=external_include_paths

@@ -185,7 +185,7 @@ tar(
   )
 )
 
-# TODO: We should use rules_foreign_cc to run cmake and build this file.
+# TODO(bazel-ready): We should use rules_foreign_cc to run cmake and build this file.
 # However, because we don't need to override the install directory,
 # we just paste the result of running `mkdir build && cd build && cmake .. && cat libyang.pc
 write_file(

@@ -2,14 +2,18 @@ load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 load("@tar.bzl", "tar")
 load("@rules_deb//distroless:defs.bzl", "flatten")
 
-# TODO BL: These I haven't found yet
-# $(SWSS)_RDEPENDS += $(PROTOBUF) $(PROTOBUF_LITE) $(PYTHON3_PROTOBUF) 
 flatten(
     name = "apt_deps",
     tars = [
         "@bookworm//libteam5:data",
         "@bookworm//libteamdctl0:data",
         "@bookworm//python3-dev",
+        "@bookworm//protobuf-compiler:data",
+        "@bookworm//python3-protobuf:data",
+        # TODO(bazel-ready): Determine if we need a different version of iputils-ping.
+        # The Dockerfile runs `apt-get update` before installing this dependency,
+        # so the version from the snapshot might be out of date.
+        "@bookworm//iputils-ping:data",
     ],
     deduplicate = True,
 )
@@ -21,15 +25,13 @@ flatten(
         "@sonic_sairedis//lib:libsairedis_dev_pkg",
         "@sonic_dash_api//:libdashapi_dev_pkg",
         "@sonic_swss_common//pyext:swsscommon_pkg",
-        # TODO: Port libswsscommon if swsscommon_dist is not enough
+        # TODO(bazel-ready): Port libswsscommon if swsscommon_dist is not enough
         # # $(LIBSWSSCOMMON)
         # "@sonic_swss_common//:libswsscommon",
   ],
   deduplicate = True,
 )
 
-# TODO: We may need to port this:
-#       RUN apt-get install iputils-ping
 oci_image(
     name = "docker-swss-layer-bookworm",
     base = "//dockers/docker-config-engine-bookworm",
