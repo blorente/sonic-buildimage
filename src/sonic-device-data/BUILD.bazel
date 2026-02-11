@@ -1,0 +1,24 @@
+load("@tar.bzl", "tar", "mutate")
+
+# TODO BL: transformations in Makefile
+tar(
+    name = "sonic-device-data_all_pkg",
+    srcs = ["//device:all"],
+    mutate = mutate(
+        strip_prefix = "device",
+        package_dir = "./usr/share/sonic",
+    ),
+    visibility = ["//visibility:public"],
+)
+
+# TODO BL: Asked question about these files: https://aspect-build.slack.com/archives/C099BB0M4NQ/p1770824076846939
+# 			cp ./sai.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/sai.profile; \
+# 			cp ./sai_mlnx.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/sai_mlnx.profile; \
+# 			cp ./sai_vpp.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/sai_vpp.profile; \
+# 			cp ./pai.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/pai.profile; \
+# 			cp ./fabriclanemap_vs.ini device/x86_64-kvm_x86_64-r0/$$(basename $$d)/fabriclanemap.ini; \
+
+# TODO BL: tests
+sh_test(
+  name = "tests",
+)

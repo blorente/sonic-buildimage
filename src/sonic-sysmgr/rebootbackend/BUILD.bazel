@@ -1,0 +1,65 @@
+load("//:flags.bzl", "DBGFLAGS", "CFLAGS_COMMON", "LDFLAGS_ASAN", "CFLAGS_ASAN")
+load("//:gnoi.bzl", "gnoi_proto_lib")
+
+# TODO(bazel-ready): Support debug 
+# if DEBUG
+# DBGFLAGS = -ggdb -DDEBUG
+# else
+# DBGFLAGS = -g
+# endif
+
+# TODO(bazel-ready): Fix the proto warnings on build
+
+genrule(
+  name = "reboot_dbus.h.gen",
+  srcs = [":reboot.xml"],
+  tools = ["@libdbus_bin//:dbusxx-xml2cpp"],
+  outs = ["reboot_dbus.h"],
+  cmd = "$(execpath @libdbus_bin//:dbusxx-xml2cpp) $(SRCS) --proxy=$(OUTS)",
+)
+
+cc_library(
+  name = "reboot_dbus",
+  hdrs = [":reboot_dbus.h.gen"],
+  includes = ["."],
+)
+
+[
+    gnoi_proto_lib(
+      "{subdir}_cc_proto".format(subdir=gnoi_subdir),
+      gnoi_subdir,
+    )
+    for gnoi_subdir in ["common", "system", "types"]
+]
+
+cc_library(
+  name = "proto_compat",
+  hdrs = ["proto_compat.h"],
+  deps = [
+    "@protobuf//:json_util",
+  ]
+)
+
+cc_binary(
+  name = "rebootbackend",
+  srcs = glob([
+    "*.cpp",
+    "*.h",
+  ]),
+  deps = [
+    "@sonic_swss_common//:libswsscommon",
+    "@bookworm//libdbus-c++-dev:libdbus-c++",
+    ":reboot_dbus",
+    ":common_cc_proto",
+    ":system_cc_proto",
+    ":types_cc_proto",
+    ":proto_compat",
+  ],
+  defines = [
+    "BAZEL",
+  ],
+  cxxopts = DBGFLAGS + CFLAGS_COMMON + CFLAGS_ASAN,
+  linkopts = LDFLAGS_ASAN,
+  visibility = ["//:__subpackages__"],
+)
+

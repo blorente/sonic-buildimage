@@ -9,3 +9,10 @@ dependencies = [
 
 # Note: redis-dump-load is excluded as it requires setuptools and is only
 # needed for the sonic-db-dump/load console scripts which can be built separately
+
+[dependency-groups]
+build = [
+    # Needed for Bazel
+    "build",
+    "setuptools",
+]

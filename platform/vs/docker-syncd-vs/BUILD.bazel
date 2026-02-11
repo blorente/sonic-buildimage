@@ -1,0 +1,174 @@
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
+load("@rules_deb//distroless:defs.bzl", "flatten")
+load("@tar.bzl", "tar")
+
+## BL: For now, we're going to assume we're going with `vs`
+## We can generalize later.
+
+flatten(
+  name = "debian_packages",
+  tars = [
+    "@bookworm//iproute2:data",
+    "@bookworm//libcap2-bin:data",
+    # RUN apt-get install -f -y libabsl20220623 libc-ares2 python3-six libboost-thread1.74.0 libboost-dev libboost-system-dev libboost-thread-dev libboost-filesystem1.74.0 libboost-program-options1.74.0 libboost-thread1.74.0 libnanomsg5 libpcap0.8 libthrift-0.17.0 libboost-dev libboost-filesystem-dev libboost-program-options-dev libgmp-dev libnanomsg-dev libpcap-dev libtool pkg-config libthrift-dev python3-thrift thrift-compiler libboost-iostreams1.74.0 libgc1 cpp libboost-dev libboost-all-dev libboost-graph-dev libboost-iostreams-dev libfl-dev libgc-dev libgmp-dev libbpf-dev tcpdump libelf-dev llvm clang python3-pyroute2 python3-ply python3-scapy python3-setuptools python3-thrift libthrift-0.17.0 libgrpc++1.51 libgrpc29 libprotobuf32 libboost-dev libboost-system-dev libboost-thread-dev libprotoc-dev protobuf-compiler python3-protobuf libgrpc++-dev libgrpc-dev protobuf-compiler-grpc python3-grpcio 
+    # TODO BL: Why do we need compile time stuff like protoc, llvm, and such?
+    "@bookworm//libabsl20220623:data",
+    "@bookworm//libc-ares2:data",
+    "@bookworm//python3-six:data",
+    "@bookworm//libboost-thread1.74.0:data",
+    "@bookworm//libboost-dev:data",
+    "@bookworm//libboost-system-dev:data",
+    "@bookworm//libboost-thread-dev:data",
+    "@bookworm//libboost-filesystem1.74.0:data",
+    "@bookworm//libboost-program-options1.74.0:data",
+    "@bookworm//libnanomsg5:data",
+    "@bookworm//libpcap0.8:data",
+    "@bookworm//libthrift-0.17.0:data",
+    "@bookworm//libboost-filesystem-dev:data",
+    "@bookworm//libboost-program-options-dev:data",
+    "@bookworm//libgmp-dev:data",
+    "@bookworm//libnanomsg-dev:data",
+    "@bookworm//libpcap-dev:data",
+    "@bookworm//libtool:data",
+    "@bookworm//libthrift-dev:data",
+    "@bookworm//python3-thrift:data",
+    "@bookworm//thrift-compiler:data",
+    "@bookworm//libboost-iostreams1.74.0:data",
+    "@bookworm//libgc1:data",
+    "@bookworm//cpp:data",
+    "@bookworm//libboost-all-dev:data",
+    "@bookworm//libboost-graph-dev:data",
+    "@bookworm//libboost-iostreams-dev:data",
+    "@bookworm//libfl-dev:data",
+    "@bookworm//libgc-dev:data",
+    "@bookworm//libbpf-dev:data",
+    "@bookworm//tcpdump:data",
+    "@bookworm//libelf-dev:data",
+    "@bookworm//llvm:data",
+    "@bookworm//clang:data",
+    "@bookworm//python3-pyroute2:data",
+    "@bookworm//python3-ply:data",
+    "@bookworm//python3-scapy:data",
+    "@bookworm//libgrpc++1.51:data",
+    "@bookworm//libgrpc29:data",
+    "@bookworm//libprotobuf32:data",
+    "@bookworm//libprotoc-dev:data",
+    "@bookworm//protobuf-compiler:data",
+    "@bookworm//python3-protobuf:data",
+    "@bookworm//libgrpc++-dev:data",
+    "@bookworm//libgrpc-dev:data",
+    "@bookworm//protobuf-compiler-grpc:data",
+    "@bookworm//python3-grpcio:data",
+    # Note: We remove this so that it doesn't conflict with pip-installed versions of setuptools.
+    #       Otherwise, we get a cyclic dependency because `pkg_resources` ends up trying to import itself.
+    # "@bookworm//python3-setuptools:data",
+  ],
+)
+
+# TODO BL: Dash engine
+# # For DASH engine
+#
+# COPY debs/libnl-3-dev_{{ LIBNL3_VERSION_SONIC }}_{{ CONFIGURED_ARCH }}.deb debs/libnl-route-3-dev_{{ LIBNL3_VERSION_SONIC }}_{{ CONFIGURED_ARCH }}.deb debs/
+# RUN dpkg -i debs/libnl-3-dev_{{ LIBNL3_VERSION_SONIC }}_{{ CONFIGURED_ARCH }}.deb debs/libnl-route-3-dev_{{ LIBNL3_VERSION_SONIC }}_{{ CONFIGURED_ARCH }}.deb
+#
+
+flatten(
+  name = "syncd_vs",
+  tars = [
+      # TODO BL: Figure out if we can switch to non-dev packages
+      "@sonic_sairedis//meta:libsaimetadata_dev_pkg",
+      "@sonic_sairedis//lib:libsairedis_dev_pkg",
+      "@sonic_sairedis//vslib:libsaivs_dev_pkg",
+  ],
+)
+
+flatten(
+  name = "rdeps",
+  tars = [
+    ":syncd_vs",
+    "@libyang3//:libyang3_pkg",
+    "@libyang3_py3//:libyang3-python_pkg",
+    "@sonic_swss_common//pyext:swsscommon_pkg",
+    "//src/sonic-device-data:sonic-device-data_all_pkg",
+    "@bookworm//libteamdctl0:data",
+    "@bookworm//libteam-utils:data",
+    "@sonic_host_services//data:sonic-host-services-data_all_pkg",
+    "@sonic_sysmgr//:sysmgr_pkg",
+    "@sonic_utilities//sonic-utilities-data:sonic-utilities-data_all_pkg",
+  ],
+)
+
+flatten(
+  name = "py_deps",
+  tars = [
+      "@sonic_py_common//:dist",
+      "@sonic_platform_common//:dist",
+      "@sonic_yang_mgmt//:dist",
+      "@sonic_host_services//:sdist",
+      "@sonic_utilities//:dist",
+      "@sonic_yang_models//:dist",
+  ],
+)
+
+# TODO BL: Debug tools
+#
+# ifeq ($(INSTALL_DEBUG_TOOLS), y)
+# $(DOCKER_SONIC_VS)_DEPENDS += $(LIBSWSSCOMMON_DBG) \
+#                               $(LIBSAIREDIS_DBG) \
+#                               $(LIBSAIVS_DBG) \
+#                               $(SYNCD_VS_DBG) \
+#                               $(SYSMGR_DBG)
+# endif
+
+# TODO BL: Routing stack
+# ifeq ($(SONIC_ROUTING_STACK), frr)
+# $(DOCKER_SONIC_VS)_DEPENDS += $(FRR)
+# else
+# $(DOCKER_SONIC_VS)_DEPENDS += $(GOBGP)
+# endif
+
+# TODO BL: FIPS
+# ifeq ($(INCLUDE_FIPS), y)
+# $(DOCKER_SONIC_VS)_DEPENDS += $(FIPS_KRB5_ALL)
+# endif
+
+# TODO BL: Startup warnings about pkg_resources.
+#         probably some first-party code is relying in the old setuptools from bookworm deb,
+#         so it's getting a warning. The warning tells us we should pin to setuptools < 81
+#         We should do that when we figure out a centralized way to handle dependencies.
+tar(
+  name = "loose_files",
+  srcs = [
+    "supervisord.conf",
+    "start.sh",
+    "critical_processes",
+  ],
+  mtree = [
+    "./usr/bin/start.sh type=file contents=$(location :start.sh)",
+    "./etc/supervisor/conf.d/supervisord.conf type=file contents=$(location :supervisord.conf)",
+    "./etc/supervisor/critical_processes type=file contents=$(location :critical_processes)",
+  ],
+)
+
+oci_image(
+    name = "docker-syncd-vs",
+    base = "//dockers/docker-config-engine-bookworm",
+    tars = [
+      ":debian_packages",
+      ":rdeps",
+      ":py_deps",
+      ":loose_files",
+    ],
+    env = {
+        "DEBIAN_FRONTEND": "noninteractive",
+    },
+    entrypoint = ["/usr/bin/supervisord"],
+    visibility = ["//visibility:public"]
+)
+
+oci_load(
+    name = "load",
+    image = ":docker-syncd-vs",
+    repo_tags = ["docker-syncd-vs:latest"]
+)
+

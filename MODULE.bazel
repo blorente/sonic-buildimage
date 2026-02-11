@@ -7,6 +7,7 @@ bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "rules_python", version = "1.6.3")
 bazel_dep(name = "rules_oci", version = "2.2.6")
 bazel_dep(name = "tar.bzl", version = "0.8.1")
+bazel_dep(name = "bazel_lib", version = "3.1.1")
 
 bazel_dep(name = "rules_distroless", version = "0.0.0", repo_name = "rules_deb")
 local_path_override(
@@ -50,6 +51,13 @@ local_path_override(
     module_name = "sonic-yang-mgmt",
     path = "src/sonic-yang-mgmt",
 )
+
+bazel_dep(name = "sonic-yang-models", version = "0.0.0", repo_name = "sonic_yang_models")
+local_path_override(
+    module_name = "sonic-yang-models",
+    path = "src/sonic-yang-models",
+)
+
 
 
 # These are needed to build p4rt
@@ -126,13 +134,13 @@ local_path_override(
     path = "../sonic-pins"
 )
 
-bazel_dep(name = "sonic-build-infra", version = "0.0.0")
+bazel_dep(name = "sonic-build-infra", version = "0.0.0", repo_name = "sonic_build_infra")
 local_path_override(
     module_name = "sonic-build-infra",
     path = "../sonic-build-infra"
 )
 
-register_toolchains("@sonic-build-infra//toolchains/gcc:host_gcc_toolchain")
+register_toolchains("@sonic_build_infra//toolchains/gcc:host_gcc_toolchain")
 
 bazel_dep(name = "libyang3", version = "3.12.2")
 local_path_override(
@@ -161,7 +169,6 @@ local_path_override(
 # Needed for swss.
 
 bazel_dep(name = "rules_shell", version = "0.6.1")
-bazel_dep(name = "bazel_lib", version = "3.1.1")
 
 bazel_dep(name = "sonic-swss", version = "0.0.0", repo_name = "sonic_swss")
 local_path_override(
@@ -187,3 +194,22 @@ local_path_override(
     path = "../sonic-dash-api",
 )
 
+# Needed for syncd
+
+bazel_dep(name = "sonic-host-services", version = "0.0.0", repo_name = "sonic_host_services")
+local_path_override(
+    module_name = "sonic-host-services",
+    path = "../sonic-host-services",
+)
+
+bazel_dep(name = "sonic-utilities", version = "0.0.0", repo_name = "sonic_utilities")
+local_path_override(
+    module_name = "sonic-utilities",
+    path = "../sonic-utilities",
+)
+
+bazel_dep(name = "sonic-sysmgr", version = "0.0.0", repo_name = "sonic_sysmgr")
+local_path_override(
+    module_name = "sonic-sysmgr",
+    path = "src/sonic-sysmgr",
+)

@@ -5,4 +5,5 @@ src/libyang3
 src/sonic-yang-mgmt
 src/libyang3-py3
 src/sonic-config-engine
+src/sonic-sysmgr
 

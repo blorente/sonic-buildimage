@@ -19,3 +19,10 @@ dependencies = [
 # Note: sonic-py-common, sonic-yang-mgmt, sonic-yang-models, swsscommon, swsssdk
 # dependencies are internal and will be stubbed for testing
 # Note: mockredispy is excluded as it requires setuptools for building
+
+[dependency-groups]
+build = [
+    # Needed for Bazel
+    "build",
+    "setuptools",
+]
