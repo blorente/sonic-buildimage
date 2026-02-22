@@ -53,12 +53,20 @@ def git_grep_todo_bl(repo_path):
     """Return list of 'file:line' hits for 'BL:' in the repo, or [] if none."""
     try:
         result = subprocess.run(
-            ["git", "grep", "-n", "--fixed-strings", "BL:"],
+            ["git", "grep", "-n", "--fixed-strings", " BL:"],
             cwd=repo_path, capture_output=True, text=True
         )
         # exit code 0 = matches found, 1 = no matches, anything else = error
         if result.returncode == 0:
-            return result.stdout.strip().splitlines()
+            hits = result.stdout.strip().splitlines()
+            # Ignore binary file notifications ("Binary file X matches")
+            # and hits in migration_manager.py itself.
+            hits = [
+                h for h in hits
+                if not h.startswith("Binary file ")
+                and not h.split(":")[0].endswith("migration_manager.py")
+            ]
+            return hits
         return []
     except OSError:
         return []
@@ -112,6 +120,17 @@ def git_create_tag(repo_path, tag_name):
         return False, result.stderr.strip()
     except OSError as e:
         return False, str(e)
+
+
+def run_tests(repo_path):
+    """Run test_working_targets.sh from repo_path. Returns True on success."""
+    script = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_working_targets.sh")
+    if not os.path.isfile(script):
+        print(f"Error: could not find test script at {script}", file=sys.stderr)
+        return False
+    print("Running test_working_targets.sh ...", file=sys.stderr)
+    result = subprocess.run([script], cwd=repo_path)
+    return result.returncode == 0
 
 
 def git_push_tag(repo_path, remote, tag_name):
@@ -320,6 +339,9 @@ def main():
     parser.add_argument("--push-remote", metavar="REMOTE",
                         help="When used with --tag, push the created tags to this remote "
                              "(e.g. 'origin')")
+    parser.add_argument("--run-tests", action="store_true",
+                        help="Run test_working_targets.sh before creating a checkpoint "
+                             "(tests always run before tagging)")
     args = parser.parse_args()
 
     results = []
@@ -331,6 +353,10 @@ def main():
                  bazel_ready_hits, short=args.short, include_branch=args.include_branch)
 
     if args.checkpoint:
+        if args.run_tests and not run_tests(args.repo):
+            print("Aborting checkpoint: tests failed.", file=sys.stderr)
+            sys.exit(1)
+
         if args.output_json:
             print(json.dumps(results, indent=2))
         else:
@@ -345,6 +371,8 @@ def main():
                       file=sys.stderr)
                 for path in dirty_repos:
                     print(f"  {bold_purple(path)}", file=sys.stderr)
+            elif not run_tests(args.repo):
+                print("Skipping tags: tests failed.", file=sys.stderr)
             else:
                 import datetime
                 tag_name = f"checkpoint-{datetime.date.today().isoformat()}"
