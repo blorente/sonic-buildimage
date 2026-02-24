@@ -26,6 +26,7 @@
 					"/bookworm/graphviz:amd64": "2.42.2-7+deb12u1",
 					"/bookworm/ifupdown-ng:amd64": "0.11.4~rc1-1+b2",
 					"/bookworm/iproute2:amd64": "6.1.0-3",
+					"/bookworm/iputils-ping:amd64": "3:20221126-1+deb12u1",
 					"/bookworm/jq:amd64": "1.6-2.1+deb12u1",
 					"/bookworm/krb5-multidev:amd64": "1.20.1-2+deb12u4",
 					"/bookworm/libabsl20220623:amd64": "20220623.1-1+deb12u2",
@@ -2006,6 +2007,25 @@
 			"size": 1045828,
 			"suite": "bookworm",
 			"version": "6.1.0-3"
+		},
+		"/bookworm/iputils-ping:amd64=3:20221126-1+deb12u1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libidn2-0:amd64=2.3.3-1+b1",
+				"/bookworm/libunistring2:amd64=1.0-2",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2",
+				"/bookworm/libcap2-bin:amd64=1:2.66-4+deb12u2"
+			],
+			"filename": "pool/main/i/iputils/iputils-ping_20221126-1+deb12u1_amd64.deb",
+			"name": "iputils-ping",
+			"section": "net",
+			"sha256": "5a206d74e2147990e08b89d09a4655e59a17222e0513a309a48e16ed2281589b",
+			"size": 47172,
+			"suite": "bookworm",
+			"version": "3:20221126-1+deb12u1"
 		},
 		"/bookworm/jq:amd64=1.6-2.1+deb12u1": {
 			"architecture": "amd64",

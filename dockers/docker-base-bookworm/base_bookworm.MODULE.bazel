@@ -33,7 +33,6 @@ apt.install(
         "libstdc++6",
         "binutils",
 
-
         "krb5-multidev",
 
         "coreutils",
@@ -67,6 +66,9 @@ apt.install(
         "libteam-dev",
         "libteamdctl0",
         "libteam-utils",
+
+        # from docker-swss-layer-bookworm/Dockerfile.j2
+        "iputils-ping",
 
         # from docker-orchagent/Dockerfile.j2
         "ifupdown",
@@ -144,9 +146,6 @@ apt.install(
         "protobuf-compiler-grpc",
         "python3-grpcio",
 
-        # TODO BL :This is jsut to test
-        "libdbus-c++-dev",
-        "libdbus-c++-bin",
     ],
 )
 

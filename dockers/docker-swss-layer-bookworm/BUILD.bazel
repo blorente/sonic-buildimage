@@ -8,7 +8,6 @@ flatten(
         "@bookworm//libteam5:data",
         "@bookworm//libteamdctl0:data",
         "@bookworm//python3-dev",
-        "@bookworm//python3-protobuf:data",
         "@bookworm//protobuf-compiler:data",
         "@bookworm//python3-protobuf:data",
         # TODO(bazel-ready): Determine if we need a different version of iputils-ping.

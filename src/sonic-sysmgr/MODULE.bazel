@@ -52,6 +52,10 @@ use_repo(apt, "bookworm")
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 # TODO(bazel-ready): remove once we add support for binaries in rules_distroless.
+# We use an http archive of a deb file instead of `@bookworm` because extract_tar doesn't handle aliases,
+# so we'd have to pass the canonical name of the generated repository by rules_distroless to `extact_tar`,
+# and that canonical name already has the version baked in anyway.
+
 http_archive(
     name = "libdbus_data",
     urls = ["http://debian-archive.trafficmanager.net/debian/pool/main/d/dbus-c++/libdbus-c++-bin_0.9.0-16_amd64.deb"],

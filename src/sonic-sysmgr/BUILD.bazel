@@ -10,14 +10,5 @@ tar(
     visibility = ["//visibility:public"],
 )
 
-# TODO(bazel-ready): Implement debug binaries.
-# SYSMGR_DBG = sysmgr-dbg_1.0.0_$(CONFIGURED_ARCH).deb
-# $(SYSMGR_DBG)_DEPENDS += $(SYSMGR)
-# $(SYSMGR_DBG)_RDEPENDS += $(SYSMGR)
-# $(eval $(call add_derived_package,$(SYSMGR),$(SYSMGR_DBG)))
-#
-# # The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
-# # are archived into debug one image to facilitate debugging.
-# #
-# DBG_SRC_ARCHIVE += sonic-sysmgr
+# TODO(bazel-ready): Verify that debug binaries work when passing the `-c dbg` flag to bazel.
 

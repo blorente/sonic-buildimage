@@ -61,16 +61,13 @@ flatten(
     #       We remove this so that it doesn't conflict with pip-installed versions of setuptools.
     #       Otherwise, we get a cyclic dependency because `pkg_resources` ends up trying to import itself.
     # "@bookworm//python3-setuptools:data",
+
+    # For DASH engine
+    "@libnl3//:libnl-3-dev_pkg",
+    "@libnl3//:libnl-route-3-dev_pkg",
   ],
   deduplicate = True,
 )
-
-# TODO BL: Dash engine
-# # For DASH engine
-#
-# COPY debs/libnl-3-dev_{{ LIBNL3_VERSION_SONIC }}_{{ CONFIGURED_ARCH }}.deb debs/libnl-route-3-dev_{{ LIBNL3_VERSION_SONIC }}_{{ CONFIGURED_ARCH }}.deb debs/
-# RUN dpkg -i debs/libnl-3-dev_{{ LIBNL3_VERSION_SONIC }}_{{ CONFIGURED_ARCH }}.deb debs/libnl-route-3-dev_{{ LIBNL3_VERSION_SONIC }}_{{ CONFIGURED_ARCH }}.deb
-#
 
 flatten(
   name = "syncd_vs",
@@ -121,6 +118,7 @@ filegroup(
 #                               $(SYNCD_VS_DBG) \
 #                               $(SYSMGR_DBG)
 # endif
+# TODO BL: Run buildifier
 
 # TODO BL: Routing stack
 # ifeq ($(SONIC_ROUTING_STACK), frr)
@@ -132,6 +130,16 @@ filegroup(
 # TODO BL: FIPS
 # ifeq ($(INCLUDE_FIPS), y)
 # $(DOCKER_SONIC_VS)_DEPENDS += $(FIPS_KRB5_ALL)
+# endif
+# ifeq ($(BLDENV), bookworm)
+# FIPS_VERSION = 1.5.2
+# FIPS_OPENSSL_VERSION = 3.0.11-1~deb12u2+fips
+# FIPS_OPENSSH_VERSION = 9.2p1-2+deb12u5+fips
+# FIPS_PYTHON_MAIN_VERSION = 3.11
+# FIPS_PYTHON_VERSION = 3.11.2-6+fips
+# FIPS_GOLANG_MAIN_VERSION = 1.19
+# FIPS_GOLANG_VERSION = 1.19.8-2+fips
+# FIPS_KRB5_VERSION = 1.20.1-2+deb12u1+fips
 # endif
 
 # TODO(bazel-ready): Fix startup warnings about pkg_resources.

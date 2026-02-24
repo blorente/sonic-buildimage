@@ -57,9 +57,6 @@ site_packages(
 # $(DOCKER_ORCHAGENT)_DEPENDS += $(SWSS_DBG)
 # endif
 
-# # Clean up
-# RUN apt-get purge -y build-essential python3-dev
-
 tar(
   name = "source_files",
   srcs = [
@@ -126,15 +123,22 @@ tar(
   ],
 )
 
-# TODO BL: We probably wnat to represent this with an alias and a `select`, 
-# and allow the individual implementations to live in `//platforms`.
-tar(
+alias(
   name = "per_platform_files",
+  actual = select({
+      "@sonic_build_infra//:platform_vs": ":per_platform_files_vs",
+      # TODO(bazel-ready): Swap to @platforms//:incompatible when we support a good number of asic manufacturers.
+      "//conditions:default": ":per_platform_files_vs",
+  }),
+)
+
+tar(
+  name = "per_platform_files_vs",
   srcs = [
-    "//platform:vs/docker-sonic-vs/database_config.json",
+    "//platform/vs/docker-sonic-vs:database_config.json",
   ],
   mtree = [
-    "./var/run/redis/sonic-db/database_config.json type=file contents=$(location //platform:vs/docker-sonic-vs/database_config.json)",
+    "./var/run/redis/sonic-db/database_config.json type=file contents=$(location //platform/vs/docker-sonic-vs:database_config.json)",
   ],
 )
 
@@ -156,9 +160,6 @@ oci_image(
     entrypoint = ["/usr/bin/docker-init.sh"],
     visibility = ["//visibility:public"]
 )
-
-# TODO BL: Make sure  these files are in the container
-# $(DOCKER_ORCHAGENT)_FILES += $(ARP_UPDATE_SCRIPT) $(ARP_UPDATE_VARS_TEMPLATE)
 
 oci_load(
     name = "load",
