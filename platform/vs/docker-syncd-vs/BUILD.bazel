@@ -2,16 +2,14 @@ load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 load("@rules_deb//distroless:defs.bzl", "flatten")
 load("@tar.bzl", "tar")
 
-## BL: For now, we're going to assume we're going with `vs`
-## We can generalize later.
-
 flatten(
   name = "debian_packages",
   tars = [
     "@bookworm//iproute2:data",
     "@bookworm//libcap2-bin:data",
-    # RUN apt-get install -f -y libabsl20220623 libc-ares2 python3-six libboost-thread1.74.0 libboost-dev libboost-system-dev libboost-thread-dev libboost-filesystem1.74.0 libboost-program-options1.74.0 libboost-thread1.74.0 libnanomsg5 libpcap0.8 libthrift-0.17.0 libboost-dev libboost-filesystem-dev libboost-program-options-dev libgmp-dev libnanomsg-dev libpcap-dev libtool pkg-config libthrift-dev python3-thrift thrift-compiler libboost-iostreams1.74.0 libgc1 cpp libboost-dev libboost-all-dev libboost-graph-dev libboost-iostreams-dev libfl-dev libgc-dev libgmp-dev libbpf-dev tcpdump libelf-dev llvm clang python3-pyroute2 python3-ply python3-scapy python3-setuptools python3-thrift libthrift-0.17.0 libgrpc++1.51 libgrpc29 libprotobuf32 libboost-dev libboost-system-dev libboost-thread-dev libprotoc-dev protobuf-compiler python3-protobuf libgrpc++-dev libgrpc-dev protobuf-compiler-grpc python3-grpcio 
-    # TODO BL: Why do we need compile time stuff like protoc, llvm, and such?
+    # TODO(bazel-ready): Trim debian packages for syncd vs.
+    # Most of these are development dependencies that should probably not be in a runtime image,
+    # we should remove the ones that we don't need.
     "@bookworm//libabsl20220623:data",
     "@bookworm//libc-ares2:data",
     "@bookworm//python3-six:data",
@@ -59,10 +57,12 @@ flatten(
     "@bookworm//libgrpc-dev:data",
     "@bookworm//protobuf-compiler-grpc:data",
     "@bookworm//python3-grpcio:data",
-    # Note: We remove this so that it doesn't conflict with pip-installed versions of setuptools.
+    # TODO(bazel-complete): Unify versions of pkg_resources
+    #       We remove this so that it doesn't conflict with pip-installed versions of setuptools.
     #       Otherwise, we get a cyclic dependency because `pkg_resources` ends up trying to import itself.
     # "@bookworm//python3-setuptools:data",
   ],
+  deduplicate = True,
 )
 
 # TODO BL: Dash engine
@@ -75,16 +75,16 @@ flatten(
 flatten(
   name = "syncd_vs",
   tars = [
-      # TODO BL: Figure out if we can switch to non-dev packages
-      "@sonic_sairedis//meta:libsaimetadata_dev_pkg",
+      "@sonic_sairedis//meta:libsaimetadata_pkg",
       "@sonic_sairedis//lib:libsairedis_dev_pkg",
-      "@sonic_sairedis//vslib:libsaivs_dev_pkg",
+      "@sonic_sairedis//vslib:libsaivs_pkg",
   ],
+  deduplicate = True,
 )
 
-flatten(
+filegroup(
   name = "rdeps",
-  tars = [
+  srcs = [
     ":syncd_vs",
     "@libyang3//:libyang3_pkg",
     "@libyang3_py3//:libyang3-python_pkg",
@@ -98,9 +98,9 @@ flatten(
   ],
 )
 
-flatten(
+filegroup(
   name = "py_deps",
-  tars = [
+  srcs = [
       "@sonic_py_common//:dist",
       "@sonic_platform_common//:dist",
       "@sonic_yang_mgmt//:dist",
@@ -110,7 +110,9 @@ flatten(
   ],
 )
 
-# TODO BL: Debug tools
+# TODO(bazel-ready): Verify debug tools.
+# Debug versions of all dependencies should alredy be built when building with `-c dbg`,
+# but we should verify that they are debuggable.
 #
 # ifeq ($(INSTALL_DEBUG_TOOLS), y)
 # $(DOCKER_SONIC_VS)_DEPENDS += $(LIBSWSSCOMMON_DBG) \
@@ -132,8 +134,8 @@ flatten(
 # $(DOCKER_SONIC_VS)_DEPENDS += $(FIPS_KRB5_ALL)
 # endif
 
-# TODO BL: Startup warnings about pkg_resources.
-#         probably some first-party code is relying in the old setuptools from bookworm deb,
+# TODO(bazel-ready): Fix startup warnings about pkg_resources.
+#         Probably some first-party code is relying in the old setuptools from bookworm deb,
 #         so it's getting a warning. The warning tells us we should pin to setuptools < 81
 #         We should do that when we figure out a centralized way to handle dependencies.
 tar(

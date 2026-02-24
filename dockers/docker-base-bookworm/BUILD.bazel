@@ -111,10 +111,10 @@ flatten(
 
         # Transitives
         "@bookworm//libhiredis-dev",
-        "@bookworm//libnl-3-dev",
-        "@bookworm//libnl-genl-3-dev",
-        "@bookworm//libnl-route-3-dev",
-        "@bookworm//libnl-nf-3-dev",
+        "@libnl3//:libnl-3-dev_pkg",
+        "@libnl3//:libnl-genl-3-dev_pkg",
+        "@libnl3//:libnl-route-3-dev_pkg",
+        "@libnl3//:libnl-nf-3-dev_pkg",
         "@bookworm//libboost-dev",
         "@bookworm//libboost-serialization-dev",
         "@bookworm//uuid-dev",

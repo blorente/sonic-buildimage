@@ -18,7 +18,7 @@ tar(
 # 			cp ./pai.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/pai.profile; \
 # 			cp ./fabriclanemap_vs.ini device/x86_64-kvm_x86_64-r0/$$(basename $$d)/fabriclanemap.ini; \
 
-# TODO BL: tests
+# TODO(bazel-ready): Make tests work.
 sh_test(
   name = "tests",
 )

@@ -60,7 +60,7 @@ http_archive(
     build_file = "//:libdbus_bin.BUILD",
 )
 
-extract_tar = use_repo_rule("//:extract_tar.bzl", "extract_tar")
+extract_tar = use_repo_rule("@sonic_build_infra//tar:extract_tar.bzl", "extract_tar")
 extract_tar(
     name = "libdbus_bin",
     archive = "@libdbus_data//:data.tar.xz",
