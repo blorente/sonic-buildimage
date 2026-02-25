@@ -22,12 +22,14 @@
 					"/bookworm/cpp:amd64": "4:12.2.0-3",
 					"/bookworm/curl:amd64": "7.88.1-10+deb12u14",
 					"/bookworm/doxygen:amd64": "1.9.4-4",
+					"/bookworm/ethtool:amd64": "1:6.1-1",
 					"/bookworm/gcc-12-base:amd64": "12.2.0-14+deb12u1",
 					"/bookworm/graphviz:amd64": "2.42.2-7+deb12u1",
 					"/bookworm/ifupdown-ng:amd64": "0.11.4~rc1-1+b2",
 					"/bookworm/iproute2:amd64": "6.1.0-3",
 					"/bookworm/iputils-ping:amd64": "3:20221126-1+deb12u1",
 					"/bookworm/jq:amd64": "1.6-2.1+deb12u1",
+					"/bookworm/kmod:amd64": "30+20221128-1",
 					"/bookworm/krb5-multidev:amd64": "1.20.1-2+deb12u4",
 					"/bookworm/libabsl20220623:amd64": "20220623.1-1+deb12u2",
 					"/bookworm/libatomic1:amd64": "12.2.0-14+deb12u1",
@@ -1476,6 +1478,22 @@
 			"suite": "bookworm",
 			"version": "3.0.5"
 		},
+		"/bookworm/ethtool:amd64=1:6.1-1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libmnl0:amd64=1.0.4-3",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/e/ethtool/ethtool_6.1-1_amd64.deb",
+			"name": "ethtool",
+			"section": "net",
+			"sha256": "97f0047507194da0fe2519f2f607b606f8796f2ef53a810da39825b542008f47",
+			"size": 196612,
+			"suite": "bookworm",
+			"version": "1:6.1-1"
+		},
 		"/bookworm/file:amd64=1:5.44-3": {
 			"architecture": "amd64",
 			"depends_on": [
@@ -2043,6 +2061,25 @@
 			"size": 63680,
 			"suite": "bookworm",
 			"version": "1.6-2.1+deb12u1"
+		},
+		"/bookworm/kmod:amd64=30+20221128-1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libkmod2:amd64=30+20221128-1",
+				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
+			],
+			"filename": "pool/main/k/kmod/kmod_30+20221128-1_amd64.deb",
+			"name": "kmod",
+			"section": "admin",
+			"sha256": "e21ae247204fe8a14ac29a5f510227d45b41cd3c41059cc942f2502d25765165",
+			"size": 95180,
+			"suite": "bookworm",
+			"version": "30+20221128-1"
 		},
 		"/bookworm/krb5-multidev:amd64=1.20.1-2+deb12u4": {
 			"architecture": "amd64",

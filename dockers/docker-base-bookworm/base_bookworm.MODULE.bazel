@@ -130,6 +130,10 @@ apt.install(
         "libgrpc-dev",
         "protobuf-compiler-grpc",
         "python3-grpcio",
+
+        # from platform/broadcom/docker-syncd-brcm
+        "kmod",
+        "ethtool",
     ],
     suites = [
         "bookworm",

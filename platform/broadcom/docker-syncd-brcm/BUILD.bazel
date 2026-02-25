@@ -8,61 +8,10 @@ flatten(
     tars = [
         "@bookworm//iproute2:data",
         "@bookworm//libcap2-bin:data",
-        # TODO(bazel-ready): Trim debian packages for syncd brcm.
-        # Most of these are development dependencies that should probably not be in a runtime image,
-        # we should remove the ones that we don't need.
-        "@bookworm//libabsl20220623:data",
-        "@bookworm//libc-ares2:data",
-        "@bookworm//python3-six:data",
-        "@bookworm//libboost-thread1.74.0:data",
-        "@bookworm//libboost-dev:data",
-        "@bookworm//libboost-system-dev:data",
-        "@bookworm//libboost-thread-dev:data",
-        "@bookworm//libboost-filesystem1.74.0:data",
-        "@bookworm//libboost-program-options1.74.0:data",
-        "@bookworm//libnanomsg5:data",
-        "@bookworm//libpcap0.8:data",
-        "@bookworm//libthrift-0.17.0:data",
-        "@bookworm//libboost-filesystem-dev:data",
-        "@bookworm//libboost-program-options-dev:data",
-        "@bookworm//libgmp-dev:data",
-        "@bookworm//libnanomsg-dev:data",
-        "@bookworm//libpcap-dev:data",
-        "@bookworm//libtool:data",
-        "@bookworm//libthrift-dev:data",
-        "@bookworm//python3-thrift:data",
-        "@bookworm//thrift-compiler:data",
-        "@bookworm//libboost-iostreams1.74.0:data",
-        "@bookworm//libgc1:data",
-        "@bookworm//cpp:data",
-        "@bookworm//libboost-all-dev:data",
-        "@bookworm//libboost-graph-dev:data",
-        "@bookworm//libboost-iostreams-dev:data",
-        "@bookworm//libfl-dev:data",
-        "@bookworm//libgc-dev:data",
-        "@bookworm//libbpf-dev:data",
-        "@bookworm//tcpdump:data",
-        "@bookworm//libelf-dev:data",
-        "@bookworm//llvm:data",
-        "@bookworm//clang:data",
-        "@bookworm//python3-pyroute2:data",
-        "@bookworm//python3-ply:data",
-        "@bookworm//python3-scapy:data",
-        "@bookworm//libgrpc++1.51:data",
-        "@bookworm//libgrpc29:data",
-        "@bookworm//libprotobuf32:data",
-        "@bookworm//libprotoc-dev:data",
-        "@bookworm//protobuf-compiler:data",
-        "@bookworm//python3-protobuf:data",
-        "@bookworm//libgrpc++-dev:data",
-        "@bookworm//libgrpc-dev:data",
-        "@bookworm//protobuf-compiler-grpc:data",
-        "@bookworm//python3-grpcio:data",
         # TODO(bazel-complete): Unify versions of pkg_resources
         #       We remove this so that it doesn't conflict with pip-installed versions of setuptools.
         #       Otherwise, we get a cyclic dependency because `pkg_resources` ends up trying to import itself.
         # "@bookworm//python3-setuptools:data",
-
 
         # Broadcom-specific packages
         "@bookworm//kmod:data",
@@ -76,6 +25,7 @@ flatten(
     tars = [
         "@sonic_sairedis//meta:libsaimetadata_pkg",
         "@sonic_sairedis//lib:libsairedis_dev_pkg",
+        "@sonic_sairedis//vslib:libsaivs_pkg",
         # TODO(bazel-ready): Add sswsyncd package (provides dsserve and bcmcmd binaries).
         # Source at platform/broadcom/sswsyncd/, currently built via Make/Debian.
     ],
@@ -84,7 +34,7 @@ flatten(
 filegroup(
     name = "rdeps",
     srcs = [
-        ":syncd_brcm",
+        ":syncd",
         "//src/sonic-device-data:sonic-device-data_all_pkg",
         "@bookworm//libteam-utils:data",
         "@bookworm//libteamdctl0:data",
@@ -118,18 +68,6 @@ filegroup(
 #                                      $(LIBSWSSCOMMON_DBG) \
 #                                      $(LIBSAIMETADATA_DBG) \
 #                                      $(LIBSAIREDIS_DBG)
-# endif
-
-# TODO BL: Routing stack
-# ifeq ($(SONIC_ROUTING_STACK), frr)
-# $(DOCKER_SYNCD_BASE)_DEPENDS += $(FRR)
-# else
-# $(DOCKER_SYNCD_BASE)_DEPENDS += $(GOBGP)
-# endif
-
-# TODO BL: FIPS
-# ifeq ($(INCLUDE_FIPS), y)
-# $(DOCKER_SYNCD_BASE)_DEPENDS += $(FIPS_KRB5_ALL)
 # endif
 
 tar(
@@ -178,4 +116,5 @@ oci_load(
     name = "load",
     image = ":docker-syncd-brcm",
     repo_tags = ["docker-syncd-brcm:latest"],
+    visibility = ["//visibility:public"],
 )
