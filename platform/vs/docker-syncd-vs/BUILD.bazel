@@ -70,7 +70,7 @@ flatten(
 )
 
 flatten(
-    name = "syncd_vs",
+    name = "syncd",
     deduplicate = True,
     tars = [
         "@sonic_sairedis//meta:libsaimetadata_pkg",
@@ -82,7 +82,7 @@ flatten(
 filegroup(
     name = "rdeps",
     srcs = [
-        ":syncd_vs",
+        ":syncd",
         "//src/sonic-device-data:sonic-device-data_all_pkg",
         "@bookworm//libteam-utils:data",
         "@bookworm//libteamdctl0:data",

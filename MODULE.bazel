@@ -19,7 +19,10 @@ bazel_dep(name = "aspect_rules_py", version = "1.8.4")
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.11.6")
 
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 include("//dockers/docker-base-bookworm:base_bookworm.MODULE.bazel")
+include("//platform/broadcom:broadcom.MODULE.bazel")
 
 bazel_dep(name = "sonic-bazel-common", version = "0.0.0", repo_name = "sonic_bazel_common")
 local_path_override(
