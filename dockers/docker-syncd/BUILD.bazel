@@ -1,12 +1,12 @@
 # Note: Will resolve to the right docker image based on platform, or fail if no platform is specified
 alias(
-  name = "docker-syncd",
-  actual = select({
-      "@sonic_build_infra//config:platform_vs": "//platform/vs/docker-syncd-vs",
-      "//conditions:default": ":empty",
-  }),
-  target_compatible_with = select({
-      "@sonic_build_infra//config:platform_vs": [],
-      "//conditions:default": ["@platforms//:incompatible"],
-  }),
+    name = "docker-syncd",
+    actual = select({
+        "@sonic_build_infra//config:platform_vs": "//platform/vs/docker-syncd-vs",
+        "//conditions:default": ":empty",
+    }),
+    target_compatible_with = select({
+        "@sonic_build_infra//config:platform_vs": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
 )

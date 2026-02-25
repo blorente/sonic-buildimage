@@ -7,46 +7,42 @@ bazel_dep(name = "tar.bzl", version = "0.8.1")
 bazel_dep(name = "bazel_lib", version = "3.1.1")
 bazel_dep(name = "protobuf", version = "33.4")
 bazel_dep(name = "openconfig_gnoi", version = "0.6.2")
-
 bazel_dep(name = "rules_distroless", version = "0.0.0", repo_name = "rules_deb")
 local_path_override(
     module_name = "rules_distroless",
-    path = "../../../rules_distroless"
+    path = "../../../rules_distroless",
 )
 
 bazel_dep(name = "sonic-build-infra", version = "0.0.0", repo_name = "sonic_build_infra")
 local_path_override(
     module_name = "sonic-build-infra",
-    path = "../../../sonic-build-infra"
+    path = "../../../sonic-build-infra",
 )
+
 register_toolchains("@sonic_build_infra//toolchains/gcc:host_gcc_toolchain")
 
 bazel_dep(name = "sonic-swss-common", version = "0.0.0", repo_name = "sonic_swss_common")
 local_path_override(
     module_name = "sonic-swss-common",
-    path = "../../../sonic-swss-common"
+    path = "../../../sonic-swss-common",
 )
 
-
 apt = use_extension("@rules_deb//apt:extensions.bzl", "apt")
-
 apt.sources_list(
     architectures = ["amd64"],
     components = ["main"],
     suites = ["bookworm"],
     uris = ["https://snapshot.debian.org/archive/debian/20251001T023456Z"],
 )
-
 apt.install(
     dependency_set = "bookworm",
-    suites = ["bookworm"],
     packages = [
-        "libdbus-c++-1-0v5", # This provides the right library for -ldbus-c++1, which is what we should actually be using.
-        "libdbus-c++-dev",
+        "libdbus-c++-1-0v5",  # This provides the right library for -ldbus-c++1, which is what we should actually be using.
         "libdbus-c++-bin",
+        "libdbus-c++-dev",
     ],
+    suites = ["bookworm"],
 )
-
 use_repo(apt, "bookworm")
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
@@ -58,13 +54,14 @@ http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "ht
 
 http_archive(
     name = "libdbus_data",
-    urls = ["http://debian-archive.trafficmanager.net/debian/pool/main/d/dbus-c++/libdbus-c++-bin_0.9.0-16_amd64.deb"],
+    build_file = "//:libdbus_bin.BUILD",
     sha256 = "557a117138ddf9eea614e1d53562e89a04266770cc8f5a980fb23a6bb84a8622",
     strip_prefix = "libdbus-c++-bin_0.9.0-16",
-    build_file = "//:libdbus_bin.BUILD",
+    urls = ["http://debian-archive.trafficmanager.net/debian/pool/main/d/dbus-c++/libdbus-c++-bin_0.9.0-16_amd64.deb"],
 )
 
 extract_tar = use_repo_rule("@sonic_build_infra//tar:extract_tar.bzl", "extract_tar")
+
 extract_tar(
     name = "libdbus_bin",
     archive = "@libdbus_data//:data.tar.xz",

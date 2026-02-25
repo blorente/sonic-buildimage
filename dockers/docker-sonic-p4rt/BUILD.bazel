@@ -3,15 +3,14 @@ load("@tar.bzl", "tar")
 
 exports_files(["p4rt_vars.j2"])
 
-
 tar(
     name = "files",
     srcs = [
-        "start.sh",
+        "critical_processes",
         "p4rt.sh",
         "p4rt_vars.j2",
+        "start.sh",
         "supervisord.conf",
-        "critical_processes"
     ],
     mtree = [
         "./usr/bin/start.sh type=file contents=$(location :start.sh)",
@@ -19,25 +18,25 @@ tar(
         "./usr/share/sonic/templates/p4rt_vars.j2 type=file contents=$(location :p4rt_vars.j2)",
         "./etc/supervisor/conf.d/supervisord.conf type=file contents=$(location :supervisord.conf)",
         "./etc/supervisor/critical_processes type=file contents=$(location :critical_processes)",
-    ]
+    ],
 )
 
 oci_image(
     name = "docker-sonic-p4rt",
     base = "//dockers/docker-config-engine-bookworm",
+    entrypoint = ["/usr/bin/supervisord"],
+    env = {
+        "DEBIAN_FRONTEND": "noninteractive",
+    },
     tars = [
         ":files",
         "@sonic-pins//p4rt_app:p4rt_binaries",
-        "@sonic_swss_common//pyext:swsscommon_dist"
+        "@sonic_swss_common//pyext:swsscommon_dist",
     ],
-    env = {
-        "DEBIAN_FRONTEND": "noninteractive"
-    },
-    entrypoint = ["/usr/bin/supervisord"],
 )
 
 oci_load(
     name = "load",
     image = ":docker-sonic-p4rt",
-    repo_tags = ["p4rt:latest"]
+    repo_tags = ["p4rt:latest"],
 )

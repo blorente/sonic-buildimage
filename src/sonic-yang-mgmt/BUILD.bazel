@@ -1,5 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_test")
-load("@tar.bzl//:tar.bzl", "tar", "mutate")
+load("@tar.bzl//:tar.bzl", "mutate", "tar")
 
 # Main sonic-yang-mgmt library
 # Note: This library requires libyang Python bindings (yang module) which must be
@@ -14,11 +14,11 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        "@sonic_yang_mgmt_pip//xmltodict",
         "@sonic_yang_mgmt_pip//ijson",
-        "@sonic_yang_mgmt_pip//jsonpointer",
         "@sonic_yang_mgmt_pip//jsondiff",
+        "@sonic_yang_mgmt_pip//jsonpointer",
         "@sonic_yang_mgmt_pip//tabulate",
+        "@sonic_yang_mgmt_pip//xmltodict",
     ],
 )
 

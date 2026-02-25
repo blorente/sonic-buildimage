@@ -1,9 +1,10 @@
+load("@rules_deb//distroless:defs.bzl", "flatten")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 load("@tar.bzl", "tar")
-load("@rules_deb//distroless:defs.bzl", "flatten")
 
 flatten(
     name = "apt_deps",
+    deduplicate = True,
     tars = [
         "@bookworm//libteam5:data",
         "@bookworm//libteamdctl0:data",
@@ -15,12 +16,12 @@ flatten(
         # so the version from the snapshot might be out of date.
         "@bookworm//iputils-ping:data",
     ],
-    deduplicate = True,
 )
 
 flatten(
-  name = "rdeps",
-  tars = [
+    name = "rdeps",
+    deduplicate = True,
+    tars = [
         "@sonic_sairedis//meta:libsaimetadata_dev_pkg",
         "@sonic_sairedis//lib:libsairedis_dev_pkg",
         "@sonic_dash_api//:libdashapi_dev_pkg",
@@ -28,31 +29,29 @@ flatten(
         # TODO(bazel-ready): Port libswsscommon if swsscommon_dist is not enough
         # # $(LIBSWSSCOMMON)
         # "@sonic_swss_common//:libswsscommon",
-  ],
-  deduplicate = True,
+    ],
 )
 
 oci_image(
     name = "docker-swss-layer-bookworm",
     base = "//dockers/docker-config-engine-bookworm",
+    entrypoint = ["/usr/bin/supervisord"],
+    env = {
+        "DEBIAN_FRONTEND": "noninteractive",
+    },
     tars = [
         ":apt_deps",
         ":rdeps",
         "@sonic_swss//:debian-data",
     ],
-    env = {
-        "DEBIAN_FRONTEND": "noninteractive"
-    },
-    entrypoint = ["/usr/bin/supervisord"],
     visibility = [
-      "//dockers/docker-swss-layer-bookworm:__subpackages__",
-      "//dockers/docker-orchagent:__subpackages__",
+        "//dockers/docker-orchagent:__subpackages__",
+        "//dockers/docker-swss-layer-bookworm:__subpackages__",
     ],
 )
 
 oci_load(
     name = "load",
     image = ":docker-swss-layer-bookworm",
-    repo_tags = ["docker-swss-layer-bookworm:latest"]
+    repo_tags = ["docker-swss-layer-bookworm:latest"],
 )
-

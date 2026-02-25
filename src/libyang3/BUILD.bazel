@@ -32,4 +32,3 @@ alias(
     actual = "@libyang3_src//:libyang3-dev_pkg",
     visibility = ["//visibility:public"],
 )
-

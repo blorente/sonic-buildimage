@@ -1,21 +1,21 @@
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
-load("@rules_deb//distroless:defs.bzl", "flatten", "group", "passwd")
-load("@tar.bzl", "tar", "mutate")
 load("@aspect_rules_py//py/unstable:defs.bzl", "py_venv_binary")
+load("@rules_deb//distroless:defs.bzl", "flatten", "group", "passwd")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 load("@sonic_build_infra//python:site_packages.bzl", "site_packages")
+load("@tar.bzl", "mutate", "tar")
 
 site_packages(
     name = "site-packages",
     srcs = [
+        "@pip//j2cli",
         "@pip//supervisor",
         "@pip//supervisord_dependent_startup",
-        "@pip//j2cli"
     ],
     mutate = mutate(
-        strip_prefix = "install",
-        package_dir = "./usr",
         awk_script = "@sonic_bazel_common//:mutate_python_packages",
-    )
+        package_dir = "./usr",
+        strip_prefix = "install",
+    ),
 )
 
 passwd(
@@ -27,7 +27,7 @@ passwd(
             "home": "/root",
             "shell": "/bin/bash",
             "username": "root",
-        }
+        },
     ],
 )
 
@@ -45,13 +45,14 @@ group(
     ],
 )
 
-
 tar(
     name = "rootfs",
-    srcs = glob(["etc/**/*", "root/*"]),
-    mutate = mutate(strip_prefix = package_name())
+    srcs = glob([
+        "etc/**/*",
+        "root/*",
+    ]),
+    mutate = mutate(strip_prefix = package_name()),
 )
-
 
 tar(
     name = "rootdirslinks",
@@ -59,13 +60,13 @@ tar(
         "./bin/sh type=link link=/bin/bash",
         "./var/log/supervisor type=dir",
         "./etc/supervisor/conf.d type=dir",
-        "./usr/bin/vim.tiny type=link link=/usr/bin/vim"
-    ]
+        "./usr/bin/vim.tiny type=link link=/usr/bin/vim",
+    ],
 )
-
 
 flatten(
     name = "flat",
+    deduplicate = True,
     tars = [
         "@bookworm//base-files",
         "@bookworm//ca-certificates",
@@ -108,7 +109,6 @@ flatten(
         "@bookworm//libatomic1",
         "@bookworm//libgmp10",
 
-
         # Transitives
         "@bookworm//libhiredis-dev",
         "@libnl3//:libnl-3-dev_pkg",
@@ -122,11 +122,16 @@ flatten(
         "@bookworm//libpcre2-8-0",
         "@bookworm//libyang2-dev",
     ],
-    deduplicate = True
 )
 
 oci_image(
     name = "docker-base-bookworm",
+    architecture = "amd64",
+    entrypoint = ["/usr/bin/supervisord"],
+    env = {
+        "DEBIAN_FRONTEND": "noninteractive",
+    },
+    os = "linux",
     tars = [
         ":rootfs",
         ":rootdirslinks",
@@ -134,17 +139,11 @@ oci_image(
         ":site-packages",
         "@sonic_supervisord_utilities//:dist",
     ],
-    env = {
-        "DEBIAN_FRONTEND": "noninteractive"
-    },
-    entrypoint = ["/usr/bin/supervisord"],
-    architecture = "amd64",
-    os = "linux",
-    visibility = ["//visibility:public"]
+    visibility = ["//visibility:public"],
 )
 
 oci_load(
     name = "load",
     image = "docker-base-bookworm",
-    repo_tags = ["docker-base-bookworm:latest"]
+    repo_tags = ["docker-base-bookworm:latest"],
 )

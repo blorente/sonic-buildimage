@@ -1,5 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@tar.bzl//:tar.bzl", "tar", "mutate")
+load("@tar.bzl//:tar.bzl", "mutate", "tar")
 
 # Main sonic-py-common library
 py_library(

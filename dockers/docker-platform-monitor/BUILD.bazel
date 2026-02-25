@@ -1,5 +1,5 @@
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
-load("@tar.bzl//:tar.bzl", "tar", "mutate")
+load("@tar.bzl//:tar.bzl", "mutate", "tar")
 
 # Generate docker_init.sh from the template
 # This renders the jinja2 template with generic platform settings
@@ -19,11 +19,11 @@ genrule(
 tar(
     name = "files",
     srcs = [
-        "lm-sensors.sh",
-        "docker-pmon.supervisord.conf.j2",
-        "docker_init.j2",
         "critical_processes",
         "delay.py",
+        "docker-pmon.supervisord.conf.j2",
+        "docker_init.j2",
+        "lm-sensors.sh",
         ":docker_init_sh",
     ],
     mtree = [
@@ -49,8 +49,8 @@ tar(
 tar(
     name = "ssd-tools",
     srcs = [
-        "ssd_tools/iSmart",
         "ssd_tools/SmartCmd",
+        "ssd_tools/iSmart",
     ],
     mtree = [
         "./usr/bin/iSmart uid=0 gid=0 mode=0755 type=file content=$(location :ssd_tools/iSmart)",
@@ -69,6 +69,10 @@ tar(
 oci_image(
     name = "docker-platform-monitor",
     base = "//dockers/docker-config-engine-bookworm",
+    entrypoint = ["/usr/bin/docker_init.sh"],
+    env = {
+        "DEBIAN_FRONTEND": "noninteractive",
+    },
     tars = [
         ":files",
         ":rsyslog-config",
@@ -78,10 +82,6 @@ oci_image(
         "@sonic_platform_daemons//:dist",
         "@sonic_swss_common//pyext:swsscommon_pkg",
     ],
-    env = {
-        "DEBIAN_FRONTEND": "noninteractive",
-    },
-    entrypoint = ["/usr/bin/docker_init.sh"],
 )
 
 oci_load(
