@@ -1,1 +1,1 @@
-exports_files(glob(["database_config.j2"]))
+exports_files(glob(["database_config.json"]))
