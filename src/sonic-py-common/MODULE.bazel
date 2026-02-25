@@ -18,9 +18,9 @@ uv.declare_venv(
     venv_name = "default",
 )
 uv.lockfile(
+    src = "//:uv.lock",
     hub_name = "sonic_py_common_pip",
     venv_name = "default",
-    src = "//:uv.lock",
 )
 
 # Declare venvs for all sonic-platform-daemons to allow cross-module deps
@@ -32,9 +32,9 @@ uv.lockfile(
             venv_name = venv,
         ),
         uv.lockfile(
+            src = "//:uv.lock",
             hub_name = "sonic_py_common_pip",
             venv_name = venv,
-            src = "//:uv.lock",
         ),
     )
     for venv in [

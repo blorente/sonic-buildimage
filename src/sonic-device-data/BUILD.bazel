@@ -1,15 +1,15 @@
-load("@tar.bzl", "tar", "mutate")
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@tar.bzl", "mutate", "tar")
 
 filegroup(
     name = "vs_profiles",
     srcs = [
+        "src/fabriclanemap_vs.ini",
+        "src/pai.vs_profile",
         "src/sai.vs_profile",
         "src/sai_mlnx.vs_profile",
         "src/sai_vpp.vs_profile",
-        "src/pai.vs_profile",
-        "src/fabriclanemap_vs.ini",
     ],
 )
 
@@ -17,32 +17,32 @@ py_binary(
     name = "generate_device_data",
     srcs = ["generate_device_data.py"],
     data = [
-        "//device:all",
         ":vs_profiles",
+        "//device:all",
     ],
 )
 
 run_binary(
     name = "device_data_generated",
     srcs = [
-        "//device:all",
         ":vs_profiles",
+        "//device:all",
     ],
-    out_dirs = ["device_output"],
-    tool = ":generate_device_data",
     env = {
         "RULEDIR": "$(RULEDIR)",
         # TODO(bazel-ready): Add support for vpp.
         "PLATFORM": "vs",
     },
+    out_dirs = ["device_output"],
+    tool = ":generate_device_data",
 )
 
 tar(
     name = "sonic-device-data_all_pkg",
     srcs = [":device_data_generated"],
     mutate = mutate(
-        strip_prefix = package_name() + "/device_output",
         package_dir = "./usr/share/sonic/device",
+        strip_prefix = package_name() + "/device_output",
     ),
     visibility = ["//visibility:public"],
 )

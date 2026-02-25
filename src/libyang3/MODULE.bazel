@@ -1,4 +1,7 @@
-module(name = "libyang3", version = "3.12.2")
+module(
+    name = "libyang3",
+    version = "3.12.2",
+)
 
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "rules_cc", version = "0.2.10")
@@ -15,22 +18,23 @@ apt.sources_list(
 )
 apt.install(
     dependency_set = "libyang3_deps",
-    suites = ["bookworm"],
     packages = [
-      "libpcre2-dev",
+        "libpcre2-dev",
     ],
+    suites = ["bookworm"],
 )
 use_repo(apt, "libyang3_deps")
 
 # libyang3 C library source from Debian
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 http_archive(
     name = "libyang3_src",
-    urls = ["http://debian-archive.trafficmanager.net/debian/pool/main/liby/libyang/libyang_3.12.2.orig.tar.xz"],
-    sha256 = "d7b35a5f9f3a5b929b9c9ee0c2b1b63fbef7be788d88f74e1362b85990002db3",
-    strip_prefix = "libyang-3.12.2",
     build_file = "//:libyang3.BUILD",
+    patch_args = ["-p1"],
     # Apply patch series from Makefile
     patches = ["//:patch/0001-pr2362-lyd_validate_noextdeps.patch"],
-    patch_args = ["-p1"],
+    sha256 = "d7b35a5f9f3a5b929b9c9ee0c2b1b63fbef7be788d88f74e1362b85990002db3",
+    strip_prefix = "libyang-3.12.2",
+    urls = ["http://debian-archive.trafficmanager.net/debian/pool/main/liby/libyang/libyang_3.12.2.orig.tar.xz"],
 )

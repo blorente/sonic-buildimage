@@ -8,11 +8,10 @@ bazel_dep(name = "rules_python", version = "1.6.3")
 bazel_dep(name = "rules_oci", version = "2.2.6")
 bazel_dep(name = "tar.bzl", version = "0.8.1")
 bazel_dep(name = "bazel_lib", version = "3.1.1")
-
 bazel_dep(name = "rules_distroless", version = "0.0.0", repo_name = "rules_deb")
 local_path_override(
     module_name = "rules_distroless",
-    path = "../rules_distroless"
+    path = "../rules_distroless",
 )
 
 bazel_dep(name = "aspect_rules_py", version = "1.8.4")
@@ -24,8 +23,8 @@ include("//dockers/docker-base-bookworm:base_bookworm.MODULE.bazel")
 
 bazel_dep(name = "sonic-bazel-common", version = "0.0.0", repo_name = "sonic_bazel_common")
 local_path_override(
-  module_name = "sonic-bazel-common",
-  path = "tools/sonic-bazel-common",
+    module_name = "sonic-bazel-common",
+    path = "tools/sonic-bazel-common",
 )
 
 bazel_dep(name = "sonic-py-common", version = "0.0.0", repo_name = "sonic_py_common")
@@ -58,13 +57,11 @@ local_path_override(
     path = "src/sonic-yang-models",
 )
 
-
-
 # These are needed to build p4rt
 
 single_version_override(
     module_name = "abseil-cpp",
-    version = "20240722.0"
+    version = "20240722.0",
 )
 
 single_version_override(
@@ -75,69 +72,64 @@ single_version_override(
 bazel_dep(name = "rules_boost", version = "0.0.0")
 archive_override(
     module_name = "rules_boost",
-    urls = ["https://github.com/nelhage/rules_boost/archive/a0643ef5ea1f939da59c42a6a5f21d1c0ffcff4f.zip"],
+    sha256 = "",
     strip_prefix = "rules_boost-a0643ef5ea1f939da59c42a6a5f21d1c0ffcff4f",
-    sha256 = ""
+    urls = ["https://github.com/nelhage/rules_boost/archive/a0643ef5ea1f939da59c42a6a5f21d1c0ffcff4f.zip"],
 )
+
 boost = use_extension("@rules_boost//:boost/repositories.bzl", "non_module_dependencies")
 use_repo(
     boost,
     "boost",
 )
 
-
-
 # P4
 bazel_dep(name = "p4runtime", repo_name = "com_github_p4lang_p4runtime")
 local_path_override(
     module_name = "p4runtime",
-    path = "../p4runtime/proto"
+    path = "../p4runtime/proto",
 )
 
 bazel_dep(name = "p4constraints", repo_name = "com_github_p4lang_p4_constraints")
 local_path_override(
     module_name = "p4constraints",
-    path = "../p4-constraints"
+    path = "../p4-constraints",
 )
-
 
 bazel_dep(name = "p4c", repo_name = "com_github_p4lang_p4c")
 local_path_override(
     module_name = "p4c",
-    path = "../p4c"
+    path = "../p4c",
 )
-
-
 
 bazel_dep(name = "gutil", version = "20250502.0", repo_name = "com_google_gutil")
 local_path_override(
     module_name = "gutil",
-    path = "../gutil"
+    path = "../gutil",
 )
-
 
 bazel_dep(name = "sonic-swss-common", version = "0.0.0", repo_name = "sonic_swss_common")
 local_path_override(
     module_name = "sonic-swss-common",
-    path = "../sonic-swss-common"
+    path = "../sonic-swss-common",
 )
 
 bazel_dep(name = "sonic-py-swsssdk", version = "0.0.0", repo_name = "sonic_py_swsssdk")
 local_path_override(
     module_name = "sonic-py-swsssdk",
-    path = "../sonic-py-swsssdk"
+    path = "../sonic-py-swsssdk",
 )
 
 bazel_dep(name = "sonic-pins", version = "0.0.0")
 local_path_override(
     module_name = "sonic-pins",
-    path = "../sonic-pins"
+    path = "../sonic-pins",
 )
 
 bazel_dep(name = "sonic-build-infra", version = "0.0.0", repo_name = "sonic_build_infra")
 local_path_override(
     module_name = "sonic-build-infra",
-    path = "../sonic-build-infra"
+    path = "../sonic-build-infra",
 )
 
 register_toolchains("@sonic_build_infra//toolchains/gcc:host_gcc_toolchain")
@@ -175,11 +167,10 @@ local_path_override(
 # Needed for swss.
 
 bazel_dep(name = "rules_shell", version = "0.6.1")
-
 bazel_dep(name = "sonic-swss", version = "0.0.0", repo_name = "sonic_swss")
 local_path_override(
     module_name = "sonic-swss",
-    path = "../sonic-swss"
+    path = "../sonic-swss",
 )
 
 bazel_dep(name = "sonic-sairedis", version = "0.0.0", repo_name = "sonic_sairedis")

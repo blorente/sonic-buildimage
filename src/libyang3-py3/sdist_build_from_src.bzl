@@ -37,11 +37,13 @@ def _sdist_build_from_src(ctx):
         # Get headers as input files
         for hdr in cc_info.compilation_context.headers.to_list():
             cc_files.append(hdr)
+
             # Extract include path from header location
             if "/usr/include/" in hdr.path and not include_paths:
                 idx = hdr.path.find("/usr/include/")
                 include_paths.append(hdr.path[:idx + len("/usr/include")])
-            # For Bazel-built libraries, look for libyang/ in path
+                # For Bazel-built libraries, look for libyang/ in path
+
             elif "/libyang/" in hdr.path and hdr.path.endswith(".h"):
                 # Get parent of libyang dir as include path
                 idx = hdr.path.find("/libyang/")
@@ -60,6 +62,7 @@ def _sdist_build_from_src(ctx):
                             library_path = lib_dir[:idx] + "/usr/lib"
                         elif not library_path:
                             library_path = lib_dir
+
                     # Also check static library
                     if lib.static_library and not library_path:
                         library_path = lib.static_library.dirname
@@ -72,7 +75,6 @@ def _sdist_build_from_src(ctx):
             library_path = f.dirname
         elif f.path.endswith(".a") and not library_path:
             library_path = f.dirname
-
 
     # Join include paths with colons for multiple paths
     # Prefix each path with $EXECROOT since we'll be in a different directory
@@ -198,10 +200,10 @@ cp "$EXECROOT/{shared_library_file}" "${{root}}/libyang.so"
     ctx.actions.run_shell(
         command = install_command,
         inputs = [
-          wheel_dir,
-          unpack,
-          shared_lib, 
-          ctx.executable._patchelf,
+            wheel_dir,
+            unpack,
+            shared_lib,
+            ctx.executable._patchelf,
         ],
         outputs = [install_dir],
     )

@@ -3,7 +3,7 @@ load("@tar.bzl", "tar")
 
 tar(
     name = "sysmgr_pkg",
-    srcs = ["//rebootbackend:rebootbackend"],
+    srcs = ["//rebootbackend"],
     mtree = [
         "./debian/sysmgr/rebootbackend type=file contents=$(location //rebootbackend:rebootbackend)",
     ],
@@ -11,4 +11,3 @@ tar(
 )
 
 # TODO(bazel-ready): Verify that debug binaries work when passing the `-c dbg` flag to bazel.
-

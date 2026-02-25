@@ -1,22 +1,21 @@
 apt = use_extension("@rules_deb//apt:extensions.bzl", "apt")
-
 apt.sources_list(
     architectures = ["amd64"],
     components = ["main"],
-    suites = ["bookworm", "bookworm-updates"],
+    suites = [
+        "bookworm",
+        "bookworm-updates",
+    ],
     uris = ["https://snapshot.debian.org/archive/debian/20251001T023456Z"],
 )
-
 apt.sources_list(
     architectures = ["amd64"],
     components = ["main"],
     suites = ["bookworm-security"],
     uris = ["https://snapshot.debian.org/archive/debian-security/20251001T023456Z"],
 )
-
 apt.install(
     dependency_set = "bookworm",
-    suites = ["bookworm", "bookworm-updates", "bookworm-security"],
     packages = [
         "base-files",
         "ca-certificates",
@@ -32,9 +31,7 @@ apt.install(
         "libgomp1",
         "libstdc++6",
         "binutils",
-
         "krb5-multidev",
-
         "coreutils",
         "bash",
         "curl",
@@ -59,7 +56,6 @@ apt.install(
         "libgmpxx4ldbl",
         "libpcre2-8-0",
         "libyang2-dev",
-
 
         # from rules/libteam.mk
         "libteam5",
@@ -96,11 +92,9 @@ apt.install(
         "libboost-thread-dev",
         "libboost-filesystem1.74.0",
         "libboost-program-options1.74.0",
-        "libboost-thread1.74.0",
         "libnanomsg5",
         "libpcap0.8",
         "libthrift-0.17.0",
-        "libboost-dev",
         "libboost-filesystem-dev",
         "libboost-program-options-dev",
         "libgmp-dev",
@@ -114,15 +108,12 @@ apt.install(
         "libboost-iostreams1.74.0",
         "libgc1",
         "cpp",
-        "libboost-dev",
         "libboost-all-dev",
         "libboost-graph-dev",
         "libboost-iostreams-dev",
         "libfl-dev",
         "libgc-dev",
-        "libgmp-dev",
         "libbpf-dev",
-        "tcpdump",
         "libelf-dev",
         "llvm",
         "clang",
@@ -130,30 +121,26 @@ apt.install(
         "python3-ply",
         "python3-scapy",
         "python3-setuptools",
-        "python3-thrift",
-        "libthrift-0.17.0",
         "libgrpc++1.51",
         "libgrpc29",
         "libprotobuf32",
-        "libboost-dev",
-        "libboost-system-dev",
-        "libboost-thread-dev",
         "libprotoc-dev",
         "protobuf-compiler",
-        "python3-protobuf",
         "libgrpc++-dev",
         "libgrpc-dev",
         "protobuf-compiler-grpc",
         "python3-grpcio",
-
+    ],
+    suites = [
+        "bookworm",
+        "bookworm-updates",
+        "bookworm-security",
     ],
 )
-
 apt.lock(
-   into = "packages.lock",
+    into = "packages.lock",
 )
 use_repo(apt, "bookworm")
-
 
 uv = use_extension("@aspect_rules_py//uv/unstable:extension.bzl", "uv")
 uv.declare_hub(hub_name = "pip")
@@ -162,14 +149,14 @@ uv.declare_venv(
     venv_name = "default",
 )
 uv.lockfile(
+    src = "//dockers/docker-base-bookworm:uv.lock",
     hub_name = "pip",
     venv_name = "default",
-    src = "//dockers/docker-base-bookworm:uv.lock",
 )
 uv.override_requirement(
     hub_name = "pip",
     requirement = "libyang",
-    target = "@libyang3_py3//:libyang3_py3",
+    target = "@libyang3_py3",
     venv_name = "default",
 )
 use_repo(uv, "pip")

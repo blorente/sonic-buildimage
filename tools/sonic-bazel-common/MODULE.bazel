@@ -1,2 +1,4 @@
-module(name = "sonic-bazel-common", version = "0.0.0")
-
+module(
+    name = "sonic-bazel-common",
+    version = "0.0.0",
+)

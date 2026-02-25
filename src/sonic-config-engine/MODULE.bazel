@@ -1,10 +1,12 @@
-module(name = "sonic-config-engine", version = "0.0.0")
+module(
+    name = "sonic-config-engine",
+    version = "0.0.0",
+)
 
 bazel_dep(name = "rules_python", version = "1.6.3")
 bazel_dep(name = "aspect_rules_py", version = "1.7.1")
 bazel_dep(name = "tar.bzl", version = "0.5.6")
 bazel_dep(name = "bazel_lib", version = "3.1.1")
-
 bazel_dep(name = "sonic-py-common", version = "0.0.0", repo_name = "sonic_py_common")
 bazel_dep(name = "sonic-swss-common", version = "0.0.0", repo_name = "sonic_swss_common")
 bazel_dep(name = "sonic-py-swsssdk", version = "0.0.0", repo_name = "sonic_py_swsssdk")
@@ -22,8 +24,8 @@ uv.declare_venv(
     venv_name = "default",
 )
 uv.lockfile(
+    src = "//:uv.lock",
     hub_name = "sonic_config_engine_pip",
     venv_name = "default",
-    src = "//:uv.lock",
 )
 use_repo(uv, "sonic_config_engine_pip")

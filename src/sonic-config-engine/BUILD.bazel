@@ -1,6 +1,6 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_binary", "py_pytest_main", "py_test")
-load("@tar.bzl//:tar.bzl", "tar", "mutate")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main", "py_test")
 load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@tar.bzl//:tar.bzl", "mutate", "tar")
 
 exports_files(["sonic-cfggen"])
 
@@ -24,7 +24,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "@sonic_py_common//:sonic-py-common",
-        "@sonic_swss_common//pyext:pyext",
+        "@sonic_swss_common//pyext",
         "@sonic_config_engine_pip//bitarray",
         "@sonic_config_engine_pip//ipaddress",
         "@sonic_config_engine_pip//jinja2",
@@ -32,7 +32,7 @@ py_library(
         "@sonic_config_engine_pip//netaddr",
 
         # Needed to run `sonic-cfggen-bin`
-        "@libyang3_py3//:libyang3_py3",
+        "@libyang3_py3",
         "@sonic_yang_mgmt//:sonic-yang-mgmt",
         "@sonic_config_engine_pip//cffi",
     ],
@@ -53,7 +53,7 @@ py_binary(
     main = "sonic_cfggen_script.py",
     visibility = ["//visibility:public"],
     deps = [
-      ":sonic-config-engine",
+        ":sonic-config-engine",
     ],
 )
 
@@ -111,7 +111,6 @@ py_test(
 
 py_test(
     name = "test-cfggen-from-yang",
-    package_collisions = "ignore",
     size = "medium",
     srcs = ["tests/test_cfggen_from_yang.py"],
     data = glob([
@@ -119,6 +118,7 @@ py_test(
         "tests/**/*.json",
         "tests/**/*.ini",
     ]),
+    package_collisions = "ignore",
     deps = [
         ":mock-tables",
         ":sonic-config-engine",
@@ -129,9 +129,9 @@ py_test(
 
 py_test(
     name = "test-cfggen-pfx-filter",
-    package_collisions = "ignore",
     size = "small",
     srcs = ["tests/test_cfggen_pfx_filter.py"],
+    package_collisions = "ignore",
     deps = [
         ":mock-tables",
         ":sonic-config-engine",
@@ -141,7 +141,6 @@ py_test(
 
 py_test(
     name = "test-cfggen-platformJson",
-    package_collisions = "ignore",
     size = "medium",
     srcs = ["tests/test_cfggen_platformJson.py"],
     data = glob([
@@ -149,6 +148,7 @@ py_test(
         "tests/**/*.json",
         "tests/**/*.ini",
     ]),
+    package_collisions = "ignore",
     deps = [
         ":mock-tables",
         ":sonic-config-engine",
@@ -158,13 +158,13 @@ py_test(
 
 py_test(
     name = "test-cfggen-t2-chassis-fe",
-    package_collisions = "ignore",
     size = "medium",
     srcs = ["tests/test_cfggen_t2_chassis_fe.py"],
     data = glob([
         "tests/**/*.xml",
         "tests/**/*.ini",
     ]),
+    package_collisions = "ignore",
     deps = [
         ":sonic-config-engine",
         ":test-common",
@@ -173,7 +173,6 @@ py_test(
 
 py_test(
     name = "test-chassis-cfggen",
-    package_collisions = "ignore",
     size = "large",
     srcs = ["tests/test_chassis_cfggen.py"],
     data = glob([
@@ -181,6 +180,7 @@ py_test(
         "tests/**/*.json",
         "tests/**/*.ini",
     ]),
+    package_collisions = "ignore",
     deps = [
         ":mock-tables",
         ":sonic-config-engine",
@@ -190,9 +190,9 @@ py_test(
 
 py_test(
     name = "test-frr",
-    package_collisions = "ignore",
     size = "small",
     srcs = ["tests/test_frr.py"],
+    package_collisions = "ignore",
     deps = [
         ":sonic-config-engine",
         ":test-common",
@@ -201,7 +201,6 @@ py_test(
 
 py_test(
     name = "test-j2files",
-    package_collisions = "ignore",
     size = "large",
     srcs = ["tests/test_j2files.py"],
     data = glob([
@@ -210,6 +209,7 @@ py_test(
         "tests/**/*.ini",
         "tests/**/*.j2",
     ]),
+    package_collisions = "ignore",
     deps = [
         ":mock-tables",
         ":sonic-config-engine",
@@ -219,7 +219,6 @@ py_test(
 
 py_test(
     name = "test-j2files-t2-chassis-fe",
-    package_collisions = "ignore",
     size = "medium",
     srcs = ["tests/test_j2files_t2_chassis_fe.py"],
     data = glob([
@@ -227,6 +226,7 @@ py_test(
         "tests/**/*.ini",
         "tests/**/*.j2",
     ]),
+    package_collisions = "ignore",
     deps = [
         ":sonic-config-engine",
         ":test-common",
@@ -235,13 +235,13 @@ py_test(
 
 py_test(
     name = "test-minigraph-case",
-    package_collisions = "ignore",
     size = "large",
     srcs = ["tests/test_minigraph_case.py"],
     data = glob([
         "tests/**/*.xml",
         "tests/**/*.ini",
     ]),
+    package_collisions = "ignore",
     deps = [
         ":mock-tables",
         ":sonic-config-engine",
@@ -251,7 +251,6 @@ py_test(
 
 py_test(
     name = "test-multinpu-cfggen",
-    package_collisions = "ignore",
     size = "large",
     srcs = ["tests/test_multinpu_cfggen.py"],
     data = glob([
@@ -259,6 +258,7 @@ py_test(
         "tests/**/*.json",
         "tests/**/*.ini",
     ]),
+    package_collisions = "ignore",
     deps = [
         ":mock-tables",
         ":sonic-config-engine",

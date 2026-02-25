@@ -1,5 +1,5 @@
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
-load("@tar.bzl//:tar.bzl", "tar", "mutate")
+load("@tar.bzl//:tar.bzl", "mutate", "tar")
 load("//dockers/docker-base-bookworm:site_packages.bzl", "site_packages")
 
 # Python pip dependencies (excluding libyang which needs special handling)
@@ -22,9 +22,9 @@ site_packages(
         "@pip//tabulate",
     ],
     mutate = mutate(
-        strip_prefix = "install",
-        package_dir = "./usr",
         awk_script = "@sonic_bazel_common//:mutate_python_packages",
+        package_dir = "./usr",
+        strip_prefix = "install",
     ),
 )
 
@@ -50,6 +50,10 @@ tar(
 oci_image(
     name = "docker-config-engine-bookworm",
     base = "//dockers/docker-base-bookworm:docker-base-bookworm",
+    entrypoint = ["/usr/bin/supervisord"],
+    env = {
+        "DEBIAN_FRONTEND": "noninteractive",
+    },
     tars = [
         "@sonic_config_engine//:dist",
         "@sonic_py_common//:dist",
@@ -61,10 +65,6 @@ oci_image(
         ":sonic-cfggen-tar",
         ":templates",
     ],
-    env = {
-        "DEBIAN_FRONTEND": "noninteractive",
-    },
-    entrypoint = ["/usr/bin/supervisord"],
     visibility = ["//visibility:public"],
 )
 

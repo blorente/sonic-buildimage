@@ -16,8 +16,8 @@ uv.declare_venv(
     venv_name = "default",
 )
 uv.lockfile(
+    src = "//:uv.lock",
     hub_name = "sonic_yang_mgmt_pip",
     venv_name = "default",
-    src = "//:uv.lock",
 )
 use_repo(uv, "sonic_yang_mgmt_pip")
