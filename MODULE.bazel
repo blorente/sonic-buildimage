@@ -1,7 +1,6 @@
 module(name = "sonic-buildimage")
 
 bazel_dep(name = "rules_cc", version = "0.2.10")
-bazel_dep(name = "rules_foreign_cc", version = "0.14.0")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "rules_python", version = "1.6.3")
@@ -153,6 +152,12 @@ bazel_dep(name = "libyang3_py3", version = "3.1.0")
 local_path_override(
     module_name = "libyang3_py3",
     path = "src/libyang3-py3",
+)
+
+bazel_dep(name = "hsflowd", version = "2.0.51-26")
+local_path_override(
+    module_name = "hsflowd",
+    path = "src/sflow/hsflowd",
 )
 
 bazel_dep(name = "sonic-platform-common", version = "0.0.0", repo_name = "sonic_platform_common")
