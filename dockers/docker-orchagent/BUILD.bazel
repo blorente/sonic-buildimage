@@ -57,6 +57,8 @@ site_packages(
 # endif
 
 # TODO BL: Make sure the j2 files that cfggen and docker-init.j2 needs are there: https://aspect-build.slack.com/archives/C099BB0M4NQ/p1772185246672969?thread_ts=1770751856.859649&cid=C099BB0M4NQ
+# TODO BL: Make sure `base_image_files` end up in the container if they need to be.
+# TODO(bazel-ready): Create debug images.
 
 tar(
     name = "source_files",
