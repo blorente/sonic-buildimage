@@ -14,6 +14,7 @@ genrule(
     srcs = ["lib/defs.h.in"],
     outs = ["lib/defs.h"],
     # TODO(bazel-ready): Define NL_DEBUG if necessary, based on configuration.
+    # TODO(bazel-ready): Define VERSION from stamping, if necessary.
     cmd = """
         sed \
             -e 's|#undef DISABLE_PTHREADS|/* #undef DISABLE_PTHREADS */|' \

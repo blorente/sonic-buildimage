@@ -160,6 +160,18 @@ local_path_override(
     path = "src/sflow/hsflowd",
 )
 
+bazel_dep(name = "psample", version = "1.1-1")
+local_path_override(
+    module_name = "psample",
+    path = "src/sflow/psample",
+)
+
+bazel_dep(name = "sflowtool", version = "5.04")
+local_path_override(
+    module_name = "sflowtool",
+    path = "src/sflow/sflowtool",
+)
+
 bazel_dep(name = "sonic-platform-common", version = "0.0.0", repo_name = "sonic_platform_common")
 local_path_override(
     module_name = "sonic-platform-common",
