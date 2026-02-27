@@ -5,3 +5,9 @@ debian/libnl-*/
 !Makefile
 !patch/
 !patch/*
+
+# Bazel
+!MODULE.bazel*
+!.bazelversion
+!*.BUILD
+!BUILD.*
