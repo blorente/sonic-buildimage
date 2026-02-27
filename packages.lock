@@ -143,6 +143,21 @@
 				}
 			}
 		},
+		"libteam_deps": {
+			"sets": {
+				"amd64": {
+					"/bookworm/libbsd-dev:amd64": "0.11.7-2",
+					"/bookworm/libdaemon-dev:amd64": "0.14-7.1",
+					"/bookworm/libdbus-1-dev:amd64": "1.14.10-1~deb12u1",
+					"/bookworm/libjansson-dev:amd64": "2.14-2",
+					"/bookworm/libnl-3-dev:amd64": "3.7.0-0.2+b1",
+					"/bookworm/libnl-cli-3-dev:amd64": "3.7.0-0.2+b1",
+					"/bookworm/libnl-genl-3-dev:amd64": "3.7.0-0.2+b1",
+					"/bookworm/libnl-route-3-dev:amd64": "3.7.0-0.2+b1",
+					"/bookworm/libzmq3-dev:amd64": "4.3.4-6"
+				}
+			}
+		},
 		"libyang3_deps": {
 			"sets": {
 				"amd64": {
@@ -7861,6 +7876,22 @@
 			"suite": "bookworm",
 			"version": "7.88.1-10+deb12u14"
 		},
+		"/bookworm/libdaemon-dev:amd64=0.14-7.1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libdaemon0:amd64=0.14-7.1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/libd/libdaemon/libdaemon-dev_0.14-7.1_amd64.deb",
+			"name": "libdaemon-dev",
+			"section": "libdevel",
+			"sha256": "fef43f66b001146cedbbfc8d2853490ec9858a600ad63f357d2aeb30a42d1ddd",
+			"size": 21008,
+			"suite": "bookworm",
+			"version": "0.14-7.1"
+		},
 		"/bookworm/libdaemon0:amd64=0.14-7.1": {
 			"architecture": "amd64",
 			"depends_on": [
@@ -10926,6 +10957,30 @@
 			"section": "libs",
 			"sha256": "6d7e3042871618e8ae29c61dcba9542dc642c3a18b580659b378196d3961eaf1",
 			"size": 32804,
+			"suite": "bookworm",
+			"version": "3.7.0-0.2+b1"
+		},
+		"/bookworm/libnl-cli-3-dev:amd64=3.7.0-0.2+b1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libnl-cli-3-200:amd64=3.7.0-0.2+b1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libnl-route-3-200:amd64=3.7.0-0.2+b1",
+				"/bookworm/libnl-3-200:amd64=3.7.0-0.2+b1",
+				"/bookworm/libnl-nf-3-200:amd64=3.7.0-0.2+b1",
+				"/bookworm/libnl-genl-3-200:amd64=3.7.0-0.2+b1",
+				"/bookworm/libnl-route-3-dev:amd64=3.7.0-0.2+b1",
+				"/bookworm/libnl-3-dev:amd64=3.7.0-0.2+b1",
+				"/bookworm/libnl-nf-3-dev:amd64=3.7.0-0.2+b1",
+				"/bookworm/libnl-genl-3-dev:amd64=3.7.0-0.2+b1"
+			],
+			"filename": "pool/main/libn/libnl3/libnl-cli-3-dev_3.7.0-0.2+b1_amd64.deb",
+			"name": "libnl-cli-3-dev",
+			"section": "libdevel",
+			"sha256": "bc87d46bd17984fb452be89bca2282971ecb14b7f540471fd984b78993d8efd1",
+			"size": 23416,
 			"suite": "bookworm",
 			"version": "3.7.0-0.2+b1"
 		},

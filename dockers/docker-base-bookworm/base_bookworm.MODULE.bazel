@@ -58,6 +58,7 @@ apt.install(
         "libyang2-dev",
 
         # from rules/libteam.mk
+        # TODO BL: Repalce with the patched versions in `src/libteam`
         "libteam5",
         "libteam-dev",
         "libteamdctl0",
