@@ -1,4 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_shared_library")
+load("@tar.bzl", "tar")
 
 # Header-only targets for modules that resolve symbols at runtime from
 # the hsflowd binary (loaded via dlopen, symbols exported via -rdynamic).
@@ -317,5 +318,40 @@ cc_library(
 cc_shared_library(
     name = "mod_dnssd_shared",
     deps = [":mod_dnssd"],
+    visibility = ["//visibility:public"],
+)
+
+# ===== Packaging =====
+
+tar(
+    name = "hsflowd_pkg",
+    srcs = [
+        ":hsflowd",
+        ":mod_dnssd_shared",
+        ":mod_docker_shared",
+        ":mod_dropmon_shared",
+        ":mod_json_shared",
+        ":mod_psample_shared",
+        ":mod_sonic_shared",
+        "src/Linux/scripts/hsflowd.conf.sonic",
+        "src/Linux/scripts/hsflowd.deb",
+        "src/Linux/scripts/hsflowd.service",
+        "src/Linux/scripts/net.sflow.hsflowd.conf",
+    ],
+    mtree = [
+        "./usr/sbin/hsflowd uid=0 gid=0 mode=0700 type=file content=$(location :hsflowd)",
+        # TODO(bazel-ready): We only support FEATURES=SONIC; other features use different config files.
+        "./etc/hsflowd.conf uid=0 gid=0 mode=0644 type=file content=$(location src/Linux/scripts/hsflowd.conf.sonic)",
+        "./etc/hsflowd/modules/mod_sonic.so uid=0 gid=0 mode=0755 type=file content=$(location :mod_sonic_shared)",
+        "./etc/hsflowd/modules/mod_psample.so uid=0 gid=0 mode=0755 type=file content=$(location :mod_psample_shared)",
+        "./etc/hsflowd/modules/mod_docker.so uid=0 gid=0 mode=0755 type=file content=$(location :mod_docker_shared)",
+        "./etc/hsflowd/modules/mod_dropmon.so uid=0 gid=0 mode=0755 type=file content=$(location :mod_dropmon_shared)",
+        "./etc/hsflowd/modules/mod_json.so uid=0 gid=0 mode=0755 type=file content=$(location :mod_json_shared)",
+        "./etc/hsflowd/modules/mod_dnssd.so uid=0 gid=0 mode=0755 type=file content=$(location :mod_dnssd_shared)",
+        # TODO(bazel-ready): We only support Debian; other distros use different init scripts.
+        "./etc/init.d/hsflowd uid=0 gid=0 mode=0755 type=file content=$(location src/Linux/scripts/hsflowd.deb)",
+        "./lib/systemd/system/hsflowd.service uid=0 gid=0 mode=0644 type=file content=$(location src/Linux/scripts/hsflowd.service)",
+        "./etc/dbus-1/system.d/net.sflow.hsflowd.conf uid=0 gid=0 mode=0644 type=file content=$(location src/Linux/scripts/net.sflow.hsflowd.conf)",
+    ],
     visibility = ["//visibility:public"],
 )
