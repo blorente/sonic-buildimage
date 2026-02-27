@@ -2,3 +2,7 @@
 !.gitignore
 !Makefile
 !patch
+# Bazel module files
+!MODULE.bazel
+!BUILD.bazel
+!*.BUILD

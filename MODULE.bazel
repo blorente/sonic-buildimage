@@ -230,3 +230,11 @@ local_path_override(
     module_name = "sonic-sysmgr",
     path = "src/sonic-sysmgr",
 )
+
+# Needed for teamd
+
+bazel_dep(name = "libteam", version = "0.0.0", repo_name = "libteam")
+local_path_override(
+    module_name = "libteam",
+    path = "src/libteam",
+)
