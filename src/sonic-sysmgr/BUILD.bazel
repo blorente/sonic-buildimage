@@ -5,7 +5,7 @@ tar(
     name = "sysmgr_pkg",
     srcs = ["//rebootbackend"],
     mtree = [
-        "./debian/sysmgr/rebootbackend type=file contents=$(location //rebootbackend:rebootbackend)",
+        "./debian/sysmgr/rebootbackend type=file content=$(location //rebootbackend:rebootbackend)",
     ],
     visibility = ["//visibility:public"],
 )

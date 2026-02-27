@@ -13,15 +13,14 @@ tar(
         "supervisord.conf",
     ],
     mtree = [
-        "./usr/bin/start.sh type=file contents=$(location :start.sh)",
-        "./usr/bin/p4rt.sh type=file contents=$(location :p4rt.sh)",
-        "./usr/share/sonic/templates/p4rt_vars.j2 type=file contents=$(location :p4rt_vars.j2)",
-        "./etc/supervisor/conf.d/supervisord.conf type=file contents=$(location :supervisord.conf)",
-        "./etc/supervisor/critical_processes type=file contents=$(location :critical_processes)",
+        "./usr/bin/start.sh type=file content=$(location :start.sh)",
+        "./usr/bin/p4rt.sh type=file content=$(location :p4rt.sh)",
+        "./usr/share/sonic/templates/p4rt_vars.j2 type=file content=$(location :p4rt_vars.j2)",
+        "./etc/supervisor/conf.d/supervisord.conf type=file content=$(location :supervisord.conf)",
+        "./etc/supervisor/critical_processes type=file content=$(location :critical_processes)",
     ],
 )
 
-# TODO BL: Unify between content and contents: https://aspect-build.slack.com/archives/C099BB0M4NQ/p1772174318850429?thread_ts=1770751856.859649&cid=C099BB0M4NQ
 # TODO BL: Create tar for cfmgr: https://aspect-build.slack.com/archives/C099BB0M4NQ/p1772182890132919?thread_ts=1770751856.859649&cid=C099BB0M4NQ
 # TODO BL: Figure out which orchangent stuff needed to depend on additional c libraries like libnl3-genl: https://aspect-build.slack.com/archives/C099BB0M4NQ/p1771530883945629?thread_ts=1770751856.859649&cid=C099BB0M4NQ
 #          (and the next message)
