@@ -131,9 +131,9 @@ tar(
         "supervisord.conf",
     ],
     mtree = [
-        "./usr/bin/start.sh type=file contents=$(location :start.sh)",
-        "./etc/supervisor/conf.d/supervisord.conf type=file contents=$(location :supervisord.conf)",
-        "./etc/supervisor/critical_processes type=file contents=$(location :critical_processes)",
+        "./usr/bin/start.sh type=file content=$(location :start.sh)",
+        "./etc/supervisor/conf.d/supervisord.conf type=file content=$(location :supervisord.conf)",
+        "./etc/supervisor/critical_processes type=file content=$(location :critical_processes)",
     ],
 )
 
