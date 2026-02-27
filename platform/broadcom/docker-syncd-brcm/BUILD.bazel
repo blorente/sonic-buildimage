@@ -85,14 +85,15 @@ tar(
         # In the Makefile build, it's copied to /usr/bin/rdb-cli via:
         #   $(DOCKER_SYNCD_BASE)_FILES += $(RDB-CLI)
     ],
+    # TODO BL: Make sure file permissions are okay
     mtree = [
-        "./usr/bin/start.sh type=file contents=$(location :start.sh)",
-        "./usr/bin/start_led.sh type=file contents=$(location :start_led.sh)",
-        "./usr/bin/bcmsh type=file contents=$(location :bcmsh)",
-        "./usr/bin/bcmcmd type=file contents=$(location :base_image_files/bcmcmd)",
-        "./usr/bin/bcm_common type=file contents=$(location :base_image_files/bcm_common)",
-        "./etc/supervisor/conf.d/supervisord.conf type=file contents=$(location :supervisord.conf)",
-        "./etc/supervisor/critical_processes type=file contents=$(location :critical_processes)",
+        "./usr/bin/start.sh type=file content=$(location :start.sh)",
+        "./usr/bin/start_led.sh type=file content=$(location :start_led.sh)",
+        "./usr/bin/bcmsh type=file content=$(location :bcmsh)",
+        "./usr/bin/bcmcmd type=file content=$(location :base_image_files/bcmcmd)",
+        "./usr/bin/bcm_common type=file content=$(location :base_image_files/bcm_common)",
+        "./etc/supervisor/conf.d/supervisord.conf type=file content=$(location :supervisord.conf)",
+        "./etc/supervisor/critical_processes type=file content=$(location :critical_processes)",
     ],
 )
 
