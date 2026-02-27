@@ -117,3 +117,9 @@ alias(
     actual = "@hsflowd_src//:mod_dnssd_shared",
     visibility = ["//visibility:public"],
 )
+
+alias(
+    name = "hsflowd_pkg",
+    actual = "@hsflowd_src//:hsflowd_pkg",
+    visibility = ["//visibility:public"],
+)
