@@ -46,6 +46,7 @@ oci_image(
     ],
     visibility = [
         "//dockers/docker-orchagent:__subpackages__",
+        "//dockers/docker-sflow:__subpackages__",
         "//dockers/docker-swss-layer-bookworm:__subpackages__",
     ],
 )

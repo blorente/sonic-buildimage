@@ -16,7 +16,7 @@ apt.sources_list(
 )
 apt.install(
     dependency_set = "bookworm",
-    packages = [
+    packages = [ # do not sort
         "base-files",
         "ca-certificates",
         "libc6",
@@ -134,6 +134,9 @@ apt.install(
         # from platform/broadcom/docker-syncd-brcm
         "kmod",
         "ethtool",
+
+        # from dockers/docker-sflow
+        "dmidecode",
     ],
     suites = [
         "bookworm",
