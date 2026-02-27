@@ -2,9 +2,11 @@
 src/libnl3
 src/libyang3
 src/libyang3-py3
+src/sflow/hsflow
+src/sflow/psample
+src/sflow/sflowtool
 src/sonic-config-engine
 src/sonic-py-common
 src/sonic-supervisord-utilities
 src/sonic-sysmgr
 src/sonic-yang-mgmt
-
