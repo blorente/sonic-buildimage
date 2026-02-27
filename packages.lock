@@ -21,6 +21,7 @@
 					"/bookworm/coreutils:amd64": "9.1-1",
 					"/bookworm/cpp:amd64": "4:12.2.0-3",
 					"/bookworm/curl:amd64": "7.88.1-10+deb12u14",
+					"/bookworm/dmidecode:amd64": "3.4-1",
 					"/bookworm/doxygen:amd64": "1.9.4-4",
 					"/bookworm/ethtool:amd64": "1:6.1-1",
 					"/bookworm/gcc-12-base:amd64": "12.2.0-14+deb12u1",
@@ -1413,6 +1414,21 @@
 			"size": 183816,
 			"suite": "bookworm",
 			"version": "1.29.5"
+		},
+		"/bookworm/dmidecode:amd64=3.4-1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/d/dmidecode/dmidecode_3.4-1_amd64.deb",
+			"name": "dmidecode",
+			"section": "utils",
+			"sha256": "d993666c87dd290d6df2a69bf0beba608c38b1157a5c97795d2011e51b0db96e",
+			"size": 68764,
+			"suite": "bookworm",
+			"version": "3.4-1"
 		},
 		"/bookworm/doxygen:amd64=1.9.4-4": {
 			"architecture": "amd64",
