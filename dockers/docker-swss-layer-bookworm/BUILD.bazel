@@ -6,8 +6,6 @@ flatten(
     name = "apt_deps",
     deduplicate = True,
     tars = [
-        "@bookworm//libteam5:data",
-        "@bookworm//libteamdctl0:data",
         "@bookworm//python3-dev",
         "@bookworm//protobuf-compiler:data",
         "@bookworm//python3-protobuf:data",
@@ -15,6 +13,10 @@ flatten(
         # The Dockerfile runs `apt-get update` before installing this dependency,
         # so the version from the snapshot might be out of date.
         "@bookworm//iputils-ping:data",
+
+        # Read libteam and libteandctl from our internal (patched) code.
+        "@libteam//:libteam5_pkg",
+        "@libteam//:libteamdctl0_pkg",
     ],
 )
 

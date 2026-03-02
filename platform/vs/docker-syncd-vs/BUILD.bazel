@@ -84,8 +84,8 @@ filegroup(
     srcs = [
         ":syncd",
         "//src/sonic-device-data:sonic-device-data_all_pkg",
-        "@bookworm//libteam-utils:data",
-        "@bookworm//libteamdctl0:data",
+        "@libteam//:libteam-utils_pkg",
+        "@libteam//:libteamdctl0_pkg",
         "@libyang3//:libyang3_pkg",
         "@libyang3_py3//:libyang3-python_pkg",
         "@sonic_host_services//data:sonic-host-services-data_all_pkg",
