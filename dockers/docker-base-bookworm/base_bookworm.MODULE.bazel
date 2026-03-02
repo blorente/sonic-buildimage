@@ -57,13 +57,6 @@ apt.install(
         "libpcre2-8-0",
         "libyang2-dev",
 
-        # from rules/libteam.mk
-        # TODO BL: Repalce with the patched versions in `src/libteam`
-        "libteam5",
-        "libteam-dev",
-        "libteamdctl0",
-        "libteam-utils",
-
         # from docker-swss-layer-bookworm/Dockerfile.j2
         "iputils-ping",
 

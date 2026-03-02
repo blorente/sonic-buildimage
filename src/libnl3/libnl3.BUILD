@@ -300,7 +300,7 @@ cc_shared_library(
 
 # TODO(bazel-ready): Parameterize tar files by target architecture.
 # TODO(bazel-ready): Generate `.200` packages if needed.
-# TODO BL: Make sure everyone links against ehse libraries.
+# TODO BL: Make sure that we use libteam and libnl everywhere. Figure out if swss uses this version of libnl and libteamdctl0, etc. 
 
 tar(
     name = "libnl-3_pkg",
