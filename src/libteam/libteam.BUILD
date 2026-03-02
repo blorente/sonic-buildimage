@@ -1,5 +1,7 @@
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_shared_library")
+load("@rules_deb//distroless:defs.bzl", "flatten")
+load("@tar.bzl", "mutate", "tar")
 
 # From configure.ac: AC_SUBST(LIBTEAM_{CURRENT,REVISION,AGE}, ...)
 LIBTEAM_CURRENT = 11
@@ -10,6 +12,13 @@ LIBTEAM_AGE = 6
 LIBTEAMDCTL_CURRENT = 1
 LIBTEAMDCTL_REVISION = 5
 LIBTEAMDCTL_AGE = 1
+
+# Libtool soname = CURRENT - AGE; full = soname.AGE.REVISION
+LIBTEAM_SOVERSION = LIBTEAM_CURRENT - LIBTEAM_AGE
+LIBTEAM_FULL_VERSION = "{}.{}.{}".format(LIBTEAM_SOVERSION, LIBTEAM_AGE, LIBTEAM_REVISION)
+
+LIBTEAMDCTL_SOVERSION = LIBTEAMDCTL_CURRENT - LIBTEAMDCTL_AGE
+LIBTEAMDCTL_FULL_VERSION = "{}.{}.{}".format(LIBTEAMDCTL_SOVERSION, LIBTEAMDCTL_AGE, LIBTEAMDCTL_REVISION)
 
 # TODO(bazel-ready): Split PIC/non-PIC targets if static libraries are needed.
 # -fPIC is not in the upstream Makefile.am — libtool adds it automatically when
@@ -95,24 +104,15 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
-cc_shared_library(
-    name = "libteamdctl_shared",
+# TODO(bazel-ready): Fix the libbsd issue in `rules_distroless`, then switch to cc_shared_library.
+cc_binary(
+    name = "teamdctl", # Note: Bazel will produce libteamdctl.so from this name.
     deps = [":libteamdctl"],
-    additional_linker_inputs = [
-        # Include static libraries directly to force static linking and bypass linker scripts
-        # TODO(bazel-ready): Solve libbsd linker script in rules_distroless.
-        # "@@rules_distroless++apt+bookworm_libbsd-dev-amd64_0.11.7-2//:usr/lib/x86_64-linux-gnu/libbsd.so.0.11.7",
-    ],
-    user_link_flags = [
-        # TODO BL: Figure out if this affects solib naming, and fix it.
-        # "-version-info" , ":".join([str(s) for s in [
-        #       LIBTEAMDCTL_CURRENT, LIBTEAMDCTL_REVISION, LIBTEAMDCTL_AGE,
-        # ]]),
+    linkshared = True,
+    linkopts = [
+        "-Wl,-soname,libteamdctl.so.{}".format(LIBTEAMDCTL_SOVERSION),
         "-Wl,--gc-sections",
         "-Wl,--as-needed",
-        # TODO BL: Figure out why the libbsd link replacement is not coming from rules_distroless
-        # Exclude libbsd from dynamic linking - we use static .a files above
-        # "-Wl,--remap-inputs=/usr/lib/x86_64-linux-gnu/libbsd.so.0.11.7=$(execpath @@rules_distroless++apt+bookworm_libbsd-dev-amd64_0.11.7-2//:usr/lib/x86_64-linux-gnu/libbsd.so.0.11.7)",
     ],
     visibility = ["//visibility:public"],
 )
@@ -195,10 +195,7 @@ cc_shared_library(
     name = "libteam_shared",
     deps = [":libteam"],
     user_link_flags = [
-        # TODO BL: Figure out if this affects solib naming, and fix it.
-        # "-version-info" , ":".join([str(s) for s in [
-        #    LIBTEAM_CURRENT, LIBTEAM_REVISION, LIBTEAM_AGE,
-        # ]]),
+        "-Wl,-soname,libteam.so.{}".format(LIBTEAM_SOVERSION),
         "-Wl,--gc-sections",
         "-Wl,--as-needed",
     ],
@@ -263,7 +260,8 @@ cc_binary(
 
 # From utils/Makefile.am: teamdctl depends on libteamdctl + jansson
 cc_binary(
-    name = "teamdctl",
+    # Note: We cannot name it `teamdctl` because the `cc_binary` we use to produce libteamdctl.so needs to be named `teamdctl`.
+    name = "teamdctl_bin",
     srcs = ["utils/teamdctl.c"],
     defines = ["_GNU_SOURCE"],
     deps = [
@@ -285,3 +283,45 @@ cc_binary(
     ],
     visibility = ["//visibility:public"],
 )
+
+# =============================================================================
+# Packaging: runtime library tarballs
+# =============================================================================
+
+tar(
+    name = "libteam5_pkg",
+    srcs = [":libteam_shared"],
+    mtree = [
+        "./usr/lib/x86_64-linux-gnu/libteam.so.{full} uid=0 gid=0 type=file content=$(location :libteam_shared)".format(full = LIBTEAM_FULL_VERSION),
+        "./usr/lib/x86_64-linux-gnu/libteam.so.{so} uid=0 gid=0 type=link link=libteam.so.{full}".format(so = LIBTEAM_SOVERSION, full = LIBTEAM_FULL_VERSION),
+    ],
+    visibility = ["//visibility:public"],
+)
+
+tar(
+    name = "libteamdctl0_pkg",
+    srcs = [":teamdctl"],
+    mtree = [
+        "./usr/lib/x86_64-linux-gnu/libteamdctl.so.{full} uid=0 gid=0 type=file content=$(location :teamdctl)".format(full = LIBTEAMDCTL_FULL_VERSION),
+        "./usr/lib/x86_64-linux-gnu/libteamdctl.so.{so} uid=0 gid=0 type=link link=libteamdctl.so.{full}".format(so = LIBTEAMDCTL_SOVERSION, full = LIBTEAMDCTL_FULL_VERSION),
+    ],
+    visibility = ["//visibility:public"],
+)
+
+tar(
+    name = "libteam-utils_pkg",
+    srcs = [
+        ":teamd",
+        ":teamdctl_bin",
+        ":teamnl",
+    ],
+    mtree = [
+        # TODO(bazel-ready): Remove teamd binary if not needed.
+        "./usr/bin/teamd uid=0 gid=0 type=file content=$(location :teamd)",
+        "./usr/bin/teamdctl uid=0 gid=0 type=file content=$(location :teamdctl_bin)",
+        "./usr/bin/teamnl uid=0 gid=0 type=file content=$(location :teamnl)",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# TODO(bazel-ready): Create -dev dist packages.

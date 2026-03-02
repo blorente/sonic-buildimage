@@ -85,7 +85,6 @@ tar(
         # In the Makefile build, it's copied to /usr/bin/rdb-cli via:
         #   $(DOCKER_SYNCD_BASE)_FILES += $(RDB-CLI)
     ],
-    # TODO BL: Make sure file permissions are okay
     mtree = [
         "./usr/bin/start.sh type=file content=$(location :start.sh)",
         "./usr/bin/start_led.sh type=file content=$(location :start_led.sh)",
