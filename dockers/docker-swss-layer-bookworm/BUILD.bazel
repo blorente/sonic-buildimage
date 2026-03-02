@@ -48,6 +48,7 @@ oci_image(
         "//dockers/docker-orchagent:__subpackages__",
         "//dockers/docker-sflow:__subpackages__",
         "//dockers/docker-swss-layer-bookworm:__subpackages__",
+        "//dockers/docker-teamd:__subpackages__",
     ],
 )
 
