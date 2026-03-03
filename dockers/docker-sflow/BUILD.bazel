@@ -14,7 +14,7 @@ tar(
         "port_index_mapper.py",
     ],
     mtree = [
-        "./etc/supervisor/.conf.d/supervisord.conf type=file content=$(location :supervisord.conf)",
+        "./etc/supervisor/conf.d/supervisord.conf type=file content=$(location :supervisord.conf)",
         "./etc/supervisor/critical_processes type=file content=$(location :critical_processes)",
         "./usr/bin/port_index_mapper.py type=file mode=755 content=$(location :port_index_mapper.py)",
     ],
