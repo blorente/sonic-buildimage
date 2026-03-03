@@ -10,7 +10,6 @@ flatten(
     tars = [
         "@bookworm//ifupdown-ng",
         "@bookworm//arping",
-        "@bookworm//iproute2",
         "@bookworm//ndisc6",
         "@bookworm//tcpdump",
         "@bookworm//bridge-utils",
@@ -19,6 +18,9 @@ flatten(
         "@bookworm//python3-protobuf",
         "@bookworm//pciutils",
         "@bookworm//python3-netifaces",
+
+        # Already in the base image.
+        # "@bookworm//iproute2",
     ],
 )
 
