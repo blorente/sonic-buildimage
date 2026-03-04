@@ -27,10 +27,8 @@ flatten(
         "@sonic_sairedis//meta:libsaimetadata_dev_pkg",
         "@sonic_sairedis//lib:libsairedis_dev_pkg",
         "@sonic_dash_api//:libdashapi_dev_pkg",
+        "@sonic_swss_common//:libswsscommon_pkg",
         "@sonic_swss_common//pyext:swsscommon_pkg",
-        # TODO(bazel-ready): Port libswsscommon if swsscommon_dist is not enough
-        # # $(LIBSWSSCOMMON)
-        # "@sonic_swss_common//:libswsscommon",
     ],
 )
 
