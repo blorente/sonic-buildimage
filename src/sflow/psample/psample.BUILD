@@ -18,7 +18,7 @@ cc_library(
     ],
     includes = ["include"],
     deps = [
-        "@bookworm//libmnl-dev:libmnl",
+        "@psample_deps//libmnl-dev:libmnl",
     ],
     visibility = ["//visibility:public"],
 )

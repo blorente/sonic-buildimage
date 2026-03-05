@@ -4,8 +4,12 @@ module(
 )
 
 bazel_dep(name = "rules_cc", version = "0.2.10")
-bazel_dep(name = "rules_distroless", version = "0.0.0", repo_name = "rules_deb")
 bazel_dep(name = "tar.bzl", version = "0.8.1")
+bazel_dep(name = "rules_distroless", version = "0.0.0", repo_name = "rules_deb")
+local_path_override(
+    module_name = "rules_distroless",
+    path = "../../../../rules_distroless",
+)
 
 apt = use_extension("@rules_deb//apt:extensions.bzl", "apt")
 apt.sources_list(
@@ -15,13 +19,13 @@ apt.sources_list(
     uris = ["https://snapshot.debian.org/archive/debian/20251001T023456Z"],
 )
 apt.install(
-    dependency_set = "bookworm",
+    dependency_set = "psample_deps",
     packages = [
         "libmnl-dev",
     ],
     suites = ["bookworm"],
 )
-use_repo(apt, "bookworm")
+use_repo(apt, "psample_deps")
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 

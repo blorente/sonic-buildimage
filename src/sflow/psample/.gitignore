@@ -10,3 +10,4 @@
 !MODULE.bazel
 !BUILD.bazel
 !*.BUILD
+!.bazelversion
