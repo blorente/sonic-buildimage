@@ -147,3 +147,27 @@ oci_load(
     image = "docker-base-bookworm",
     repo_tags = ["docker-base-bookworm:latest"],
 )
+
+# Tools that are expected to exist in debug containers.
+# We do not bake them into a base image, because they should be installed as a layer on top of existing containers.
+# For instance, the `docker-orchagent-dbg` container should be:
+#   - FROM docker-orchagent
+#   - install :debug-packages
+#
+# For now, binary symbols are not stripped in Bazel, so the binaries in the containers should be enough to debug.
+# Note: This is not true for binaries in `sonic-swss`.
+# These are stripped, you should include the package `@sonic_swss//:debian-debug-data` in your image.
+#
+# TODO(bazel-ready): Strip binary symbols and create versions of the containers with debug symbols.
+flatten(
+    name = "debug-packages",
+    tars = [
+        "@bookworm//gdb:data",
+        "@bookworm//gdbserver:data",
+        "@bookworm//vim:data",
+        "@bookworm//openssh-client:data",
+        "@bookworm//sshpass:data",
+        "@bookworm//strace:data",
+    ],
+    deduplicate = True,
+)
