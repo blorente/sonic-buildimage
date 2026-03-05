@@ -200,7 +200,7 @@ cc_library(
     deps = [
         ":libcjson_headers",
         ":libsflow_headers",
-        "@bookworm//libhiredis-dev:libhiredis",
+        "@hsflowd_deps//libhiredis-dev:libhiredis",
     ],
     visibility = ["//visibility:public"],
 )
@@ -310,7 +310,7 @@ cc_library(
     linkopts = ["-lresolv"],
     deps = [
         ":libsflow_headers",
-        "@bookworm//libc6-dev:libc6",
+        "@hsflowd_deps//libc6-dev:libc6",
     ],
     visibility = ["//visibility:public"],
 )
