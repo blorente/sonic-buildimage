@@ -28,6 +28,12 @@ apt.sources_list(
     suites = ["bookworm"],
     uris = ["https://snapshot.debian.org/archive/debian/20251001T023456Z"],
 )
+apt.sources_list(
+    architectures = ["amd64"],
+    components = ["main"],
+    suites = ["bookworm-security"],
+    uris = ["https://snapshot.debian.org/archive/debian-security/20251001T023456Z"],
+)
 apt.install(
     dependency_set = "libteam_deps",
     packages = [
@@ -41,7 +47,7 @@ apt.install(
         "libzmq3-dev",
         "libbsd-dev",
     ],
-    suites = ["bookworm"],
+    suites = ["bookworm", "bookworm-security"],
 )
 use_repo(apt, "libteam_deps")
 
