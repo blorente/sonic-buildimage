@@ -9,6 +9,7 @@
 					"/bookworm-security/redis-tools:amd64": "5:7.0.15-1~deb12u5",
 					"/bookworm-updates/ca-certificates:all": "20230311+deb12u1",
 					"/bookworm-updates/libssl3:amd64": "3.0.17-1~deb12u2",
+					"/bookworm-updates/openssh-client:amd64": "1:9.2p1-2+deb12u7",
 					"/bookworm-updates/openssl:amd64": "3.0.17-1~deb12u2",
 					"/bookworm/arping:amd64": "2.23-1",
 					"/bookworm/aspell:amd64": "0.60.8-4+b1",
@@ -25,8 +26,9 @@
 					"/bookworm/doxygen:amd64": "1.9.4-4",
 					"/bookworm/ethtool:amd64": "1:6.1-1",
 					"/bookworm/gcc-12-base:amd64": "12.2.0-14+deb12u1",
+					"/bookworm/gdb-minimal:amd64": "13.1-3",
+					"/bookworm/gdbserver:amd64": "13.1-3",
 					"/bookworm/graphviz:amd64": "2.42.2-7+deb12u1",
-					"/bookworm/ifupdown-ng:amd64": "0.11.4~rc1-1+b2",
 					"/bookworm/iproute2:amd64": "6.1.0-3",
 					"/bookworm/iputils-ping:amd64": "3:20221126-1+deb12u1",
 					"/bookworm/jq:amd64": "1.6-2.1+deb12u1",
@@ -57,9 +59,6 @@
 					"/bookworm/libcap2-bin:amd64": "1:2.66-4+deb12u2",
 					"/bookworm/libdaemon0:amd64": "0.14-7.1",
 					"/bookworm/libdbus-1-3:amd64": "1.14.10-1~deb12u1",
-					"/bookworm/libdbus-c++-1-0v5:amd64": "0.9.0-11",
-					"/bookworm/libdbus-c++-bin:amd64": "0.9.0-11",
-					"/bookworm/libdbus-c++-dev:amd64": "0.9.0-11",
 					"/bookworm/libelf-dev:amd64": "0.188-2.1",
 					"/bookworm/libfl-dev:amd64": "2.6.4-8.2",
 					"/bookworm/libgc-dev:amd64": "1:8.2.2-3",
@@ -78,7 +77,6 @@
 					"/bookworm/libhiredis0.14:amd64": "0.14.1-3",
 					"/bookworm/libjansson-dev:amd64": "2.14-2",
 					"/bookworm/libjansson4:amd64": "2.14-2",
-					"/bookworm/libmnl-dev:amd64": "1.0.4-3",
 					"/bookworm/libnanomsg-dev:amd64": "1.1.5+dfsg-1.1+b1",
 					"/bookworm/libnanomsg5:amd64": "1.1.5+dfsg-1.1+b1",
 					"/bookworm/libnl-3-dev:amd64": "3.7.0-0.2+b1",
@@ -109,6 +107,7 @@
 					"/bookworm/ndisc6:amd64": "1.0.5-1+b2",
 					"/bookworm/ndppd:amd64": "0.2.5-6",
 					"/bookworm/netbase:all": "6.4",
+					"/bookworm/netscript-2.4:all": "5.5.5+nmu1",
 					"/bookworm/nlohmann-json3-dev:all": "3.11.2-2",
 					"/bookworm/pciutils:amd64": "1:3.9.0-4",
 					"/bookworm/perl:amd64": "5.36.0-7+deb12u3",
@@ -133,12 +132,23 @@
 					"/bookworm/python3-thrift:amd64": "0.17.0-2+b2",
 					"/bookworm/python3:amd64": "3.11.2-1+b1",
 					"/bookworm/rsyslog:amd64": "8.2302.0-1+deb12u1",
+					"/bookworm/sshpass:amd64": "1.09-1+b1",
+					"/bookworm/strace:amd64": "6.1-0.1",
 					"/bookworm/swig:all": "4.1.0-0.2",
 					"/bookworm/tcpdump:amd64": "4.99.3-1",
 					"/bookworm/thrift-compiler:amd64": "0.17.0-2+b2",
 					"/bookworm/tzdata:all": "2025b-0+deb12u2",
 					"/bookworm/uuid-dev:amd64": "2.38.1-5+deb12u3",
+					"/bookworm/vim-nox:amd64": "2:9.0.1378-2+deb12u2",
 					"/bookworm/vim-tiny:amd64": "2:9.0.1378-2+deb12u2"
+				}
+			}
+		},
+		"hsflowd_deps": {
+			"sets": {
+				"amd64": {
+					"/bookworm/libc6-dev:amd64": "2.36-9+deb12u13",
+					"/bookworm/libhiredis-dev:amd64": "0.14.1-3"
 				}
 			}
 		},
@@ -161,6 +171,22 @@
 			"sets": {
 				"amd64": {
 					"/bookworm/libpcre2-dev:amd64": "10.42-1"
+				}
+			}
+		},
+		"psample_deps": {
+			"sets": {
+				"amd64": {
+					"/bookworm/libmnl-dev:amd64": "1.0.4-3"
+				}
+			}
+		},
+		"sysmgr_deps": {
+			"sets": {
+				"amd64": {
+					"/bookworm/libdbus-c++-1-0v5:amd64": "0.9.0-11",
+					"/bookworm/libdbus-c++-bin:amd64": "0.9.0-11",
+					"/bookworm/libdbus-c++-dev:amd64": "0.9.0-11"
 				}
 			}
 		}
@@ -370,7 +396,8 @@
 				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13",
 				"/bookworm-security/icu-devtools:amd64=72.1-3+deb12u1",
 				"/bookworm/libstdc++6:amd64=12.2.0-14+deb12u1",
-				"/bookworm-security/libicu72:amd64=72.1-3+deb12u1"
+				"/bookworm-security/libicu72:amd64=72.1-3+deb12u1",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/updates/main/i/icu/libicu-dev_72.1-3+deb12u1_amd64.deb",
 			"name": "libicu-dev",
@@ -484,7 +511,26 @@
 				"/bookworm-security/libicu72:amd64=72.1-3+deb12u1",
 				"/bookworm/libstdc++6:amd64=12.2.0-14+deb12u1",
 				"/bookworm/libpciaccess0:amd64=0.17-2",
-				"/bookworm/libmunge2:amd64=0.5.15-2"
+				"/bookworm/libmunge2:amd64=0.5.15-2",
+				"/bookworm/automake:all=1:1.16.5-1.3",
+				"/bookworm/autotools-dev:all=20220109.1",
+				"/bookworm/autoconf:all=2.71-3",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/m4:amd64=1.4.19-3",
+				"/bookworm/perl:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/dpkg:amd64=1.21.22",
+				"/bookworm/tar:amd64=1.34+dfsg-1.2+deb12u1",
+				"/bookworm/libselinux1:amd64=3.4-1+b6",
+				"/bookworm/libpcre2-8-0:amd64=10.42-1",
+				"/bookworm/libacl1:amd64=2.3.1-3",
+				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3",
+				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1"
 			],
 			"filename": "pool/updates/main/p/pmix/libpmix-dev_4.2.2-1+deb12u1_amd64.deb",
 			"name": "libpmix-dev",
@@ -530,6 +576,60 @@
 			"size": 621892,
 			"suite": "bookworm-security",
 			"version": "4.2.2-1+deb12u1"
+		},
+		"/bookworm-security/libruby3.1:amd64=3.1.2-7+deb12u1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libyaml-0-2:amd64=0.2.5-1",
+				"/bookworm/libtinfo6:amd64=6.4-4",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/libncurses6:amd64=6.4-4",
+				"/bookworm/libgmp10:amd64=2:6.2.1+dfsg1-1.1",
+				"/bookworm/libffi8:amd64=3.4.4-1",
+				"/bookworm/libedit2:amd64=3.1-20221030-2",
+				"/bookworm/libbsd0:amd64=0.11.7-2",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
+				"/bookworm/ruby-sdbm:amd64=1.0.0-5+b1",
+				"/bookworm/libruby:amd64=1:3.1",
+				"/bookworm/ruby-webrick:all=1.8.1-1",
+				"/bookworm/ruby-xmlrpc:all=0.3.2-2",
+				"/bookworm/ruby-net-telnet:all=0.2.0-1",
+				"/bookworm/rake:all=13.0.6-3",
+				"/bookworm/ruby:amd64=1:3.1",
+				"/bookworm/ruby-rubygems:all=3.3.15-2+deb12u1",
+				"/bookworm-security/ruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/rubygems-integration:all=1.18",
+				"/bookworm-updates/ca-certificates:all=20230311+deb12u1",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm-updates/openssl:amd64=3.0.17-1~deb12u2"
+			],
+			"filename": "pool/updates/main/r/ruby3.1/libruby3.1_3.1.2-7+deb12u1_amd64.deb",
+			"name": "libruby3.1",
+			"section": "libs",
+			"sha256": "5b14a1054f39de3945321637d0ded2b20bbbf1d31108e39d69bfbabe3622f274",
+			"size": 5400480,
+			"suite": "bookworm-security",
+			"version": "3.1.2-7+deb12u1"
+		},
+		"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/updates/main/o/openssl/libssl3_3.0.14-1~deb12u2_amd64.deb",
+			"name": "libssl3",
+			"section": "libs",
+			"sha256": "b308a8fd9889fd7e57b801511e3f42a203675b6b0087455a977d25b7633a1296",
+			"size": 2024288,
+			"suite": "bookworm-security",
+			"version": "3.0.14-1~deb12u2"
 		},
 		"/bookworm-security/libtasn1-6:amd64=4.19.0-2+deb12u1": {
 			"architecture": "amd64",
@@ -623,7 +723,8 @@
 				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
 				"/bookworm-security/linux-libc-dev:amd64=6.1.153-1",
 				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13",
-				"/bookworm-security/icu-devtools:amd64=72.1-3+deb12u1"
+				"/bookworm-security/icu-devtools:amd64=72.1-3+deb12u1",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/updates/main/libx/libxml2/libxml2-dev_2.9.14+dfsg-1.3~deb12u4_amd64.deb",
 			"name": "libxml2-dev",
@@ -740,6 +841,45 @@
 			"size": 990064,
 			"suite": "bookworm-security",
 			"version": "5:7.0.15-1~deb12u5"
+		},
+		"/bookworm-security/ruby3.1:amd64=3.1.2-7+deb12u1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm-security/libruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/libyaml-0-2:amd64=0.2.5-1",
+				"/bookworm/libtinfo6:amd64=6.4-4",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/libncurses6:amd64=6.4-4",
+				"/bookworm/libgmp10:amd64=2:6.2.1+dfsg1-1.1",
+				"/bookworm/libffi8:amd64=3.4.4-1",
+				"/bookworm/libedit2:amd64=3.1-20221030-2",
+				"/bookworm/libbsd0:amd64=0.11.7-2",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
+				"/bookworm/ruby-sdbm:amd64=1.0.0-5+b1",
+				"/bookworm/libruby:amd64=1:3.1",
+				"/bookworm/ruby-webrick:all=1.8.1-1",
+				"/bookworm/ruby-xmlrpc:all=0.3.2-2",
+				"/bookworm/ruby-net-telnet:all=0.2.0-1",
+				"/bookworm/rake:all=13.0.6-3",
+				"/bookworm/ruby:amd64=1:3.1",
+				"/bookworm/ruby-rubygems:all=3.3.15-2+deb12u1",
+				"/bookworm/rubygems-integration:all=1.18",
+				"/bookworm-updates/ca-certificates:all=20230311+deb12u1",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm-updates/openssl:amd64=3.0.17-1~deb12u2"
+			],
+			"filename": "pool/updates/main/r/ruby3.1/ruby3.1_3.1.2-7+deb12u1_amd64.deb",
+			"name": "ruby3.1",
+			"section": "ruby",
+			"sha256": "714adc8690d962bfa54e9226d59e4c7e9f70e2aec4060ac0a41412a3094bf379",
+			"size": 663332,
+			"suite": "bookworm-security",
+			"version": "3.1.2-7+deb12u1"
 		},
 		"/bookworm-updates/ca-certificates:all=20230311+deb12u1": {
 			"architecture": "all",
@@ -950,6 +1090,78 @@
 			"size": 266036,
 			"suite": "bookworm",
 			"version": "0.60.8-4+b1"
+		},
+		"/bookworm/autoconf:all=2.71-3": {
+			"architecture": "all",
+			"depends_on": [
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/m4:amd64=1.4.19-3",
+				"/bookworm/perl:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/dpkg:amd64=1.21.22",
+				"/bookworm/tar:amd64=1.34+dfsg-1.2+deb12u1",
+				"/bookworm/libselinux1:amd64=3.4-1+b6",
+				"/bookworm/libpcre2-8-0:amd64=10.42-1",
+				"/bookworm/libacl1:amd64=2.3.1-3",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1",
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
+				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3",
+				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1"
+			],
+			"filename": "pool/main/a/autoconf/autoconf_2.71-3_all.deb",
+			"name": "autoconf",
+			"section": "devel",
+			"sha256": "7d798ed8c21fc7387127de1dfdb4640003d8ba033ae5a1ff29559610cbd0c323",
+			"size": 332120,
+			"suite": "bookworm",
+			"version": "2.71-3"
+		},
+		"/bookworm/automake:all=1:1.16.5-1.3": {
+			"architecture": "all",
+			"depends_on": [
+				"/bookworm/autotools-dev:all=20220109.1",
+				"/bookworm/autoconf:all=2.71-3",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/m4:amd64=1.4.19-3",
+				"/bookworm/perl:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/dpkg:amd64=1.21.22",
+				"/bookworm/tar:amd64=1.34+dfsg-1.2+deb12u1",
+				"/bookworm/libselinux1:amd64=3.4-1+b6",
+				"/bookworm/libpcre2-8-0:amd64=10.42-1",
+				"/bookworm/libacl1:amd64=2.3.1-3",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1",
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
+				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3",
+				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1"
+			],
+			"filename": "pool/main/a/automake-1.16/automake_1.16.5-1.3_all.deb",
+			"name": "automake",
+			"section": "devel",
+			"sha256": "f9a5758d87b5389bf2dbb00cc9c48e0cf59bb0ac842c5ce25d41e4bfa3f2f962",
+			"size": 822960,
+			"suite": "bookworm",
+			"version": "1:1.16.5-1.3"
 		},
 		"/bookworm/autotools-dev:all=20220109.1": {
 			"architecture": "all",
@@ -1239,7 +1451,7 @@
 				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
 				"/bookworm-security/linux-libc-dev:amd64=6.1.153-1",
 				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13",
-				"/bookworm/linux-libc-dev:amd64=6.1.148-1"
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/e/e2fsprogs/comerr-dev_2.1-1.47.0-2+b2_amd64.deb",
 			"name": "comerr-dev",
@@ -1488,7 +1700,8 @@
 				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
 				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
 				"/bookworm/libmd0:amd64=1.0.4-2",
-				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1"
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/d/dpkg/dpkg_1.21.22_amd64.deb",
 			"name": "dpkg",
@@ -1705,6 +1918,87 @@
 			"size": 5216,
 			"suite": "bookworm",
 			"version": "4:12.2.0-3"
+		},
+		"/bookworm/gdb-minimal:amd64=13.1-3": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
+				"/bookworm/libxxhash0:amd64=0.8.1-1",
+				"/bookworm/libtinfo6:amd64=6.4-4",
+				"/bookworm/libstdc++6:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libreadline8:amd64=8.2-1.3",
+				"/bookworm/readline-common:all=8.2-1.3",
+				"/bookworm/dpkg:amd64=1.21.22",
+				"/bookworm/tar:amd64=1.34+dfsg-1.2+deb12u1",
+				"/bookworm/libselinux1:amd64=3.4-1+b6",
+				"/bookworm/libpcre2-8-0:amd64=10.42-1",
+				"/bookworm/libacl1:amd64=2.3.1-3",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1",
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
+				"/bookworm/libipt2:amd64=2.0.5-1",
+				"/bookworm/libgmp10:amd64=2:6.2.1+dfsg1-1.1",
+				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2",
+				"/bookworm/libdebuginfod1:amd64=0.188-2.1",
+				"/bookworm/libdebuginfod-common:all=0.188-2.1",
+				"/bookworm/ucf:all=3.0043+nmu1+deb12u1",
+				"/bookworm/sensible-utils:all=0.0.17+nmu1",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm/libdw1:amd64=0.188-2.1",
+				"/bookworm/libelf1:amd64=0.188-2.1",
+				"/bookworm/libcurl3-gnutls:amd64=7.88.1-10+deb12u14",
+				"/bookworm/libssh2-1:amd64=1.10.0-3+b1",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/librtmp1:amd64=2.4+20151223.gitfa8646d.1-2+b2",
+				"/bookworm/libnettle8:amd64=3.8.1-2",
+				"/bookworm/libhogweed6:amd64=3.8.1-2",
+				"/bookworm-security/libgnutls30:amd64=3.7.9-2+deb12u5",
+				"/bookworm/libunistring2:amd64=1.0-2",
+				"/bookworm-security/libtasn1-6:amd64=4.19.0-2+deb12u1",
+				"/bookworm/libp11-kit0:amd64=0.24.1-2",
+				"/bookworm/libffi8:amd64=3.4.4-1",
+				"/bookworm/libidn2-0:amd64=2.3.3-1+b1",
+				"/bookworm/libpsl5:amd64=0.21.2-1",
+				"/bookworm/libnghttp2-14:amd64=1.52.0-1+deb12u2",
+				"/bookworm/libldap-2.5-0:amd64=2.5.13+dfsg-5",
+				"/bookworm/libsasl2-2:amd64=2.1.28+dfsg-10",
+				"/bookworm/libsasl2-modules-db:amd64=2.1.28+dfsg-10",
+				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1",
+				"/bookworm/libgssapi-krb5-2:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkrb5support0:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkrb5-3:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkeyutils1:amd64=1.6.3-2",
+				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm/libbrotli1:amd64=1.0.9-2+b6"
+			],
+			"filename": "pool/main/g/gdb/gdb-minimal_13.1-3_amd64.deb",
+			"name": "gdb-minimal",
+			"section": "devel",
+			"sha256": "4aabd8955f0fa362e0474ddd02b5bbed77489b11dae04bbe2c420a54ac27e8ce",
+			"size": 3253832,
+			"suite": "bookworm",
+			"version": "13.1-3"
+		},
+		"/bookworm/gdbserver:amd64=13.1-3": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libstdc++6:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/g/gdb/gdbserver_13.1-3_amd64.deb",
+			"name": "gdbserver",
+			"section": "devel",
+			"sha256": "fd0056ae6b4b58b98f06776ccf6f68e938beb35d6dede1f6b292eb9c66afb316",
+			"size": 381116,
+			"suite": "bookworm",
+			"version": "13.1-3"
 		},
 		"/bookworm/gfortran-12:amd64=12.2.0-14+deb12u1": {
 			"architecture": "amd64",
@@ -2057,6 +2351,29 @@
 			"suite": "bookworm",
 			"version": "6.1.0-3"
 		},
+		"/bookworm/iptables:amd64=1.8.9-2": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libnftnl11:amd64=1.2.4-2",
+				"/bookworm/libmnl0:amd64=1.0.4-3",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libnfnetlink0:amd64=1.0.2-2",
+				"/bookworm/libnetfilter-conntrack3:amd64=1.0.9-3",
+				"/bookworm/netbase:all=6.4",
+				"/bookworm/libxtables12:amd64=1.8.9-2",
+				"/bookworm/libip6tc2:amd64=1.8.9-2",
+				"/bookworm/libip4tc2:amd64=1.8.9-2"
+			],
+			"filename": "pool/main/i/iptables/iptables_1.8.9-2_amd64.deb",
+			"name": "iptables",
+			"section": "net",
+			"sha256": "2928d3ca6ca8a3dc3f423f6752822b1f3614a5ba609ff7806bcba4449ffe90e1",
+			"size": 360192,
+			"suite": "bookworm",
+			"version": "1.8.9-2"
+		},
 		"/bookworm/iputils-ping:amd64=3:20221126-1+deb12u1": {
 			"architecture": "amd64",
 			"depends_on": [
@@ -2075,6 +2392,45 @@
 			"size": 47172,
 			"suite": "bookworm",
 			"version": "3:20221126-1+deb12u1"
+		},
+		"/bookworm/isc-dhcp-client:amd64=4.4.3-P1-2": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/iproute2:amd64=6.1.0-3",
+				"/bookworm/libcap2-bin:amd64=1:2.66-4+deb12u2",
+				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libxtables12:amd64=1.8.9-2",
+				"/bookworm/libtirpc3:amd64=1.3.3+ds-1",
+				"/bookworm/libtirpc-common:all=1.3.3+ds-1",
+				"/bookworm/libgssapi-krb5-2:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkrb5support0:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkrb5-3:amd64=1.20.1-2+deb12u4",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/libkeyutils1:amd64=1.6.3-2",
+				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm/libselinux1:amd64=3.4-1+b6",
+				"/bookworm/libpcre2-8-0:amd64=10.42-1",
+				"/bookworm/libmnl0:amd64=1.0.4-3",
+				"/bookworm/libelf1:amd64=0.188-2.1",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1",
+				"/bookworm/libbsd0:amd64=0.11.7-2",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm/libbpf1:amd64=1:1.1.2-0+deb12u1",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1"
+			],
+			"filename": "pool/main/i/isc-dhcp/isc-dhcp-client_4.4.3-P1-2_amd64.deb",
+			"name": "isc-dhcp-client",
+			"section": "net",
+			"sha256": "243dd7288443d3edec79558925b839f038637964cecb7202a9a0f95fadbeb6e3",
+			"size": 1095928,
+			"suite": "bookworm",
+			"version": "4.4.3-P1-2"
 		},
 		"/bookworm/jq:amd64=1.6-2.1+deb12u1": {
 			"architecture": "amd64",
@@ -2141,7 +2497,7 @@
 				"/bookworm/libgssrpc4:amd64=1.20.1-2+deb12u4",
 				"/bookworm/libkadm5srv-mit12:amd64=1.20.1-2+deb12u4",
 				"/bookworm/libkdb5-10:amd64=1.20.1-2+deb12u4",
-				"/bookworm/linux-libc-dev:amd64=6.1.148-1"
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/k/krb5/krb5-multidev_1.20.1-2+deb12u4_amd64.deb",
 			"name": "krb5-multidev",
@@ -2669,7 +3025,18 @@
 				"/bookworm/libboost-atomic-dev:amd64=1.74.0.3",
 				"/bookworm/libboost-tools-dev:amd64=1.74.0.3",
 				"/bookworm/libboost1.74-tools-dev:amd64=1.74.0+ds1-21",
-				"/bookworm/libboost-dev:amd64=1.74.0.3"
+				"/bookworm/libboost-dev:amd64=1.74.0.3",
+				"/bookworm/automake:all=1:1.16.5-1.3",
+				"/bookworm/autotools-dev:all=20220109.1",
+				"/bookworm/autoconf:all=2.71-3",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/m4:amd64=1.4.19-3",
+				"/bookworm/perl:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3"
 			],
 			"filename": "pool/main/b/boost-defaults/libboost-all-dev_1.74.0.3_amd64.deb",
 			"name": "libboost-all-dev",
@@ -4840,7 +5207,21 @@
 				"/bookworm/libboost-serialization1.74.0:amd64=1.74.0+ds1-21",
 				"/bookworm/libboost-serialization1.74-dev:amd64=1.74.0+ds1-21",
 				"/bookworm/libboost1.74-dev:amd64=1.74.0+ds1-21",
-				"/bookworm/libstdc++-12-dev:amd64=12.2.0-14+deb12u1"
+				"/bookworm/libstdc++-12-dev:amd64=12.2.0-14+deb12u1",
+				"/bookworm/automake:all=1:1.16.5-1.3",
+				"/bookworm/autotools-dev:all=20220109.1",
+				"/bookworm/autoconf:all=2.71-3",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/m4:amd64=1.4.19-3",
+				"/bookworm/perl:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/dpkg:amd64=1.21.22",
+				"/bookworm/tar:amd64=1.34+dfsg-1.2+deb12u1",
+				"/bookworm/libacl1:amd64=2.3.1-3",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3"
 			],
 			"filename": "pool/main/b/boost-defaults/libboost-mpi-dev_1.74.0.3_amd64.deb",
 			"name": "libboost-mpi-dev",
@@ -5003,7 +5384,18 @@
 				"/bookworm/cpp-12:amd64=12.2.0-14+deb12u1",
 				"/bookworm/libboost-serialization1.74-dev:amd64=1.74.0+ds1-21",
 				"/bookworm/libboost1.74-dev:amd64=1.74.0+ds1-21",
-				"/bookworm/libstdc++-12-dev:amd64=12.2.0-14+deb12u1"
+				"/bookworm/libstdc++-12-dev:amd64=12.2.0-14+deb12u1",
+				"/bookworm/automake:all=1:1.16.5-1.3",
+				"/bookworm/autotools-dev:all=20220109.1",
+				"/bookworm/autoconf:all=2.71-3",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/m4:amd64=1.4.19-3",
+				"/bookworm/perl:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3"
 			],
 			"filename": "pool/main/b/boost-defaults/libboost-mpi-python-dev_1.74.0.3_amd64.deb",
 			"name": "libboost-mpi-python-dev",
@@ -5165,7 +5557,18 @@
 				"/bookworm/cpp-12:amd64=12.2.0-14+deb12u1",
 				"/bookworm/libboost-serialization1.74-dev:amd64=1.74.0+ds1-21",
 				"/bookworm/libboost1.74-dev:amd64=1.74.0+ds1-21",
-				"/bookworm/libstdc++-12-dev:amd64=12.2.0-14+deb12u1"
+				"/bookworm/libstdc++-12-dev:amd64=12.2.0-14+deb12u1",
+				"/bookworm/automake:all=1:1.16.5-1.3",
+				"/bookworm/autotools-dev:all=20220109.1",
+				"/bookworm/autoconf:all=2.71-3",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/m4:amd64=1.4.19-3",
+				"/bookworm/perl:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3"
 			],
 			"filename": "pool/main/b/boost1.74/libboost-mpi-python1.74-dev_1.74.0+ds1-21_amd64.deb",
 			"name": "libboost-mpi-python1.74-dev",
@@ -5413,7 +5816,21 @@
 				"/bookworm/libboost-serialization1.74.0:amd64=1.74.0+ds1-21",
 				"/bookworm/libboost-serialization1.74-dev:amd64=1.74.0+ds1-21",
 				"/bookworm/libboost1.74-dev:amd64=1.74.0+ds1-21",
-				"/bookworm/libstdc++-12-dev:amd64=12.2.0-14+deb12u1"
+				"/bookworm/libstdc++-12-dev:amd64=12.2.0-14+deb12u1",
+				"/bookworm/automake:all=1:1.16.5-1.3",
+				"/bookworm/autotools-dev:all=20220109.1",
+				"/bookworm/autoconf:all=2.71-3",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/m4:amd64=1.4.19-3",
+				"/bookworm/perl:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/dpkg:amd64=1.21.22",
+				"/bookworm/tar:amd64=1.34+dfsg-1.2+deb12u1",
+				"/bookworm/libacl1:amd64=2.3.1-3",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3"
 			],
 			"filename": "pool/main/b/boost1.74/libboost-mpi1.74-dev_1.74.0+ds1-21_amd64.deb",
 			"name": "libboost-mpi1.74-dev",
@@ -6159,8 +6576,7 @@
 				"/bookworm/libasan8:amd64=12.2.0-14+deb12u1",
 				"/bookworm/libatomic1:amd64=12.2.0-14+deb12u1",
 				"/bookworm/libitm1:amd64=12.2.0-14+deb12u1",
-				"/bookworm/libgomp1:amd64=12.2.0-14+deb12u1",
-				"/bookworm/linux-libc-dev:amd64=6.1.148-1"
+				"/bookworm/libgomp1:amd64=12.2.0-14+deb12u1"
 			],
 			"filename": "pool/main/b/boost-defaults/libboost-serialization-dev_1.74.0.3_amd64.deb",
 			"name": "libboost-serialization-dev",
@@ -6206,8 +6622,7 @@
 				"/bookworm/libasan8:amd64=12.2.0-14+deb12u1",
 				"/bookworm/libatomic1:amd64=12.2.0-14+deb12u1",
 				"/bookworm/libitm1:amd64=12.2.0-14+deb12u1",
-				"/bookworm/libgomp1:amd64=12.2.0-14+deb12u1",
-				"/bookworm/linux-libc-dev:amd64=6.1.148-1"
+				"/bookworm/libgomp1:amd64=12.2.0-14+deb12u1"
 			],
 			"filename": "pool/main/b/boost1.74/libboost-serialization1.74-dev_1.74.0+ds1-21_amd64.deb",
 			"name": "libboost-serialization1.74-dev",
@@ -7337,7 +7752,8 @@
 				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
 				"/bookworm-security/linux-libc-dev:amd64=6.1.153-1",
 				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13",
-				"/bookworm/linux-libc-dev:amd64=6.1.148-1"
+				"/bookworm/linux-libc-dev:amd64=6.1.148-1",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/g/glibc/libc6-dev_2.36-9+deb12u13_amd64.deb",
 			"name": "libc6-dev",
@@ -7787,6 +8203,48 @@
 			"suite": "bookworm",
 			"version": "2.40-2"
 		},
+		"/bookworm/libcurl3-gnutls:amd64=7.88.1-10+deb12u14": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
+				"/bookworm/libssh2-1:amd64=1.10.0-3+b1",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/librtmp1:amd64=2.4+20151223.gitfa8646d.1-2+b2",
+				"/bookworm/libnettle8:amd64=3.8.1-2",
+				"/bookworm/libhogweed6:amd64=3.8.1-2",
+				"/bookworm/libgmp10:amd64=2:6.2.1+dfsg1-1.1",
+				"/bookworm-security/libgnutls30:amd64=3.7.9-2+deb12u5",
+				"/bookworm/libunistring2:amd64=1.0-2",
+				"/bookworm-security/libtasn1-6:amd64=4.19.0-2+deb12u1",
+				"/bookworm/libp11-kit0:amd64=0.24.1-2",
+				"/bookworm/libffi8:amd64=3.4.4-1",
+				"/bookworm/libidn2-0:amd64=2.3.3-1+b1",
+				"/bookworm/libpsl5:amd64=0.21.2-1",
+				"/bookworm/libnghttp2-14:amd64=1.52.0-1+deb12u2",
+				"/bookworm/libldap-2.5-0:amd64=2.5.13+dfsg-5",
+				"/bookworm/libsasl2-2:amd64=2.1.28+dfsg-10",
+				"/bookworm/libsasl2-modules-db:amd64=2.1.28+dfsg-10",
+				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1",
+				"/bookworm/libgssapi-krb5-2:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkrb5support0:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkrb5-3:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkeyutils1:amd64=1.6.3-2",
+				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm/libbrotli1:amd64=1.0.9-2+b6"
+			],
+			"filename": "pool/main/c/curl/libcurl3-gnutls_7.88.1-10+deb12u14_amd64.deb",
+			"name": "libcurl3-gnutls",
+			"section": "libs",
+			"sha256": "15431a9d3c3ea95df9f2f77ba300a992ada486e9584edf1e88ffa8be43c0fc17",
+			"size": 386204,
+			"suite": "bookworm",
+			"version": "7.88.1-10+deb12u14"
+		},
 		"/bookworm/libcurl3-nss:amd64=7.88.1-10+deb12u14": {
 			"architecture": "amd64",
 			"depends_on": [
@@ -8010,7 +8468,8 @@
 				"/bookworm/libpkgconf3:amd64=1.8.1-1",
 				"/bookworm/libdbus-1-3:amd64=1.14.10-1~deb12u1",
 				"/bookworm/libelogind0:amd64=246.10-1debian1",
-				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2"
+				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/d/dbus/libdbus-1-dev_1.14.10-1~deb12u1_amd64.deb",
 			"name": "libdbus-1-dev",
@@ -8039,7 +8498,8 @@
 				"/bookworm/libunwind8:amd64=1.6.2-3",
 				"/bookworm/libdbus-1-3:amd64=1.14.10-1~deb12u1",
 				"/bookworm/libelogind0:amd64=246.10-1debian1",
-				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2"
+				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/d/dbus-c++/libdbus-c++-1-0v5_0.9.0-11_amd64.deb",
 			"name": "libdbus-c++-1-0v5",
@@ -8142,6 +8602,72 @@
 			"size": 185140,
 			"suite": "bookworm",
 			"version": "1.0.11-1+deb12u2"
+		},
+		"/bookworm/libdebuginfod-common:all=0.188-2.1": {
+			"architecture": "all",
+			"depends_on": [
+				"/bookworm/ucf:all=3.0043+nmu1+deb12u1",
+				"/bookworm/sensible-utils:all=0.0.17+nmu1",
+				"/bookworm/debconf:all=1.5.82"
+			],
+			"filename": "pool/main/e/elfutils/libdebuginfod-common_0.188-2.1_all.deb",
+			"name": "libdebuginfod-common",
+			"section": "devel",
+			"sha256": "447be2fea4f171c32b32ea172ef83d12c6fc39636bb2bd9f95242b8ab4560369",
+			"size": 21544,
+			"suite": "bookworm",
+			"version": "0.188-2.1"
+		},
+		"/bookworm/libdebuginfod1:amd64=0.188-2.1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libdebuginfod-common:all=0.188-2.1",
+				"/bookworm/ucf:all=3.0043+nmu1+deb12u1",
+				"/bookworm/sensible-utils:all=0.0.17+nmu1",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm/libdw1:amd64=0.188-2.1",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1",
+				"/bookworm/libelf1:amd64=0.188-2.1",
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
+				"/bookworm/libcurl3-gnutls:amd64=7.88.1-10+deb12u14",
+				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
+				"/bookworm/libssh2-1:amd64=1.10.0-3+b1",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/librtmp1:amd64=2.4+20151223.gitfa8646d.1-2+b2",
+				"/bookworm/libnettle8:amd64=3.8.1-2",
+				"/bookworm/libhogweed6:amd64=3.8.1-2",
+				"/bookworm/libgmp10:amd64=2:6.2.1+dfsg1-1.1",
+				"/bookworm-security/libgnutls30:amd64=3.7.9-2+deb12u5",
+				"/bookworm/libunistring2:amd64=1.0-2",
+				"/bookworm-security/libtasn1-6:amd64=4.19.0-2+deb12u1",
+				"/bookworm/libp11-kit0:amd64=0.24.1-2",
+				"/bookworm/libffi8:amd64=3.4.4-1",
+				"/bookworm/libidn2-0:amd64=2.3.3-1+b1",
+				"/bookworm/libpsl5:amd64=0.21.2-1",
+				"/bookworm/libnghttp2-14:amd64=1.52.0-1+deb12u2",
+				"/bookworm/libldap-2.5-0:amd64=2.5.13+dfsg-5",
+				"/bookworm/libsasl2-2:amd64=2.1.28+dfsg-10",
+				"/bookworm/libsasl2-modules-db:amd64=2.1.28+dfsg-10",
+				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1",
+				"/bookworm/libgssapi-krb5-2:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkrb5support0:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkrb5-3:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkeyutils1:amd64=1.6.3-2",
+				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm/libbrotli1:amd64=1.0.9-2+b6"
+			],
+			"filename": "pool/main/e/elfutils/libdebuginfod1_0.188-2.1_amd64.deb",
+			"name": "libdebuginfod1",
+			"section": "libs",
+			"sha256": "9650db2043d4e231a355940467e47dd0b4727700c2ce150010f03baaabfb0d0b",
+			"size": 27316,
+			"suite": "bookworm",
+			"version": "0.188-2.1"
 		},
 		"/bookworm/libdeflate0:amd64=1.14-1": {
 			"architecture": "amd64",
@@ -8353,6 +8879,25 @@
 			"suite": "bookworm",
 			"version": "3.2.1-1"
 		},
+		"/bookworm/libdw1:amd64=0.188-2.1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1",
+				"/bookworm/libelf1:amd64=0.188-2.1",
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1"
+			],
+			"filename": "pool/main/e/elfutils/libdw1_0.188-2.1_amd64.deb",
+			"name": "libdw1",
+			"section": "libs",
+			"sha256": "ffd7b1bad982ad1afd9c2b75ab2edd18e229508df731a8f4d8443f093a91442f",
+			"size": 234760,
+			"suite": "bookworm",
+			"version": "0.188-2.1"
+		},
 		"/bookworm/libdynaloader-functions-perl:all=0.003-3": {
 			"architecture": "all",
 			"depends_on": [
@@ -8395,7 +8940,8 @@
 				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
 				"/bookworm/libdbus-1-3:amd64=1.14.10-1~deb12u1",
 				"/bookworm/libelogind0:amd64=246.10-1debian1",
-				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2"
+				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/e/efl/libecore1_1.26.3-1+b1_amd64.deb",
 			"name": "libecore1",
@@ -8429,7 +8975,8 @@
 				"/bookworm/libunwind8:amd64=1.6.2-3",
 				"/bookworm/libc6:amd64=2.36-9+deb12u13",
 				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
-				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/e/efl/libeina1a_1.26.3-1+b1_amd64.deb",
 			"name": "libeina1a",
@@ -8682,7 +9229,8 @@
 				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
 				"/bookworm/linux-libc-dev:amd64=6.1.148-1",
 				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13",
-				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2"
+				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2",
+				"/bookworm-security/linux-libc-dev:amd64=6.1.153-1"
 			],
 			"filename": "pool/main/e/expat/libexpat1-dev_2.5.0-1+deb12u2_amd64.deb",
 			"name": "libexpat1-dev",
@@ -9241,6 +9789,21 @@
 			"suite": "bookworm",
 			"version": "1.46-1"
 		},
+		"/bookworm/libgpm2:amd64=1.20.7-10+b1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/g/gpm/libgpm2_1.20.7-10+b1_amd64.deb",
+			"name": "libgpm2",
+			"section": "libs",
+			"sha256": "2ac1236547360284e9e154ad11a14564db65175bd4da393ec652ac1b2dc43571",
+			"size": 14216,
+			"suite": "bookworm",
+			"version": "1.20.7-10+b1"
+		},
 		"/bookworm/libgprofng0:amd64=2.40-2": {
 			"architecture": "amd64",
 			"depends_on": [
@@ -9436,7 +9999,8 @@
 				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
 				"/bookworm/libkeyutils1:amd64=1.6.3-2",
 				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
-				"/bookworm/libcom-err2:amd64=1.47.0-2+b2"
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/k/krb5/libgssapi-krb5-2_1.20.1-2+deb12u4_amd64.deb",
 			"name": "libgssapi-krb5-2",
@@ -9458,7 +10022,8 @@
 				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
 				"/bookworm/libkeyutils1:amd64=1.6.3-2",
 				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
-				"/bookworm/libcom-err2:amd64=1.47.0-2+b2"
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/k/krb5/libgssrpc4_1.20.1-2+deb12u4_amd64.deb",
 			"name": "libgssrpc4",
@@ -9704,7 +10269,29 @@
 				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13",
 				"/bookworm/libnuma1:amd64=2.0.16-1",
 				"/bookworm/libhwloc15:amd64=2.9.0-1",
-				"/bookworm/libudev1:amd64=252.39-1~deb12u1"
+				"/bookworm/libudev1:amd64=252.39-1~deb12u1",
+				"/bookworm/automake:all=1:1.16.5-1.3",
+				"/bookworm/autotools-dev:all=20220109.1",
+				"/bookworm/autoconf:all=2.71-3",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/m4:amd64=1.4.19-3",
+				"/bookworm/perl:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/dpkg:amd64=1.21.22",
+				"/bookworm/tar:amd64=1.34+dfsg-1.2+deb12u1",
+				"/bookworm/libselinux1:amd64=3.4-1+b6",
+				"/bookworm/libpcre2-8-0:amd64=10.42-1",
+				"/bookworm/libacl1:amd64=2.3.1-3",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1",
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3",
+				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1"
 			],
 			"filename": "pool/main/h/hwloc/libhwloc-dev_2.9.0-1_amd64.deb",
 			"name": "libhwloc-dev",
@@ -9870,6 +10457,51 @@
 			"size": 123636,
 			"suite": "bookworm",
 			"version": "2.3.3-1+b1"
+		},
+		"/bookworm/libip4tc2:amd64=1.8.9-2": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/i/iptables/libip4tc2_1.8.9-2_amd64.deb",
+			"name": "libip4tc2",
+			"section": "libs",
+			"sha256": "f2c48b367f9ec13f9aa577e7ccf81b371ce5d5fe22dddf9d7aa99f1e0bb7cfc4",
+			"size": 19016,
+			"suite": "bookworm",
+			"version": "1.8.9-2"
+		},
+		"/bookworm/libip6tc2:amd64=1.8.9-2": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/i/iptables/libip6tc2_1.8.9-2_amd64.deb",
+			"name": "libip6tc2",
+			"section": "libs",
+			"sha256": "be88db3dfa2fe3345ea343207f7c75345602686121e579023d021c348b9b4f4d",
+			"size": 19416,
+			"suite": "bookworm",
+			"version": "1.8.9-2"
+		},
+		"/bookworm/libipt2:amd64=2.0.5-1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/i/intel-processor-trace/libipt2_2.0.5-1_amd64.deb",
+			"name": "libipt2",
+			"section": "libs",
+			"sha256": "d3687e2b7654a6450dbdfbadde216ce08cd84f52155f70cd7104309f897e62e5",
+			"size": 43852,
+			"suite": "bookworm",
+			"version": "2.0.5-1"
 		},
 		"/bookworm/libisl23:amd64=0.25-1.1": {
 			"architecture": "amd64",
@@ -10073,7 +10705,8 @@
 				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
 				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
 				"/bookworm/libgssrpc4:amd64=1.20.1-2+deb12u4",
-				"/bookworm/libgssapi-krb5-2:amd64=1.20.1-2+deb12u4"
+				"/bookworm/libgssapi-krb5-2:amd64=1.20.1-2+deb12u4",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/k/krb5/libkadm5clnt-mit12_1.20.1-2+deb12u4_amd64.deb",
 			"name": "libkadm5clnt-mit12",
@@ -10097,7 +10730,8 @@
 				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
 				"/bookworm/libkdb5-10:amd64=1.20.1-2+deb12u4",
 				"/bookworm/libgssrpc4:amd64=1.20.1-2+deb12u4",
-				"/bookworm/libgssapi-krb5-2:amd64=1.20.1-2+deb12u4"
+				"/bookworm/libgssapi-krb5-2:amd64=1.20.1-2+deb12u4",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/k/krb5/libkadm5srv-mit12_1.20.1-2+deb12u4_amd64.deb",
 			"name": "libkadm5srv-mit12",
@@ -10120,7 +10754,8 @@
 				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
 				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
 				"/bookworm/libgssrpc4:amd64=1.20.1-2+deb12u4",
-				"/bookworm/libgssapi-krb5-2:amd64=1.20.1-2+deb12u4"
+				"/bookworm/libgssapi-krb5-2:amd64=1.20.1-2+deb12u4",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/k/krb5/libkdb5-10_1.20.1-2+deb12u4_amd64.deb",
 			"name": "libkdb5-10",
@@ -10173,7 +10808,8 @@
 				"/bookworm/libkrb5support0:amd64=1.20.1-2+deb12u4",
 				"/bookworm/libkeyutils1:amd64=1.6.3-2",
 				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
-				"/bookworm/libcom-err2:amd64=1.47.0-2+b2"
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/k/krb5/libkrb5-3_1.20.1-2+deb12u4_amd64.deb",
 			"name": "libkrb5-3",
@@ -10213,7 +10849,7 @@
 				"/bookworm/libgssrpc4:amd64=1.20.1-2+deb12u4",
 				"/bookworm/libkadm5srv-mit12:amd64=1.20.1-2+deb12u4",
 				"/bookworm/libkdb5-10:amd64=1.20.1-2+deb12u4",
-				"/bookworm/linux-libc-dev:amd64=6.1.148-1"
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/k/krb5/libkrb5-dev_1.20.1-2+deb12u4_amd64.deb",
 			"name": "libkrb5-dev",
@@ -10356,7 +10992,30 @@
 				"/bookworm/libltdl7:amd64=2.4.7-7~deb12u1",
 				"/bookworm/libc6:amd64=2.36-9+deb12u13",
 				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
-				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/automake:all=1:1.16.5-1.3",
+				"/bookworm/autotools-dev:all=20220109.1",
+				"/bookworm/autoconf:all=2.71-3",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/m4:amd64=1.4.19-3",
+				"/bookworm/perl:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/dpkg:amd64=1.21.22",
+				"/bookworm/tar:amd64=1.34+dfsg-1.2+deb12u1",
+				"/bookworm/libselinux1:amd64=3.4-1+b6",
+				"/bookworm/libpcre2-8-0:amd64=10.42-1",
+				"/bookworm/libacl1:amd64=2.3.1-3",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1",
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
+				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3",
+				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1"
 			],
 			"filename": "pool/main/libt/libtool/libltdl-dev_2.4.7-7~deb12u1_amd64.deb",
 			"name": "libltdl-dev",
@@ -10380,6 +11039,22 @@
 			"size": 393000,
 			"suite": "bookworm",
 			"version": "2.4.7-7~deb12u1"
+		},
+		"/bookworm/liblua5.2-0:amd64=5.2.4-3": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libstdc++6:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/l/lua5.2/liblua5.2-0_5.2.4-3_amd64.deb",
+			"name": "liblua5.2-0",
+			"section": "libs",
+			"sha256": "c5e1e8410ab9dbbe9ddc30f306c3e50c5ed17acfe4bcfb681078d4b85070c9eb",
+			"size": 111120,
+			"suite": "bookworm",
+			"version": "5.2.4-3"
 		},
 		"/bookworm/liblz4-1:amd64=1.9.4-1": {
 			"architecture": "amd64",
@@ -10805,6 +11480,22 @@
 			"suite": "bookworm",
 			"version": "1.1.5+dfsg-1.1+b1"
 		},
+		"/bookworm/libncurses6:amd64=6.4-4": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libtinfo6:amd64=6.4-4"
+			],
+			"filename": "pool/main/n/ncurses/libncurses6_6.4-4_amd64.deb",
+			"name": "libncurses6",
+			"section": "libs",
+			"sha256": "72300f09f02669c06c99b641ea795d52300ec7eb65eaccddf7bc3b72934f0ef5",
+			"size": 103136,
+			"suite": "bookworm",
+			"version": "6.4-4"
+		},
 		"/bookworm/libncursesw6:amd64=6.4-4": {
 			"architecture": "amd64",
 			"depends_on": [
@@ -10893,6 +11584,22 @@
 			"size": 15132,
 			"suite": "bookworm",
 			"version": "1.0.2-2"
+		},
+		"/bookworm/libnftnl11:amd64=1.2.4-2": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libmnl0:amd64=1.0.4-3",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/libn/libnftnl/libnftnl11_1.2.4-2_amd64.deb",
+			"name": "libnftnl11",
+			"section": "libs",
+			"sha256": "9e619e1470a1915264e906020f3bfc046fd8458043b1342686d997b5078213af",
+			"size": 61632,
+			"suite": "bookworm",
+			"version": "1.2.4-2"
 		},
 		"/bookworm/libnghttp2-14:amd64=1.52.0-1+deb12u2": {
 			"architecture": "amd64",
@@ -11120,7 +11827,8 @@
 				"/bookworm-security/linux-libc-dev:amd64=6.1.153-1",
 				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13",
 				"/bookworm-security/icu-devtools:amd64=72.1-3+deb12u1",
-				"/bookworm/libnorm1:amd64=1.5.9+dfsg-2"
+				"/bookworm/libnorm1:amd64=1.5.9+dfsg-2",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/n/norm/libnorm-dev_1.5.9+dfsg-2_amd64.deb",
 			"name": "libnorm-dev",
@@ -11162,7 +11870,8 @@
 				"/bookworm/libkeyutils1:amd64=1.6.3-2",
 				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
 				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
-				"/bookworm/libnsl2:amd64=1.3.0-2"
+				"/bookworm/libnsl2:amd64=1.3.0-2",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/libn/libnsl/libnsl-dev_1.3.0-2_amd64.deb",
 			"name": "libnsl-dev",
@@ -11186,7 +11895,8 @@
 				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
 				"/bookworm/libkeyutils1:amd64=1.6.3-2",
 				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
-				"/bookworm/libcom-err2:amd64=1.47.0-2+b2"
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/libn/libnsl/libnsl2_1.3.0-2_amd64.deb",
 			"name": "libnsl2",
@@ -11454,7 +12164,21 @@
 				"/bookworm/libctf0:amd64=2.40-2",
 				"/bookworm/libctf-nobfd0:amd64=2.40-2",
 				"/bookworm/libcc1-0:amd64=12.2.0-14+deb12u1",
-				"/bookworm/cpp-12:amd64=12.2.0-14+deb12u1"
+				"/bookworm/cpp-12:amd64=12.2.0-14+deb12u1",
+				"/bookworm/automake:all=1:1.16.5-1.3",
+				"/bookworm/autotools-dev:all=20220109.1",
+				"/bookworm/autoconf:all=2.71-3",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/m4:amd64=1.4.19-3",
+				"/bookworm/perl:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/dpkg:amd64=1.21.22",
+				"/bookworm/tar:amd64=1.34+dfsg-1.2+deb12u1",
+				"/bookworm/libacl1:amd64=2.3.1-3",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3"
 			],
 			"filename": "pool/main/o/openmpi/libopenmpi-dev_4.1.4-3+b1_amd64.deb",
 			"name": "libopenmpi-dev",
@@ -12170,7 +12894,7 @@
 				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
 				"/bookworm-security/linux-libc-dev:amd64=6.1.153-1",
 				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13",
-				"/bookworm/linux-libc-dev:amd64=6.1.148-1"
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/p/pcre2/libpcre2-dev_10.42-1_amd64.deb",
 			"name": "libpcre2-dev",
@@ -12331,7 +13055,8 @@
 				"/bookworm/liblz4-1:amd64=1.9.4-1",
 				"/bookworm/libgcrypt20:amd64=1.10.1-3",
 				"/bookworm/libgpg-error0:amd64=1.46-1",
-				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2"
+				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2",
+				"/bookworm/libelogind0:amd64=246.10-1debian1"
 			],
 			"filename": "pool/main/p/procps/libproc2-0_4.0.2-3_amd64.deb",
 			"name": "libproc2-0",
@@ -12369,7 +13094,8 @@
 				"/bookworm/libcrypt-dev:amd64=1:4.4.33-2",
 				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
 				"/bookworm/linux-libc-dev:amd64=6.1.148-1",
-				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13"
+				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13",
+				"/bookworm-security/linux-libc-dev:amd64=6.1.153-1"
 			],
 			"filename": "pool/main/p/protobuf/libprotobuf-dev_3.21.12-3_amd64.deb",
 			"name": "libprotobuf-dev",
@@ -12567,7 +13293,9 @@
 				"/bookworm/libffi8:amd64=3.4.4-1",
 				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1",
 				"/bookworm/media-types:all=10.0.0",
-				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6"
+				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6",
+				"/bookworm-security/linux-libc-dev:amd64=6.1.153-1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/p/python3-defaults/libpython3-dev_3.11.2-1+b1_amd64.deb",
 			"name": "libpython3-dev",
@@ -12613,7 +13341,8 @@
 				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1",
 				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
 				"/bookworm/media-types:all=10.0.0",
-				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6"
+				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/p/python3-defaults/libpython3-stdlib_3.11.2-1+b1_amd64.deb",
 			"name": "libpython3-stdlib",
@@ -12670,7 +13399,9 @@
 				"/bookworm/libffi8:amd64=3.4.4-1",
 				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1",
 				"/bookworm/media-types:all=10.0.0",
-				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6"
+				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6",
+				"/bookworm-security/linux-libc-dev:amd64=6.1.153-1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/p/python3.11/libpython3.11-dev_3.11.2-6+deb12u6_amd64.deb",
 			"name": "libpython3.11-dev",
@@ -12731,7 +13462,8 @@
 				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1",
 				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
 				"/bookworm/media-types:all=10.0.0",
-				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6"
+				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/p/python3.11/libpython3.11-stdlib_3.11.2-6+deb12u6_amd64.deb",
 			"name": "libpython3.11-stdlib",
@@ -12778,7 +13510,8 @@
 				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1",
 				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
 				"/bookworm/media-types:all=10.0.0",
-				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6"
+				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/p/python3.11/libpython3.11_3.11.2-6+deb12u6_amd64.deb",
 			"name": "libpython3.11",
@@ -12805,7 +13538,10 @@
 				"/bookworm/libblkid1:amd64=2.38.1-5+deb12u3",
 				"/bookworm/libffi8:amd64=3.4.4-1",
 				"/bookworm/libdouble-conversion3:amd64=3.2.1-1",
-				"/bookworm/shared-mime-info:amd64=2.2-1"
+				"/bookworm/shared-mime-info:amd64=2.2-1",
+				"/bookworm-security/libicu72:amd64=72.1-3+deb12u1",
+				"/bookworm-security/libxml2:amd64=2.9.14+dfsg-1.3~deb12u4",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/q/qtbase-opensource-src/libqt5core5a_5.15.8+dfsg-11+deb12u3_amd64.deb",
 			"name": "libqt5core5a",
@@ -12836,7 +13572,10 @@
 				"/bookworm/shared-mime-info:amd64=2.2-1",
 				"/bookworm/libdbus-1-3:amd64=1.14.10-1~deb12u1",
 				"/bookworm/libelogind0:amd64=246.10-1debian1",
-				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2"
+				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2",
+				"/bookworm-security/libicu72:amd64=72.1-3+deb12u1",
+				"/bookworm-security/libxml2:amd64=2.9.14+dfsg-1.3~deb12u4",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/q/qtbase-opensource-src/libqt5dbus5_5.15.8+dfsg-11+deb12u3_amd64.deb",
 			"name": "libqt5dbus5",
@@ -12875,7 +13614,10 @@
 				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
 				"/bookworm/libkeyutils1:amd64=1.6.3-2",
 				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
-				"/bookworm/libcom-err2:amd64=1.47.0-2+b2"
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm-security/libicu72:amd64=72.1-3+deb12u1",
+				"/bookworm-security/libxml2:amd64=2.9.14+dfsg-1.3~deb12u4",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/q/qtbase-opensource-src/libqt5network5_5.15.8+dfsg-11+deb12u3_amd64.deb",
 			"name": "libqt5network5",
@@ -12999,7 +13741,8 @@
 				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
 				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
 				"/bookworm/libmd0:amd64=1.0.4-2",
-				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1"
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/r/readline/libreadline8_8.2-1.3_amd64.deb",
 			"name": "libreadline8",
@@ -13033,6 +13776,45 @@
 			"size": 60824,
 			"suite": "bookworm",
 			"version": "2.4+20151223.gitfa8646d.1-2+b2"
+		},
+		"/bookworm/libruby:amd64=1:3.1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm-security/libruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libyaml-0-2:amd64=0.2.5-1",
+				"/bookworm/libtinfo6:amd64=6.4-4",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/libncurses6:amd64=6.4-4",
+				"/bookworm/libgmp10:amd64=2:6.2.1+dfsg1-1.1",
+				"/bookworm/libffi8:amd64=3.4.4-1",
+				"/bookworm/libedit2:amd64=3.1-20221030-2",
+				"/bookworm/libbsd0:amd64=0.11.7-2",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
+				"/bookworm/ruby-sdbm:amd64=1.0.0-5+b1",
+				"/bookworm/ruby-webrick:all=1.8.1-1",
+				"/bookworm/ruby-xmlrpc:all=0.3.2-2",
+				"/bookworm/ruby-net-telnet:all=0.2.0-1",
+				"/bookworm/rake:all=13.0.6-3",
+				"/bookworm/ruby:amd64=1:3.1",
+				"/bookworm/ruby-rubygems:all=3.3.15-2+deb12u1",
+				"/bookworm-security/ruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/rubygems-integration:all=1.18",
+				"/bookworm-updates/ca-certificates:all=20230311+deb12u1",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm-updates/openssl:amd64=3.0.17-1~deb12u2"
+			],
+			"filename": "pool/main/r/ruby-defaults/libruby_3.1_amd64.deb",
+			"name": "libruby",
+			"section": "libs",
+			"sha256": "82dbf5391286e05e7eefd965b4b15dbafd9194f491fc3f6fd3d01bacd69a74ba",
+			"size": 4972,
+			"suite": "bookworm",
+			"version": "1:3.1"
 		},
 		"/bookworm/libsasl2-2:amd64=2.1.28+dfsg-10": {
 			"architecture": "amd64",
@@ -13447,7 +14229,8 @@
 				"/bookworm/liblz4-1:amd64=1.9.4-1",
 				"/bookworm/libgcrypt20:amd64=1.10.1-3",
 				"/bookworm/libgpg-error0:amd64=1.46-1",
-				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2"
+				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/s/systemd/libsystemd0_252.39-1~deb12u1_amd64.deb",
 			"name": "libsystemd0",
@@ -13456,6 +14239,24 @@
 			"size": 332760,
 			"suite": "bookworm",
 			"version": "252.39-1~deb12u1"
+		},
+		"/bookworm/libtcl8.6:amd64=8.6.13+dfsg-2": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/tzdata:all=2025b-0+deb12u2",
+				"/bookworm/debconf:all=1.5.82"
+			],
+			"filename": "pool/main/t/tcl8.6/libtcl8.6_8.6.13+dfsg-2_amd64.deb",
+			"name": "libtcl8.6",
+			"section": "libs",
+			"sha256": "976c4235b816635e1756016f3adbabb634e8b97a9f6b97cf901be099e4fd2487",
+			"size": 1034548,
+			"suite": "bookworm",
+			"version": "8.6.13+dfsg-2"
 		},
 		"/bookworm/libteam-dev:amd64=1.31-1": {
 			"architecture": "amd64",
@@ -13768,7 +14569,8 @@
 				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
 				"/bookworm/libkeyutils1:amd64=1.6.3-2",
 				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
-				"/bookworm/libcom-err2:amd64=1.47.0-2+b2"
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/libt/libtirpc/libtirpc-dev_1.3.3+ds-1_amd64.deb",
 			"name": "libtirpc-dev",
@@ -13791,7 +14593,8 @@
 				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
 				"/bookworm/libkeyutils1:amd64=1.6.3-2",
 				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
-				"/bookworm/libcom-err2:amd64=1.47.0-2+b2"
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/libt/libtirpc/libtirpc3_1.3.3+ds-1_amd64.deb",
 			"name": "libtirpc3",
@@ -14005,7 +14808,8 @@
 			"depends_on": [
 				"/bookworm/libc6:amd64=2.36-9+deb12u13",
 				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
-				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/libu/libunwind/libunwind8_1.6.2-3_amd64.deb",
 			"name": "libunwind8",
@@ -14353,6 +15157,36 @@
 			"suite": "bookworm",
 			"version": "1.8.9-2"
 		},
+		"/bookworm/libxxhash0:amd64=0.8.1-1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/x/xxhash/libxxhash0_0.8.1-1_amd64.deb",
+			"name": "libxxhash0",
+			"section": "libs",
+			"sha256": "6c19a5d18c8350744581fbd25d5d29e2b7101053e25aafa4e1ffcc2b505b2f1c",
+			"size": 27584,
+			"suite": "bookworm",
+			"version": "0.8.1-1"
+		},
+		"/bookworm/libyaml-0-2:amd64=0.2.5-1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/liby/libyaml/libyaml-0-2_0.2.5-1_amd64.deb",
+			"name": "libyaml-0-2",
+			"section": "libs",
+			"sha256": "207b539919a47c85bcf738677f0ccf5bbac9844f2d3f158696f518be4c4ba6c4",
+			"size": 53580,
+			"suite": "bookworm",
+			"version": "0.2.5-1"
+		},
 		"/bookworm/libyang2-dev:amd64=2.1.30-2": {
 			"architecture": "amd64",
 			"depends_on": [
@@ -14382,8 +15216,7 @@
 				"/bookworm/libcrypt-dev:amd64=1:4.4.33-2",
 				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
 				"/bookworm-security/linux-libc-dev:amd64=6.1.153-1",
-				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13",
-				"/bookworm/linux-libc-dev:amd64=6.1.148-1"
+				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13"
 			],
 			"filename": "pool/main/liby/libyang2/libyang2-dev_2.1.30-2_amd64.deb",
 			"name": "libyang2-dev",
@@ -14509,7 +15342,7 @@
 				"/bookworm/libpgm-dev:amd64=5.3.128~dfsg-2",
 				"/bookworm/libpgm-5.3-0:amd64=5.3.128~dfsg-2",
 				"/bookworm/libzmq5:amd64=4.3.4-6",
-				"/bookworm/linux-libc-dev:amd64=6.1.148-1"
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/z/zeromq3/libzmq3-dev_4.3.4-6_amd64.deb",
 			"name": "libzmq3-dev",
@@ -14537,7 +15370,8 @@
 				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
 				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
 				"/bookworm/libbsd0:amd64=0.11.7-2",
-				"/bookworm/libmd0:amd64=1.0.4-2"
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm-security/libssl3:amd64=3.0.14-1~deb12u2"
 			],
 			"filename": "pool/main/z/zeromq3/libzmq5_4.3.4-6_amd64.deb",
 			"name": "libzmq5",
@@ -15041,7 +15875,21 @@
 				"/bookworm/libctf0:amd64=2.40-2",
 				"/bookworm/libctf-nobfd0:amd64=2.40-2",
 				"/bookworm/libcc1-0:amd64=12.2.0-14+deb12u1",
-				"/bookworm/cpp-12:amd64=12.2.0-14+deb12u1"
+				"/bookworm/cpp-12:amd64=12.2.0-14+deb12u1",
+				"/bookworm/automake:all=1:1.16.5-1.3",
+				"/bookworm/autotools-dev:all=20220109.1",
+				"/bookworm/autoconf:all=2.71-3",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/m4:amd64=1.4.19-3",
+				"/bookworm/perl:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/dpkg:amd64=1.21.22",
+				"/bookworm/tar:amd64=1.34+dfsg-1.2+deb12u1",
+				"/bookworm/libacl1:amd64=2.3.1-3",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3"
 			],
 			"filename": "pool/main/m/mpi-defaults/mpi-default-dev_1.14_amd64.deb",
 			"name": "mpi-default-dev",
@@ -15135,6 +15983,59 @@
 			"size": 12800,
 			"suite": "bookworm",
 			"version": "6.4"
+		},
+		"/bookworm/netscript-2.4:all=5.5.5+nmu1": {
+			"architecture": "all",
+			"depends_on": [
+				"/bookworm/sysvinit-utils:amd64=3.06-4",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/isc-dhcp-client:amd64=4.4.3-P1-2",
+				"/bookworm/iproute2:amd64=6.1.0-3",
+				"/bookworm/libcap2-bin:amd64=1:2.66-4+deb12u2",
+				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2",
+				"/bookworm/libxtables12:amd64=1.8.9-2",
+				"/bookworm/libtirpc3:amd64=1.3.3+ds-1",
+				"/bookworm/libtirpc-common:all=1.3.3+ds-1",
+				"/bookworm/libgssapi-krb5-2:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkrb5support0:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkrb5-3:amd64=1.20.1-2+deb12u4",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/libkeyutils1:amd64=1.6.3-2",
+				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm/libselinux1:amd64=3.4-1+b6",
+				"/bookworm/libpcre2-8-0:amd64=10.42-1",
+				"/bookworm/libmnl0:amd64=1.0.4-3",
+				"/bookworm/libelf1:amd64=0.188-2.1",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1",
+				"/bookworm/libbsd0:amd64=0.11.7-2",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm/libbpf1:amd64=1:1.1.2-0+deb12u1",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm/debianutils:amd64=5.7-0.5~deb12u1",
+				"/bookworm/bash:amd64=5.2.15-2+b9",
+				"/bookworm/base-files:amd64=12.4+deb12u12",
+				"/bookworm/mawk:amd64=1.3.4.20200120-3.1",
+				"/bookworm/libtinfo6:amd64=6.4-4",
+				"/bookworm/netbase:all=6.4",
+				"/bookworm/iptables:amd64=1.8.9-2",
+				"/bookworm/libnftnl11:amd64=1.2.4-2",
+				"/bookworm/libnfnetlink0:amd64=1.0.2-2",
+				"/bookworm/libnetfilter-conntrack3:amd64=1.0.9-3",
+				"/bookworm/libip6tc2:amd64=1.8.9-2",
+				"/bookworm/libip4tc2:amd64=1.8.9-2",
+				"/bookworm/bridge-utils:amd64=1.7.1-1"
+			],
+			"filename": "pool/main/n/netscript-2.4/netscript-2.4_5.5.5+nmu1_all.deb",
+			"name": "netscript-2.4",
+			"section": "net",
+			"sha256": "5c0f20f89e4d8031985057c003ccbbaf8c19cc1d61eabd96ef37d3dc71017ef1",
+			"size": 46464,
+			"suite": "bookworm",
+			"version": "5.5.5+nmu1"
 		},
 		"/bookworm/nlohmann-json3-dev:all=3.11.2-2": {
 			"architecture": "all",
@@ -15490,7 +16391,8 @@
 				"/bookworm/libgcrypt20:amd64=1.10.1-3",
 				"/bookworm/libgpg-error0:amd64=1.46-1",
 				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2",
-				"/bookworm/libncursesw6:amd64=6.4-4"
+				"/bookworm/libncursesw6:amd64=6.4-4",
+				"/bookworm/libelogind0:amd64=246.10-1debian1"
 			],
 			"filename": "pool/main/p/procps/procps_4.0.2-3_amd64.deb",
 			"name": "procps",
@@ -15645,7 +16547,8 @@
 				"/bookworm/python3.11:amd64=3.11.2-6+deb12u6",
 				"/bookworm/python3.11-minimal:amd64=3.11.2-6+deb12u6",
 				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2",
-				"/bookworm/python3-minimal:amd64=3.11.2-1+b1"
+				"/bookworm/python3-minimal:amd64=3.11.2-1+b1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/d/dbus-python/python3-dbus_1.3.2-4+b1_amd64.deb",
 			"name": "python3-dbus",
@@ -15770,7 +16673,8 @@
 				"/bookworm/python3.11:amd64=3.11.2-6+deb12u6",
 				"/bookworm/python3.11-minimal:amd64=3.11.2-6+deb12u6",
 				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2",
-				"/bookworm/python3-minimal:amd64=3.11.2-1+b1"
+				"/bookworm/python3-minimal:amd64=3.11.2-1+b1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/p/python3-stdlib-extensions/python3-distutils_3.11.2-3_all.deb",
 			"name": "python3-distutils",
@@ -15827,7 +16731,8 @@
 				"/bookworm/python3.11-minimal:amd64=3.11.2-6+deb12u6",
 				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2",
 				"/bookworm/python3-minimal:amd64=3.11.2-1+b1",
-				"/bookworm/gir1.2-glib-2.0:amd64=1.74.0-3"
+				"/bookworm/gir1.2-glib-2.0:amd64=1.74.0-3",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/p/pygobject/python3-gi_3.42.2-3+b1_amd64.deb",
 			"name": "python3-gi",
@@ -15994,7 +16899,8 @@
 				"/bookworm/python3.11:amd64=3.11.2-6+deb12u6",
 				"/bookworm/python3.11-minimal:amd64=3.11.2-6+deb12u6",
 				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2",
-				"/bookworm/python3-minimal:amd64=3.11.2-1+b1"
+				"/bookworm/python3-minimal:amd64=3.11.2-1+b1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/p/python3-stdlib-extensions/python3-lib2to3_3.11.2-3_all.deb",
 			"name": "python3-lib2to3",
@@ -16046,7 +16952,8 @@
 				"/bookworm/python3.11:amd64=3.11.2-6+deb12u6",
 				"/bookworm/python3.11-minimal:amd64=3.11.2-6+deb12u6",
 				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2",
-				"/bookworm/python3-minimal:amd64=3.11.2-1+b1"
+				"/bookworm/python3-minimal:amd64=3.11.2-1+b1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/m/m2crypto/python3-m2crypto_0.38.0-4+b1_amd64.deb",
 			"name": "python3-m2crypto",
@@ -16074,7 +16981,8 @@
 				"/bookworm/python3.11-minimal:amd64=3.11.2-6+deb12u6",
 				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2",
 				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6",
-				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2"
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/p/python3-defaults/python3-minimal_3.11.2-1+b1_amd64.deb",
 			"name": "python3-minimal",
@@ -16672,7 +17580,9 @@
 				"/bookworm/python3.11:amd64=3.11.2-6+deb12u6",
 				"/bookworm/python3.11-minimal:amd64=3.11.2-6+deb12u6",
 				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2",
-				"/bookworm/python3-minimal:amd64=3.11.2-1+b1"
+				"/bookworm/python3-minimal:amd64=3.11.2-1+b1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1",
+				"/bookworm/libelogind0:amd64=246.10-1debian1"
 			],
 			"filename": "pool/main/p/python-systemd/python3-systemd_235-1+b2_amd64.deb",
 			"name": "python3-systemd",
@@ -16893,7 +17803,9 @@
 				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13",
 				"/bookworm/libexpat1-dev:amd64=2.5.0-1+deb12u2",
 				"/bookworm/python3.11:amd64=3.11.2-6+deb12u6",
-				"/bookworm/python3.11-minimal:amd64=3.11.2-6+deb12u6"
+				"/bookworm/python3.11-minimal:amd64=3.11.2-6+deb12u6",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1",
+				"/bookworm-security/linux-libc-dev:amd64=6.1.153-1"
 			],
 			"filename": "pool/main/p/python3.11/python3.11-dev_3.11.2-6+deb12u6_amd64.deb",
 			"name": "python3.11-dev",
@@ -16960,7 +17872,8 @@
 				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
 				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6",
 				"/bookworm/python3.11-minimal:amd64=3.11.2-6+deb12u6",
-				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2"
+				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/p/python3.11/python3.11_3.11.2-6+deb12u6_amd64.deb",
 			"name": "python3.11",
@@ -17022,6 +17935,45 @@
 			"suite": "bookworm",
 			"version": "3.11.2-1+b1"
 		},
+		"/bookworm/rake:all=13.0.6-3": {
+			"architecture": "all",
+			"depends_on": [
+				"/bookworm/ruby:amd64=1:3.1",
+				"/bookworm/ruby-rubygems:all=3.3.15-2+deb12u1",
+				"/bookworm/libruby:amd64=1:3.1",
+				"/bookworm-security/libruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libyaml-0-2:amd64=0.2.5-1",
+				"/bookworm/libtinfo6:amd64=6.4-4",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/libncurses6:amd64=6.4-4",
+				"/bookworm/libgmp10:amd64=2:6.2.1+dfsg1-1.1",
+				"/bookworm/libffi8:amd64=3.4.4-1",
+				"/bookworm/libedit2:amd64=3.1-20221030-2",
+				"/bookworm/libbsd0:amd64=0.11.7-2",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
+				"/bookworm/ruby-sdbm:amd64=1.0.0-5+b1",
+				"/bookworm/ruby-webrick:all=1.8.1-1",
+				"/bookworm/ruby-xmlrpc:all=0.3.2-2",
+				"/bookworm/ruby-net-telnet:all=0.2.0-1",
+				"/bookworm-security/ruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/rubygems-integration:all=1.18",
+				"/bookworm-updates/ca-certificates:all=20230311+deb12u1",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm-updates/openssl:amd64=3.0.17-1~deb12u2"
+			],
+			"filename": "pool/main/r/rake/rake_13.0.6-3_all.deb",
+			"name": "rake",
+			"section": "ruby",
+			"sha256": "9818519ad01d850db5b52c35bddee7571764cb6838f9ba4b1efab76613a4b9f9",
+			"size": 83908,
+			"suite": "bookworm",
+			"version": "13.0.6-3"
+		},
 		"/bookworm/readline-common:all=8.2-1.3": {
 			"architecture": "all",
 			"depends_on": [
@@ -17036,7 +17988,8 @@
 				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
 				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
 				"/bookworm/libmd0:amd64=1.0.4-2",
-				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1"
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/r/readline/readline-common_8.2-1.3_all.deb",
 			"name": "readline-common",
@@ -17078,7 +18031,8 @@
 				"/bookworm/libcap2:amd64=1:2.66-4+deb12u2",
 				"/bookworm/liblognorm5:amd64=2.0.6-4",
 				"/bookworm/libfastjson4:amd64=1.2304.0-1",
-				"/bookworm/libestr0:amd64=0.1.11-1"
+				"/bookworm/libestr0:amd64=0.1.11-1",
+				"/bookworm/libelogind0:amd64=246.10-1debian1"
 			],
 			"filename": "pool/main/r/rsyslog/rsyslog_8.2302.0-1+deb12u1_amd64.deb",
 			"name": "rsyslog",
@@ -17087,6 +18041,177 @@
 			"size": 724152,
 			"suite": "bookworm",
 			"version": "8.2302.0-1+deb12u1"
+		},
+		"/bookworm/ruby-net-telnet:all=0.2.0-1": {
+			"architecture": "all",
+			"depends_on": [],
+			"filename": "pool/main/r/ruby-net-telnet/ruby-net-telnet_0.2.0-1_all.deb",
+			"name": "ruby-net-telnet",
+			"section": "ruby",
+			"sha256": "e8a5b95e359894fbca0fa1cc70cdd349c125f43e883775491735a44ced957256",
+			"size": 13076,
+			"suite": "bookworm",
+			"version": "0.2.0-1"
+		},
+		"/bookworm/ruby-rubygems:all=3.3.15-2+deb12u1": {
+			"architecture": "all",
+			"depends_on": [
+				"/bookworm/ruby:amd64=1:3.1",
+				"/bookworm/libruby:amd64=1:3.1",
+				"/bookworm-security/libruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libyaml-0-2:amd64=0.2.5-1",
+				"/bookworm/libtinfo6:amd64=6.4-4",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/libncurses6:amd64=6.4-4",
+				"/bookworm/libgmp10:amd64=2:6.2.1+dfsg1-1.1",
+				"/bookworm/libffi8:amd64=3.4.4-1",
+				"/bookworm/libedit2:amd64=3.1-20221030-2",
+				"/bookworm/libbsd0:amd64=0.11.7-2",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
+				"/bookworm/ruby-sdbm:amd64=1.0.0-5+b1",
+				"/bookworm/ruby-webrick:all=1.8.1-1",
+				"/bookworm/ruby-xmlrpc:all=0.3.2-2",
+				"/bookworm/ruby-net-telnet:all=0.2.0-1",
+				"/bookworm/rake:all=13.0.6-3",
+				"/bookworm-security/ruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/rubygems-integration:all=1.18",
+				"/bookworm-updates/ca-certificates:all=20230311+deb12u1",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm-updates/openssl:amd64=3.0.17-1~deb12u2"
+			],
+			"filename": "pool/main/r/rubygems/ruby-rubygems_3.3.15-2+deb12u1_all.deb",
+			"name": "ruby-rubygems",
+			"section": "ruby",
+			"sha256": "49485e383cea98395b57a795179b837800bf05a3a7dfb1c6ca708187452a8bd6",
+			"size": 292916,
+			"suite": "bookworm",
+			"version": "3.3.15-2+deb12u1"
+		},
+		"/bookworm/ruby-sdbm:amd64=1.0.0-5+b1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libruby:amd64=1:3.1",
+				"/bookworm-security/libruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libyaml-0-2:amd64=0.2.5-1",
+				"/bookworm/libtinfo6:amd64=6.4-4",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/libncurses6:amd64=6.4-4",
+				"/bookworm/libgmp10:amd64=2:6.2.1+dfsg1-1.1",
+				"/bookworm/libffi8:amd64=3.4.4-1",
+				"/bookworm/libedit2:amd64=3.1-20221030-2",
+				"/bookworm/libbsd0:amd64=0.11.7-2",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
+				"/bookworm/ruby-webrick:all=1.8.1-1",
+				"/bookworm/ruby-xmlrpc:all=0.3.2-2",
+				"/bookworm/ruby-net-telnet:all=0.2.0-1",
+				"/bookworm/rake:all=13.0.6-3",
+				"/bookworm/ruby:amd64=1:3.1",
+				"/bookworm/ruby-rubygems:all=3.3.15-2+deb12u1",
+				"/bookworm-security/ruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/rubygems-integration:all=1.18",
+				"/bookworm-updates/ca-certificates:all=20230311+deb12u1",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm-updates/openssl:amd64=3.0.17-1~deb12u2"
+			],
+			"filename": "pool/main/r/ruby-sdbm/ruby-sdbm_1.0.0-5+b1_amd64.deb",
+			"name": "ruby-sdbm",
+			"section": "ruby",
+			"sha256": "5fa973172e17d96ec7e435616e84d135dc96c29426907bddbf4db4947f1878b9",
+			"size": 15440,
+			"suite": "bookworm",
+			"version": "1.0.0-5+b1"
+		},
+		"/bookworm/ruby-webrick:all=1.8.1-1": {
+			"architecture": "all",
+			"depends_on": [],
+			"filename": "pool/main/r/ruby-webrick/ruby-webrick_1.8.1-1_all.deb",
+			"name": "ruby-webrick",
+			"section": "ruby",
+			"sha256": "65c31aff127cda20f8a10258b0ec28f512fd6f9e89b525e9d3a0bdbe1da7a007",
+			"size": 51376,
+			"suite": "bookworm",
+			"version": "1.8.1-1"
+		},
+		"/bookworm/ruby-xmlrpc:all=0.3.2-2": {
+			"architecture": "all",
+			"depends_on": [
+				"/bookworm/ruby-webrick:all=1.8.1-1"
+			],
+			"filename": "pool/main/r/ruby-xmlrpc/ruby-xmlrpc_0.3.2-2_all.deb",
+			"name": "ruby-xmlrpc",
+			"section": "ruby",
+			"sha256": "9135e8be628682bce290308a2170ad2a53e81cd515bf415a6ed1358c1078e815",
+			"size": 24436,
+			"suite": "bookworm",
+			"version": "0.3.2-2"
+		},
+		"/bookworm/ruby:amd64=1:3.1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/ruby-rubygems:all=3.3.15-2+deb12u1",
+				"/bookworm/libruby:amd64=1:3.1",
+				"/bookworm-security/libruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libyaml-0-2:amd64=0.2.5-1",
+				"/bookworm/libtinfo6:amd64=6.4-4",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/libncurses6:amd64=6.4-4",
+				"/bookworm/libgmp10:amd64=2:6.2.1+dfsg1-1.1",
+				"/bookworm/libffi8:amd64=3.4.4-1",
+				"/bookworm/libedit2:amd64=3.1-20221030-2",
+				"/bookworm/libbsd0:amd64=0.11.7-2",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
+				"/bookworm/ruby-sdbm:amd64=1.0.0-5+b1",
+				"/bookworm/ruby-webrick:all=1.8.1-1",
+				"/bookworm/ruby-xmlrpc:all=0.3.2-2",
+				"/bookworm/ruby-net-telnet:all=0.2.0-1",
+				"/bookworm/rake:all=13.0.6-3",
+				"/bookworm-security/ruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/rubygems-integration:all=1.18",
+				"/bookworm-updates/ca-certificates:all=20230311+deb12u1",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm-updates/openssl:amd64=3.0.17-1~deb12u2"
+			],
+			"filename": "pool/main/r/ruby-defaults/ruby_3.1_amd64.deb",
+			"name": "ruby",
+			"section": "ruby",
+			"sha256": "4617d5eb715441bdc92e710d127f28654bbf05e888fbb492a14538d4189f3eef",
+			"size": 5868,
+			"suite": "bookworm",
+			"version": "1:3.1"
+		},
+		"/bookworm/rubygems-integration:all=1.18": {
+			"architecture": "all",
+			"depends_on": [
+				"/bookworm-updates/ca-certificates:all=20230311+deb12u1",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm-updates/openssl:amd64=3.0.17-1~deb12u2",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/r/rubygems-integration/rubygems-integration_1.18_all.deb",
+			"name": "rubygems-integration",
+			"section": "ruby",
+			"sha256": "8a0f590154c7d2239a84434093096c3ac60ad88fb2b4fbd89a67c2fd20ed7328",
+			"size": 6704,
+			"suite": "bookworm",
+			"version": "1.18"
 		},
 		"/bookworm/sed:amd64=4.9-1": {
 			"architecture": "amd64",
@@ -17106,6 +18231,17 @@
 			"suite": "bookworm",
 			"version": "4.9-1"
 		},
+		"/bookworm/sensible-utils:all=0.0.17+nmu1": {
+			"architecture": "all",
+			"depends_on": [],
+			"filename": "pool/main/s/sensible-utils/sensible-utils_0.0.17+nmu1_all.deb",
+			"name": "sensible-utils",
+			"section": "utils",
+			"sha256": "e0e66f783996ec4670ed5041c446160ec671c723d4be47d3bc27af93c2958a76",
+			"size": 19020,
+			"suite": "bookworm",
+			"version": "0.0.17+nmu1"
+		},
 		"/bookworm/sgml-base:all=1.31": {
 			"architecture": "all",
 			"depends_on": [
@@ -17120,7 +18256,8 @@
 				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
 				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
 				"/bookworm/libmd0:amd64=1.0.4-2",
-				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1"
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/s/sgml-base/sgml-base_1.31_all.deb",
 			"name": "sgml-base",
@@ -17142,7 +18279,11 @@
 				"/bookworm/libpcre2-8-0:amd64=10.42-1",
 				"/bookworm/libmount1:amd64=2.38.1-5+deb12u3",
 				"/bookworm/libblkid1:amd64=2.38.1-5+deb12u3",
-				"/bookworm/libffi8:amd64=3.4.4-1"
+				"/bookworm/libffi8:amd64=3.4.4-1",
+				"/bookworm-security/libxml2:amd64=2.9.14+dfsg-1.3~deb12u4",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1",
+				"/bookworm-security/libicu72:amd64=72.1-3+deb12u1",
+				"/bookworm/libstdc++6:amd64=12.2.0-14+deb12u1"
 			],
 			"filename": "pool/main/s/shared-mime-info/shared-mime-info_2.2-1_amd64.deb",
 			"name": "shared-mime-info",
@@ -17151,6 +18292,38 @@
 			"size": 728896,
 			"suite": "bookworm",
 			"version": "2.2-1"
+		},
+		"/bookworm/sshpass:amd64=1.09-1+b1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/s/sshpass/sshpass_1.09-1+b1_amd64.deb",
+			"name": "sshpass",
+			"section": "utils",
+			"sha256": "d2256f010fa2f8dca765c44ea7a77c675f718619c88bd511f4a542ca718d783f",
+			"size": 12988,
+			"suite": "bookworm",
+			"version": "1.09-1+b1"
+		},
+		"/bookworm/strace:amd64=6.1-0.1": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libunwind8:amd64=1.6.2-3",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1"
+			],
+			"filename": "pool/main/s/strace/strace_6.1-0.1_amd64.deb",
+			"name": "strace",
+			"section": "utils",
+			"sha256": "1942d086a6244a1a9643489d3b0aa604ac44b88991d6c69217a63a193671bd4f",
+			"size": 1313880,
+			"suite": "bookworm",
+			"version": "6.1-0.1"
 		},
 		"/bookworm/swig4.0:amd64=4.1.0-0.2": {
 			"architecture": "amd64",
@@ -17286,6 +18459,20 @@
 			"suite": "bookworm",
 			"version": "2025b-0+deb12u2"
 		},
+		"/bookworm/ucf:all=3.0043+nmu1+deb12u1": {
+			"architecture": "all",
+			"depends_on": [
+				"/bookworm/sensible-utils:all=0.0.17+nmu1",
+				"/bookworm/debconf:all=1.5.82"
+			],
+			"filename": "pool/main/u/ucf/ucf_3.0043+nmu1+deb12u1_all.deb",
+			"name": "ucf",
+			"section": "utils",
+			"sha256": "928f2d5d327ef0f8d1b9c03a506134f56564cd2acf3e9f041df3dbdc68b00525",
+			"size": 55312,
+			"suite": "bookworm",
+			"version": "3.0043+nmu1+deb12u1"
+		},
 		"/bookworm/usrmerge:all=37~deb12u1": {
 			"architecture": "all",
 			"depends_on": [
@@ -17367,6 +18554,98 @@
 			"suite": "bookworm",
 			"version": "2:9.0.1378-2+deb12u2"
 		},
+		"/bookworm/vim-nox:amd64=2:9.0.1378-2+deb12u2": {
+			"architecture": "amd64",
+			"depends_on": [
+				"/bookworm/libtinfo6:amd64=6.4-4",
+				"/bookworm/libc6:amd64=2.36-9+deb12u13",
+				"/bookworm/libgcc-s1:amd64=12.2.0-14+deb12u1",
+				"/bookworm/gcc-12-base:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libtcl8.6:amd64=8.6.13+dfsg-2",
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm/tzdata:all=2025b-0+deb12u2",
+				"/bookworm/debconf:all=1.5.82",
+				"/bookworm/libsodium23:amd64=1.0.18-1",
+				"/bookworm/libselinux1:amd64=3.4-1+b6",
+				"/bookworm/libpcre2-8-0:amd64=10.42-1",
+				"/bookworm-security/libruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/libyaml-0-2:amd64=0.2.5-1",
+				"/bookworm-updates/libssl3:amd64=3.0.17-1~deb12u2",
+				"/bookworm/libncurses6:amd64=6.4-4",
+				"/bookworm/libgmp10:amd64=2:6.2.1+dfsg1-1.1",
+				"/bookworm/libffi8:amd64=3.4.4-1",
+				"/bookworm/libedit2:amd64=3.1-20221030-2",
+				"/bookworm/libbsd0:amd64=0.11.7-2",
+				"/bookworm/libmd0:amd64=1.0.4-2",
+				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
+				"/bookworm/ruby-sdbm:amd64=1.0.0-5+b1",
+				"/bookworm/libruby:amd64=1:3.1",
+				"/bookworm/ruby-webrick:all=1.8.1-1",
+				"/bookworm/ruby-xmlrpc:all=0.3.2-2",
+				"/bookworm/ruby-net-telnet:all=0.2.0-1",
+				"/bookworm/rake:all=13.0.6-3",
+				"/bookworm/ruby:amd64=1:3.1",
+				"/bookworm/ruby-rubygems:all=3.3.15-2+deb12u1",
+				"/bookworm-security/ruby3.1:amd64=3.1.2-7+deb12u1",
+				"/bookworm/rubygems-integration:all=1.18",
+				"/bookworm-updates/ca-certificates:all=20230311+deb12u1",
+				"/bookworm-updates/openssl:amd64=3.0.17-1~deb12u2",
+				"/bookworm/libpython3.11:amd64=3.11.2-6+deb12u6",
+				"/bookworm/libexpat1:amd64=2.5.0-1+deb12u2",
+				"/bookworm/libpython3.11-stdlib:amd64=3.11.2-6+deb12u6",
+				"/bookworm/libuuid1:amd64=2.38.1-5+deb12u3",
+				"/bookworm/libtirpc3:amd64=1.3.3+ds-1",
+				"/bookworm/libtirpc-common:all=1.3.3+ds-1",
+				"/bookworm/libgssapi-krb5-2:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkrb5support0:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkrb5-3:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libkeyutils1:amd64=1.6.3-2",
+				"/bookworm/libk5crypto3:amd64=1.20.1-2+deb12u4",
+				"/bookworm/libcom-err2:amd64=1.47.0-2+b2",
+				"/bookworm/libsqlite3-0:amd64=3.40.1-2+deb12u2",
+				"/bookworm/libreadline8:amd64=8.2-1.3",
+				"/bookworm/readline-common:all=8.2-1.3",
+				"/bookworm/dpkg:amd64=1.21.22",
+				"/bookworm/tar:amd64=1.34+dfsg-1.2+deb12u1",
+				"/bookworm/libacl1:amd64=2.3.1-3",
+				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1",
+				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
+				"/bookworm/libnsl2:amd64=1.3.0-2",
+				"/bookworm/libncursesw6:amd64=6.4-4",
+				"/bookworm/libdb5.3:amd64=5.3.28+dfsg2-1",
+				"/bookworm/media-types:all=10.0.0",
+				"/bookworm/libpython3.11-minimal:amd64=3.11.2-6+deb12u6",
+				"/bookworm/libperl5.36:amd64=5.36.0-7+deb12u3",
+				"/bookworm/perl-modules-5.36:all=5.36.0-7+deb12u3",
+				"/bookworm/perl-base:amd64=5.36.0-7+deb12u3",
+				"/bookworm/libgdbm6:amd64=1.23-3",
+				"/bookworm/libgdbm-compat4:amd64=1.23-3",
+				"/bookworm/liblua5.2-0:amd64=5.2.4-3",
+				"/bookworm/libstdc++6:amd64=12.2.0-14+deb12u1",
+				"/bookworm/libgpm2:amd64=1.20.7-10+b1",
+				"/bookworm/vim-runtime:all=2:9.0.1378-2+deb12u2",
+				"/bookworm/vim-common:all=2:9.0.1378-2+deb12u2"
+			],
+			"filename": "pool/main/v/vim/vim-nox_9.0.1378-2+deb12u2_amd64.deb",
+			"name": "vim-nox",
+			"section": "editors",
+			"sha256": "47a06a97610b70a65e5571c22a205d51aea178f8bcab6322e4e1f67824454889",
+			"size": 1747820,
+			"suite": "bookworm",
+			"version": "2:9.0.1378-2+deb12u2"
+		},
+		"/bookworm/vim-runtime:all=2:9.0.1378-2+deb12u2": {
+			"architecture": "all",
+			"depends_on": [],
+			"filename": "pool/main/v/vim/vim-runtime_9.0.1378-2+deb12u2_all.deb",
+			"name": "vim-runtime",
+			"section": "editors",
+			"sha256": "6a3dd2317a593742cb247f3494d986b3127887dbe1449253b8efa6112289854e",
+			"size": 7026844,
+			"suite": "bookworm",
+			"version": "2:9.0.1378-2+deb12u2"
+		},
 		"/bookworm/vim-tiny:amd64=2:9.0.1378-2+deb12u2": {
 			"architecture": "amd64",
 			"depends_on": [
@@ -17420,7 +18699,8 @@
 				"/bookworm/libzstd1:amd64=1.5.4+dfsg2-5",
 				"/bookworm/libmd0:amd64=1.0.4-2",
 				"/bookworm/libbz2-1.0:amd64=1.0.8-5+b1",
-				"/bookworm/sed:amd64=4.9-1"
+				"/bookworm/sed:amd64=4.9-1",
+				"/bookworm-security/liblzma5:amd64=5.4.1-1"
 			],
 			"filename": "pool/main/x/xml-core/xml-core_0.18+nmu1_all.deb",
 			"name": "xml-core",
@@ -17454,7 +18734,8 @@
 				"/bookworm/libcrypt1:amd64=1:4.4.33-2",
 				"/bookworm/linux-libc-dev:amd64=6.1.148-1",
 				"/bookworm/libc-dev-bin:amd64=2.36-9+deb12u13",
-				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1"
+				"/bookworm/zlib1g:amd64=1:1.2.13.dfsg-1",
+				"/bookworm-security/linux-libc-dev:amd64=6.1.153-1"
 			],
 			"filename": "pool/main/z/zlib/zlib1g-dev_1.2.13.dfsg-1_amd64.deb",
 			"name": "zlib1g-dev",

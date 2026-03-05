@@ -56,6 +56,13 @@ apt.install(
         "libgmpxx4ldbl",
         "libpcre2-8-0",
         "libyang2-dev",
+        # for debug docker images.
+        "gdb",
+        "gdbserver",
+        "vim",
+        "openssh-client",
+        "sshpass",
+        "strace",
 
         # from docker-swss-layer-bookworm/Dockerfile.j2
         "iputils-ping",
