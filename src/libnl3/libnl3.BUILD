@@ -1,7 +1,9 @@
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@tar.bzl", "tar", "mutate")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_deb//distroless:defs.bzl", "flatten")
+load("@rules_flex//flex:flex.bzl", "flex")
 
 # =============================================================================
 # Generated headers
@@ -50,66 +52,89 @@ genrule(
 # Flex/Bison generated sources for libnl-route-3
 # =============================================================================
 
-FLEX = "$(execpath @flex_bin//:flex)"
+# The BCR flex binary is built with M4="/bin/false", expecting M4 to be
+# provided via environment variable at runtime.
+FLEX_ENV = {"M4": "$(M4)"}
 
-# Bison needs m4 at runtime and its data files (skeletons, m4sugar).
-# BISON_PKGDATADIR tells bison where to find usr/share/bison from the extracted deb.
-M4 = "$(execpath @m4_bin//:m4)"
-BISON = "$(execpath @bison_bin//:bison)"
-BISON_ENV = "M4={m4} BISON_PKGDATADIR=$$(dirname $$(dirname {bison}))/share/bison {bison}".format(
-    m4 = M4,
-    bison = BISON,
-)
-
-FLEX_TOOLS = ["@flex_bin//:flex"]
-BISON_TOOLS = [
-    "@bison_bin//:bison",
-    "@bison_bin//:bison_data",
-    "@m4_bin//:m4",
-]
-
-genrule(
+flex(
     name = "pktloc_grammar",
-    srcs = ["lib/route/pktloc_grammar.l"],
-    outs = [
-        "lib/route/pktloc_grammar.c",
-        "lib/route/pktloc_grammar.h",
-    ],
-    cmd = FLEX + " --header-file=$(location lib/route/pktloc_grammar.h) -o $(location lib/route/pktloc_grammar.c) $(SRCS)",
-    tools = FLEX_TOOLS,
+    src = "lib/route/pktloc_grammar.l",
 )
+# run_binary(
+#     name = "pktloc_grammar",
+#     tool = "@flex//:flex",
+#     srcs = [
+#         "lib/route/pktloc_grammar.l",
+#     ],
+#     outs = [
+#         "lib/route/pktloc_grammar.c",
+#         "lib/route/pktloc_grammar.h",
+#     ],
+#     args = [
+#         "--header-file=$(location lib/route/pktloc_grammar.h)",
+#         "-o",
+#         "$(location lib/route/pktloc_grammar.c)",
+#         "$(location lib/route/pktloc_grammar.l)",
+#     ],
+#     env = FLEX_ENV,
+# )
 
-genrule(
+run_binary(
     name = "pktloc_syntax",
+    tool = "@bison//:bison",
     srcs = ["lib/route/pktloc_syntax.y"],
     outs = [
         "lib/route/pktloc_syntax.c",
         "lib/route/pktloc_syntax.h",
     ],
-    cmd = BISON_ENV + " -d -o $(location lib/route/pktloc_syntax.c) $(SRCS)",
-    tools = BISON_TOOLS,
-)
-
-genrule(
-    name = "ematch_grammar",
-    srcs = ["lib/route/cls/ematch_grammar.l"],
-    outs = [
-        "lib/route/cls/ematch_grammar.c",
-        "lib/route/cls/ematch_grammar.h",
+    args = [
+        "-d",
+        "-o",
+        "$(location lib/route/pktloc_syntax.c)",
+        "$(location lib/route/pktloc_syntax.y)",
     ],
-    cmd = FLEX + " --header-file=$(location lib/route/cls/ematch_grammar.h) -o $(location lib/route/cls/ematch_grammar.c) $(SRCS)",
-    tools = FLEX_TOOLS,
 )
 
-genrule(
+flex(
+    name = "ematch_grammar",
+    src = "lib/route/cls/ematch_grammar.l",
+)
+# run_binary(
+#     name = "ematch_grammar",
+#     tool = "@flex//:flex",
+#     toolchains = [
+#         "@rules_m4//m4:current_m4_toolchain",
+#     ],
+#     srcs = [
+#         "lib/route/cls/ematch_grammar.l",
+#     ],
+#     outs = [
+#         "lib/route/cls/ematch_grammar.c",
+#         "lib/route/cls/ematch_grammar.h",
+#     ],
+#     args = [
+#         "--header-file=$(location lib/route/cls/ematch_grammar.h)",
+#         "-o",
+#         "$(location lib/route/cls/ematch_grammar.c)",
+#         "$(location lib/route/cls/ematch_grammar.l)",
+#     ],
+#     env = FLEX_ENV,
+# )
+
+run_binary(
     name = "ematch_syntax",
+    tool = "@bison//:bison",
     srcs = ["lib/route/cls/ematch_syntax.y"],
     outs = [
         "lib/route/cls/ematch_syntax.c",
         "lib/route/cls/ematch_syntax.h",
     ],
-    cmd = BISON_ENV + " -d -o $(location lib/route/cls/ematch_syntax.c) $(SRCS)",
-    tools = BISON_TOOLS,
+    args = [
+        "-d",
+        "-o",
+        "$(location lib/route/cls/ematch_syntax.c)",
+        "$(location lib/route/cls/ematch_syntax.y)",
+    ],
 )
 
 # =============================================================================
@@ -126,6 +151,16 @@ filegroup(
 cc_library(
     name = "public_headers",
     hdrs = glob(["include/netlink/**/*.h"]),
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"],
+)
+
+# Compat headers: consumers use #include <libnl3/netlink/...>
+# This matches the Debian libnl3-dev package layout.
+cc_library(
+    name = "public_headers_compat",
+    hdrs = glob(["include/netlink/**/*.h"]),
+    include_prefix = "libnl3",
     strip_include_prefix = "include",
     visibility = ["//visibility:public"],
 )
@@ -175,6 +210,7 @@ cc_library(
     linkopts = LIBNL_LINKOPTS,
     deps = [
         ":public_headers",
+        ":public_headers_compat",
         ":private_headers",
     ],
     visibility = ["//visibility:public"],
@@ -490,5 +526,4 @@ flatten(
         ":libnl-route-3_pkg",
     ],
     visibility = ["//visibility:public"],
-    deduplicate = True,
 )
