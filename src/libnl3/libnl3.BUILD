@@ -162,11 +162,7 @@ LIBNL_COPTS = [
     "-DNDEBUG",
 ]
 
-LIBNL_LINKOPTS = [
-    # TODO BL: Delete if unnecessary
-    # "-lpthread",
-    # "-lm",
-]
+LIBNL_LINKOPTS = []
 
 # =============================================================================
 # Core library: libnl-3

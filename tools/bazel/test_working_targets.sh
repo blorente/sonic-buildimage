@@ -26,8 +26,6 @@ test_repo "../sonic-build-infra" "bazel build ..."
 
 echo "[= Testing Docker Images =]"
 
-# TODO BL: Figure out what's up with base_image_files.
-
 cd "${repo_root}"
 bazel query 'kind(oci_load, ...)'
 

@@ -68,7 +68,7 @@ apt.install(
         "iputils-ping",
 
         # from docker-orchagent/Dockerfile.j2
-        "ifupdown",
+        "ifupdown-ng",
         "arping",
         # "iproute2", # Already here
         "ndisc6",

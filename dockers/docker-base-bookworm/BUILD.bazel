@@ -11,11 +11,6 @@ site_packages(
         "@pip//supervisor",
         "@pip//supervisord_dependent_startup",
     ],
-    mutate = mutate(
-        awk_script = "@sonic_bazel_common//:mutate_python_packages",
-        package_dir = "./usr",
-        strip_prefix = "install",
-    ),
 )
 
 passwd(

@@ -2,7 +2,7 @@ load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@rules_deb//distroless:defs.bzl", "flatten", "group", "passwd")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 load("@tar.bzl", "mutate", "tar")
-load("//dockers/docker-base-bookworm:site_packages.bzl", "site_packages")
+load("@sonic_build_infra//python:site_packages.bzl", "site_packages")
 
 flatten(
     name = "apt_deps",
@@ -29,11 +29,6 @@ site_packages(
     srcs = [
         "@pip//scapy",
     ],
-    mutate = mutate(
-        awk_script = "@sonic_bazel_common//:mutate_python_packages",
-        package_dir = "./usr",
-        strip_prefix = "install",
-    ),
 )
 
 # TODO(bazel-ready): Unported, we don't support arm64 yet
@@ -58,8 +53,6 @@ site_packages(
 # $(DOCKER_ORCHAGENT)_DEPENDS += $(SWSS_DBG)
 # endif
 
-# TODO BL: Make sure the j2 files that cfggen and docker-init.j2 needs are there: https://aspect-build.slack.com/archives/C099BB0M4NQ/p1772185246672969?thread_ts=1770751856.859649&cid=C099BB0M4NQ
-# TODO BL: Make sure `base_image_files` end up in the container if they need to be.
 # TODO(bazel-ready): Create debug images.
 
 tar(
