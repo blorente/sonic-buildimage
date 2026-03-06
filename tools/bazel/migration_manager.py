@@ -14,6 +14,10 @@ import subprocess
 import sys
 
 
+def red(text):
+    return f"\033[1;31m{text}\033[0m"
+
+
 def bold_purple(text):
     return f"\033[1;35m{text}\033[0m"
 
@@ -147,6 +151,57 @@ def git_push_tag(repo_path, remote, tag_name):
         return False, str(e)
 
 
+def git_has_unpushed_commits(repo_path):
+    """Return True if the current branch has commits not pushed to the 'thesayyn' remote."""
+    try:
+        branch = git_branch(repo_path)
+        if not branch:
+            return False
+        # Check if thesayyn remote has this branch
+        result = subprocess.run(
+            ["git", "rev-parse", "--verify", f"thesayyn/{branch}"],
+            cwd=repo_path, capture_output=True, text=True
+        )
+        if result.returncode != 0:
+            # Remote branch doesn't exist — all local commits are unpushed
+            return True
+        # Count commits ahead of the remote branch
+        result = subprocess.run(
+            ["git", "rev-list", "--count", f"thesayyn/{branch}..HEAD"],
+            cwd=repo_path, capture_output=True, text=True, check=True
+        )
+        return int(result.stdout.strip()) > 0
+    except (subprocess.CalledProcessError, ValueError):
+        return False
+
+
+BAZEL_GITIGNORE_PATTERNS = [
+    "MODULE.bazel",
+    "MODULE.bazel.lock",
+    "BUILD",
+    "BUILD.bazel",
+    ".bazelversion",
+    ".bazelrc",
+    "WORKSPACE",
+    "WORKSPACE.bazel",
+]
+
+
+def git_check_ignored_bazel_files(repo_path):
+    """Return list of Bazel-related file patterns that are gitignored in this repo."""
+    ignored = []
+    try:
+        result = subprocess.run(
+            ["git", "check-ignore", "--"] + BAZEL_GITIGNORE_PATTERNS,
+            cwd=repo_path, capture_output=True, text=True
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            ignored = result.stdout.strip().splitlines()
+    except OSError:
+        pass
+    return ignored
+
+
 REPO_NAME_OVERRIDES = {
     "sonic-sairedis/SAI": "opencompute/SAI",
 }
@@ -176,8 +231,9 @@ def parse_local_path_overrides(module_bazel_path):
     return paths
 
 
-def process_repo(repo_path, visited, results, dirty_repos, todo_hits,
-                 bazel_ready_hits, short=False, include_branch=False, parent_path=None):
+def process_repo(repo_path, visited, results, dirty_repos, unpushed_repos,
+                 ignored_bazel_files, todo_hits, bazel_ready_hits,
+                 short=False, include_branch=False, parent_path=None):
     abs_path = os.path.realpath(repo_path)
 
     if abs_path in visited:
@@ -195,6 +251,13 @@ def process_repo(repo_path, visited, results, dirty_repos, todo_hits,
 
     if git_has_uncommitted_changes(abs_path):
         dirty_repos.append(abs_path)
+
+    if git_has_unpushed_commits(abs_path):
+        unpushed_repos.append(abs_path)
+
+    ignored = git_check_ignored_bazel_files(abs_path)
+    if ignored:
+        ignored_bazel_files[abs_path] = ignored
 
     bl_hits = git_grep_todo_bl(abs_path)
     if bl_hits:
@@ -229,9 +292,10 @@ def process_repo(repo_path, visited, results, dirty_repos, todo_hits,
 
     for rel_path in parse_local_path_overrides(module_bazel):
         dep_path = os.path.join(abs_path, rel_path)
-        process_repo(dep_path, visited, results, dirty_repos, todo_hits,
-                     bazel_ready_hits, short=short,
-                     include_branch=include_branch, parent_path=abs_path)
+        process_repo(dep_path, visited, results, dirty_repos, unpushed_repos,
+                     ignored_bazel_files, todo_hits, bazel_ready_hits,
+                     short=short, include_branch=include_branch,
+                     parent_path=abs_path)
 
 
 def format_markdown(results, include_branch=False):
@@ -319,6 +383,45 @@ def format_checkpoint_markdown(results, todo_bl_hits, todo_bazel_ready_hits,
     return "\n".join(lines)
 
 
+def report_errors(dirty_repos, unpushed_repos, ignored_bazel_files, todo_hits):
+    """Print all error diagnostics to stderr. Returns True if any errors were found."""
+    errors = False
+
+    if dirty_repos:
+        print(red("Error: the following repositories have uncommitted changes:"),
+              file=sys.stderr)
+        for path in dirty_repos:
+            print(f"  {bold_purple(path)}", file=sys.stderr)
+        errors = True
+
+    if unpushed_repos:
+        print(red("Error: the following repositories have unpushed commits (remote: thesayyn):"),
+              file=sys.stderr)
+        for path in unpushed_repos:
+            print(f"  {bold_purple(path)}", file=sys.stderr)
+        errors = True
+
+    if ignored_bazel_files:
+        print(red("Error: the following repositories have gitignored Bazel files:"),
+              file=sys.stderr)
+        for path, files in ignored_bazel_files.items():
+            print(f"  {bold_purple(path)}", file=sys.stderr)
+            for f in files:
+                print(f"    {dim(f)}", file=sys.stderr)
+        errors = True
+
+    if todo_hits:
+        print(red("Error: the following repositories contain 'BL:' markers:"),
+              file=sys.stderr)
+        for path, hits in todo_hits.items():
+            print(f"  {bold_purple(path)}", file=sys.stderr)
+            for hit in hits:
+                print(format_grep_hit(hit), file=sys.stderr)
+        errors = True
+
+    return errors
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Generate a commit table from Bazel local_path_override dependencies"
@@ -347,10 +450,13 @@ def main():
     results = []
     visited = set()
     dirty_repos = []
+    unpushed_repos = []
+    ignored_bazel_files = {}
     todo_hits = {}
     bazel_ready_hits = {}
-    process_repo(args.repo, visited, results, dirty_repos, todo_hits,
-                 bazel_ready_hits, short=args.short, include_branch=args.include_branch)
+    process_repo(args.repo, visited, results, dirty_repos, unpushed_repos,
+                 ignored_bazel_files, todo_hits, bazel_ready_hits,
+                 short=args.short, include_branch=args.include_branch)
 
     if args.checkpoint:
         if args.run_tests and not run_tests(args.repo):
@@ -391,31 +497,21 @@ def main():
                         else:
                             print(f"Warning: could not push tag in {r['repository']}: {err}",
                                   file=sys.stderr)
+
+        report_errors(dirty_repos, unpushed_repos, ignored_bazel_files,
+                      todo_hits)
         return
 
-    errors = False
+    errors = report_errors(dirty_repos, unpushed_repos, ignored_bazel_files,
+                           todo_hits)
 
-    if dirty_repos:
-        print("Error: the following repositories have uncommitted changes:", file=sys.stderr)
-        for path in dirty_repos:
-            print(f"  {bold_purple(path)}", file=sys.stderr)
-        errors = True
-
-    if todo_hits:
-        print("Error: the following repositories contain 'BL:' markers:", file=sys.stderr)
-        for path, hits in todo_hits.items():
-            print(f"  {bold_purple(path)}", file=sys.stderr)
-            for hit in hits:
-                print(format_grep_hit(hit), file=sys.stderr)
-        errors = True
-
-    if errors:
-        sys.exit(1)
-
-    if args.output_json:
-        print(json.dumps(results, indent=2))
+    if not errors:
+        if args.output_json:
+            print(json.dumps(results, indent=2))
+        else:
+            print(format_markdown(results, include_branch=args.include_branch))
     else:
-        print(format_markdown(results, include_branch=args.include_branch))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
