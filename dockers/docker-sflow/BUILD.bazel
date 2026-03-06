@@ -2,9 +2,7 @@ load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@rules_deb//distroless:defs.bzl", "flatten", "group", "passwd")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 load("@tar.bzl", "mutate", "tar")
-load("//dockers/docker-base-bookworm:site_packages.bzl", "site_packages")
-
-# TODO BL: what is base_image_files?
+load("@sonic_build_infra//python:site_packages.bzl", "site_packages")
 
 tar(
     name = "source_files",

@@ -1,6 +1,6 @@
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 load("@tar.bzl//:tar.bzl", "mutate", "tar")
-load("//dockers/docker-base-bookworm:site_packages.bzl", "site_packages")
+load("@sonic_build_infra//python:site_packages.bzl", "site_packages")
 
 # Python pip dependencies (excluding libyang which needs special handling)
 site_packages(
@@ -21,11 +21,6 @@ site_packages(
         "@pip//jsondiff",
         "@pip//tabulate",
     ],
-    mutate = mutate(
-        awk_script = "@sonic_bazel_common//:mutate_python_packages",
-        package_dir = "./usr",
-        strip_prefix = "install",
-    ),
 )
 
 # sonic-cfggen entrypoint script

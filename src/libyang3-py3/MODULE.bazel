@@ -9,6 +9,12 @@ bazel_dep(name = "rules_cc", version = "0.2.10")
 bazel_dep(name = "libyang3", version = "3.12.2")
 bazel_dep(name = "tar.bzl", version = "0.8.1")
 
+bazel_dep(name = "sonic-build-infra", version = "0.0.0", repo_name = "sonic_build_infra")
+local_path_override(
+    module_name = "sonic-build-infra",
+    path = "../../../sonic-build-infra"
+)
+
 # Set up pip dependencies for building using uv lockfile
 uv = use_extension("@aspect_rules_py//uv/unstable:extension.bzl", "uv")
 uv.declare_hub(hub_name = "libyang3_py3_pip")
@@ -48,8 +54,3 @@ http_archive(
 )
 
 bazel_dep(name = "patchelf", version = "0.18.0.bcr.1")
-bazel_dep(name = "sonic-bazel-common", version = "0.0.0", repo_name = "sonic_bazel_common")
-local_path_override(
-    module_name = "sonic-bazel-common",
-    path = "tools/sonic-bazel-common",
-)
