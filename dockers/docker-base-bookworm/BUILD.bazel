@@ -11,6 +11,7 @@ site_packages(
         "@pip//supervisor",
         "@pip//supervisord_dependent_startup",
     ],
+    visibility = [":__subpackages__"],
 )
 
 passwd(
