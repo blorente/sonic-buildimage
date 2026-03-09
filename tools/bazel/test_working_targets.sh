@@ -12,10 +12,20 @@ function test_repo() {
   popd
 }
 
+echo "[= Testing Local Tests =]"
+
+bazel test \
+  //dockers/docker-orchagent/tests:site-packages_assert \
+  //dockers/docker-base-bookworm/tests:site-packages_assert \
+  @libyang3_py3//... \
+  --keep_going
+
 echo "[= Testing Dependent Repositories =]"
 
 test_repo "../sonic-utilities" "bazel build :sonic-utilities :dist"
+test_repo "../sonic-utilities" "bazel test //:all"
 test_repo "../sonic-host-services" "bazel build :sonic-host-services :dist"
+test_repo "../sonic-host-services" "bazel test //:all"
 test_repo "../sonic-sairedis/SAI" "bazel build ..."
 test_repo "../sonic-sairedis" "bazel build ..."
 test_repo "../sonic-dash-api" "bazel build ..."

@@ -29,6 +29,7 @@ site_packages(
     srcs = [
         "@pip//scapy",
     ],
+    visibility = [":__subpackages__"],
 )
 
 # TODO(bazel-ready): Unported, we don't support arm64 yet
