@@ -137,9 +137,7 @@ local_path_override(
 bazel_dep(name = "sonic-build-infra", version = "0.0.0", repo_name = "sonic_build_infra")
 local_path_override(
     module_name = "sonic-build-infra",
-    # TODO BL: restore after testing.
     path = "../sonic-build-infra",
-    # path = "/tmp/sonic-build-infra",
 )
 
 register_toolchains("@sonic_build_infra//toolchains/gcc:host_gcc_toolchain")
