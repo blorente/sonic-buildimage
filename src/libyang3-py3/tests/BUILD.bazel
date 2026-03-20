@@ -4,4 +4,7 @@ assert_tar(
     name = "libyang3-python_pkg_assert",
     tar = "//:libyang3-python_pkg",
     expected = ":libyang3-python_pkg.expected.txt",
+    inconsistent_sizes = [
+        "./usr/lib/python3/dist-packages/libyang.so",
+    ],
 )

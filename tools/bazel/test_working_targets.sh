@@ -18,7 +18,8 @@ bazel test \
   //dockers/docker-orchagent/tests:site-packages_assert \
   //dockers/docker-base-bookworm/tests:site-packages_assert \
   @libyang3_py3//... \
-  --keep_going
+  --keep_going \
+  --test_output=errors
 
 echo "[= Testing Dependent Repositories =]"
 
