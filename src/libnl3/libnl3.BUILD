@@ -60,24 +60,6 @@ flex(
     name = "pktloc_grammar",
     src = "lib/route/pktloc_grammar.l",
 )
-# run_binary(
-#     name = "pktloc_grammar",
-#     tool = "@flex//:flex",
-#     srcs = [
-#         "lib/route/pktloc_grammar.l",
-#     ],
-#     outs = [
-#         "lib/route/pktloc_grammar.c",
-#         "lib/route/pktloc_grammar.h",
-#     ],
-#     args = [
-#         "--header-file=$(location lib/route/pktloc_grammar.h)",
-#         "-o",
-#         "$(location lib/route/pktloc_grammar.c)",
-#         "$(location lib/route/pktloc_grammar.l)",
-#     ],
-#     env = FLEX_ENV,
-# )
 
 run_binary(
     name = "pktloc_syntax",
@@ -99,27 +81,6 @@ flex(
     name = "ematch_grammar",
     src = "lib/route/cls/ematch_grammar.l",
 )
-# run_binary(
-#     name = "ematch_grammar",
-#     tool = "@flex//:flex",
-#     toolchains = [
-#         "@rules_m4//m4:current_m4_toolchain",
-#     ],
-#     srcs = [
-#         "lib/route/cls/ematch_grammar.l",
-#     ],
-#     outs = [
-#         "lib/route/cls/ematch_grammar.c",
-#         "lib/route/cls/ematch_grammar.h",
-#     ],
-#     args = [
-#         "--header-file=$(location lib/route/cls/ematch_grammar.h)",
-#         "-o",
-#         "$(location lib/route/cls/ematch_grammar.c)",
-#         "$(location lib/route/cls/ematch_grammar.l)",
-#     ],
-#     env = FLEX_ENV,
-# )
 
 run_binary(
     name = "ematch_syntax",

@@ -166,6 +166,14 @@ local_path_override(
     path = "src/libnl3",
 )
 
+# Override to get around our gcc toolchain's limitations
+# See: https://github.com/blorente/rules_m4/commit/623849876d5722e9a5515a6237a39ad81c585af9#diff-64fffd7f2fee0a5a182cc297f3c260f7820729dd4f2855c52aeac25fa5d65271R37-R46
+git_override(
+     module_name = "rules_m4",
+     remote = "https://github.com/blorente/rules_m4",
+     commit = "623849876d5722e9a5515a6237a39ad81c585af9",
+)
+
 bazel_dep(name = "libyang3_py3", version = "3.1.0")
 local_path_override(
     module_name = "libyang3_py3",
