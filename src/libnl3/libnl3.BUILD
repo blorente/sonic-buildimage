@@ -1,9 +1,9 @@
-load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@tar.bzl", "tar", "mutate")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_deb//distroless:defs.bzl", "flatten")
 load("@rules_flex//flex:flex.bzl", "flex")
+load("@rules_bison//bison:bison.bzl", "bison_cc_library")
 
 # =============================================================================
 # Generated headers
@@ -61,20 +61,14 @@ flex(
     src = "lib/route/pktloc_grammar.l",
 )
 
-run_binary(
+bison_cc_library(
     name = "pktloc_syntax",
-    tool = "@bison//:bison",
-    srcs = ["lib/route/pktloc_syntax.y"],
-    outs = [
-        "lib/route/pktloc_syntax.c",
-        "lib/route/pktloc_syntax.h",
+    src = "lib/route/pktloc_syntax.y",
+    copts = [
+        "-fPIC",
+        "-I{REPO_DIR}/include/linux-private",
     ],
-    args = [
-        "-d",
-        "-o",
-        "$(location lib/route/pktloc_syntax.c)",
-        "$(location lib/route/pktloc_syntax.y)",
-    ],
+    deps = [":private_headers"],
 )
 
 flex(
@@ -82,20 +76,14 @@ flex(
     src = "lib/route/cls/ematch_grammar.l",
 )
 
-run_binary(
+bison_cc_library(
     name = "ematch_syntax",
-    tool = "@bison//:bison",
-    srcs = ["lib/route/cls/ematch_syntax.y"],
-    outs = [
-        "lib/route/cls/ematch_syntax.c",
-        "lib/route/cls/ematch_syntax.h",
+    src = "lib/route/cls/ematch_syntax.y",
+    copts = [
+        "-fPIC",
+        "-I{REPO_DIR}/include/linux-private",
     ],
-    args = [
-        "-d",
-        "-o",
-        "$(location lib/route/cls/ematch_syntax.c)",
-        "$(location lib/route/cls/ematch_syntax.y)",
-    ],
+    deps = [":private_headers"],
 )
 
 # =============================================================================
@@ -144,6 +132,11 @@ cc_library(
     ]) + [":defs_h"],
     # include/netlink-private/netlink.h uses #include <defs.h>,
     # so we need lib/ in the include path (where defs.h is generated).
+    #
+    # Note: include/linux-private is intentionally NOT listed here; adding it
+    # via includes= would generate -isystem, which GCC searches AFTER the
+    # toolchain's -isystem paths. The linux-private headers need to shadow the
+    # system linux-libc-dev headers, so they are added via -I in LIBNL_COPTS.
     includes = [
         "include",
         "lib",
@@ -152,6 +145,9 @@ cc_library(
         ":linux_private_headers",
         ":public_headers",
     ],
+    # _GNU_SOURCE is required by the private headers (e.g. struct ucred in
+    # netlink-private/types.h). Propagate it to all consumers via defines.
+    defines = ["_GNU_SOURCE"],
 )
 
 # =============================================================================
@@ -165,6 +161,14 @@ LIBNL_COPTS = [
     "-D_GNU_SOURCE",
     "-O2",
     "-DNDEBUG",
+    # The libnl3 linux-private headers (e.g. linux/snmp.h) must shadow the
+    # system linux-libc-dev headers, which are newer and have grown extra enum
+    # values that break libnl3's static assertions (e.g. __ICMP6_MIB_MAX == 6
+    # in lib/route/link/inet6.c). GCC ignores -I for a directory that is already
+    # listed as -isystem, so include/linux-private must NOT appear in
+    # private_headers.includes= (which generates -isystem). Instead, we use -I
+    # here to get user-include priority over the toolchain system headers.
+    "-I{REPO_DIR}/include/linux-private",
 ]
 
 LIBNL_LINKOPTS = []
@@ -238,19 +242,12 @@ cc_library(
         ],
     ) + [
         ":pktloc_grammar",
-        ":pktloc_syntax",
         ":ematch_grammar",
-        ":ematch_syntax",
     ],
     copts = LIBNL_COPTS,
-    # includes adds both source-tree and genfiles-tree variants, so the
-    # generated flex/bison headers in lib/route/ and lib/route/cls/ are
-    # findable via #include "pktloc_syntax.h" etc.
-    includes = [
-        "lib/route",
-        "lib/route/cls",
-    ],
     deps = [
+        ":pktloc_syntax",
+        ":ematch_syntax",
         ":libnl_3",
         ":private_headers",
     ],

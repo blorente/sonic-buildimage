@@ -26,24 +26,23 @@ register_toolchains("@sonic_build_infra//toolchains/gcc:host_gcc_toolchain")
 # For now, we only resolve the version pinned in @bookworm from our selected debian snapshot.
 LIBNL_3_VERSION = "3.7.0"
 
-http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+libnl3_src = use_repo_rule("//:libnl3_src.bzl", "libnl3_src")
 
-http_archive(
+libnl3_src(
     name = "libnl3_src",
-    build_file = "//:libnl3.BUILD",
-    patch_args = ["-p1"],
+    build_file_template = "//:libnl3.BUILD",
     patches = [
         "//:patch/0003-Adding-support-for-RTA_NH_ID-attribute.patch",
-        "//:patch/fix-icmp6-mib-max-assert.patch",
+        # TODO BL: restore all the other patches in the sequence
+        # "//:patch/fix-icmp6-mib-max-assert.patch",
     ],
     sha256 = "9fe43ccbeeea72c653bdcf8c93332583135cda46a79507bfd0a483bb57f65939",
     strip_prefix = "libnl-{}".format(LIBNL_3_VERSION),
     urls = ["http://debian-archive.trafficmanager.net/debian/pool/main/libn/libnl3/libnl3_{}.orig.tar.gz".format(LIBNL_3_VERSION)],
 )
 
-bazel_dep(name = "bison", version = "3.8.2.bcr.2")
-bazel_dep(name = "flex", version = "2.6.4")
 bazel_dep(name = "rules_flex", version = "0.4")
+bazel_dep(name = "rules_bison", version = "0.4")
 bazel_dep(name = "rules_m4", version = "0.3")
 # TODO BL: replace with new version of rules_m4 when this merges:
 #  https://github.com/jmillikin/rules_m4/pull/23
