@@ -24,9 +24,9 @@ bazel test \
 echo "[= Testing Dependent Repositories =]"
 
 test_repo "../sonic-utilities" "bazel build :sonic-utilities :dist"
-test_repo "../sonic-utilities" "bazel test //:all"
+test_repo "../sonic-utilities" "bazel test //:all --test_output=errors"
 test_repo "../sonic-host-services" "bazel build :sonic-host-services :dist"
-test_repo "../sonic-host-services" "bazel test //:all"
+test_repo "../sonic-host-services" "bazel test //:all --test_output=errors"
 test_repo "../sonic-sairedis/SAI" "bazel build ..."
 test_repo "../sonic-sairedis" "bazel build ..."
 test_repo "../sonic-dash-api" "bazel build ..."
