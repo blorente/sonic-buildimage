@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("//:flags.bzl", "CFLAGS_ASAN", "CFLAGS_COMMON", "DBGFLAGS", "LDFLAGS_ASAN")
 load("//:gnoi.bzl", "gnoi_proto_lib")
 

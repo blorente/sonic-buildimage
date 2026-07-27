@@ -1,7 +1,5 @@
-load("@rules_distroless//distroless:defs.bzl", "flatten")
 load("@sonic_build_infra//deb:sonic_deb.bzl", "sonic_deb")
 load("@sonic_build_infra//tar:sonic_deploy_tar.bzl", "sonic_deploy_tar")
-load("@tar.bzl", "tar")
 
 sonic_deploy_tar(
     name = "sysmgr_pkg",
