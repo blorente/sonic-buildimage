@@ -19,20 +19,15 @@ function test_repo() {
   repo=$1
   cmd=$2
 
-  echo "[host] ${repo}: ${cmd}"
-  pushd "${repo_root}/${repo}"
-  ${cmd}
-  bazel clean
-  popd
-
-  run_in_slave $1 $2
+  echo "[slave] ${repo}: ${cmd}"
+  run_in_slave "${repo}" "bazel clean && ${cmd}"
 }
 
 echo "[= Testing Dependent Repositories =]"
 
 test_repo "src/sonic-build-infra" "bazel build ..."
 test_repo "src/sonic-swss-common" "bazel build ..."
-test_repo "src/sonic-sysmgr" "bazel build ..."
+test_repo "src/sonic-sysmgr" "bazel build ... && bazel run //tools/bazel/buildifier:buildifier"
 test_repo "src/libnl3" "bazel build ..."
 
 echo "[= Testing Docker Images =]"
@@ -47,7 +42,12 @@ set -e
 for image in ${docker_images[@]}; do
     echo "[docker-make] ${image}"
 
-    make "target/${image}.gz"
+    rm -f "target/${image}.gz"
+    BUILD_WITH_BAZEL_WHEN_AVAILABLE=true \
+      RUN_BAZEL_IN_SLAVE_CONTAINER=true \
+      BLDENV=bookworm \
+      NOTRIXIE=1 \
+      make "target/${image}.gz"
 done
 
 echo "[= DONE =]"
