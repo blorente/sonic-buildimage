@@ -187,17 +187,18 @@ SONiC relies on apt-installed dependencies in two places: As build-time dependen
 
 In both cases, we use `rules_distroless` to fetch packages from a Debian snapshot. `rules_distroless` will resolve dependencies, unpack them, and overlay a Bazel build on top of them so that we can use them within our targets.
 
-The full, centralized list of packages lives in the `apt.install` block of [`sonic-build-infra`'s `MODULE.bazel`](/src/sonic-build-infra/MODULE.bazel). Modules that depend on `sonic-build-infra` re-export this list (via the `bookworm` hub repo), so they don't have to declare their own apt dependencies.
+The full, centralized list of packages lives in the `apt.install` block of [`sonic-build-infra`'s `MODULE.bazel`](/src/sonic-build-infra/MODULE.bazel). Modules that depend on `sonic-build-infra` re-export this list (via the `trixie` hub repo), so they don't have to declare their own apt dependencies.
 
 This will create appropriate Bazel targets for all the relevant parts of the Debian package:
 
 ```
-➜ bazel query @bookworm//libc6-dev:all
-@bookworm//libc6-dev:control
-@bookworm//libc6-dev:data
-@bookworm//libc6-dev:libc6
-@bookworm//libc6-dev:libc6-dev
+➜ bazel query @trixie//libc6-dev:all
+@trixie//libc6-dev:control
+@trixie//libc6-dev:data
+@trixie//libc6-dev:libc6
+@trixie//libc6-dev:libc6-dev
 ```
+
 #### Adding Debian packages to Images
 
 This fits nicely with the structure of Debian packages. Their `data` sections were designed to be unpacked directly in a system's root, so they can serve directly as a layer:
@@ -206,7 +207,7 @@ This fits nicely with the structure of Debian packages. Their `data` sections we
 oci_image(
 	name = "example_image",
 	layers = [
-		"@bookworm//libc6-dev:data", # Add it as a layer directly
+		"@trixie//libc6-dev:data", # Add it as a layer directly
 		...
 	],
 )
@@ -220,9 +221,9 @@ flatten(
     deduplicate = True,
     tars = [
 	    # Note the lack of `:data`. `flatten` is smart enough to figure it out.
-        "@bookworm//libdbus-1-3",
-        "@bookworm//libdbus-c++-1-0v5",
-        "@bookworm//libprotobuf32",
+        "@trixie//libdbus-1-3",
+        "@trixie//libdbus-c++-1-0v5",
+        "@trixie//libprotobuf32t64",
     ],
 )
 
@@ -243,37 +244,40 @@ oci_image(
 > 
 > Please see [this document](/tools/bazel/docs/import-external-projects.md) for alternatives and guidance on handling external dependencies.
 
-Let's say our binary `:foo` depends on `libc6` being installed and present in the system. Outside Bazel, what we would do is install the `libc6-dev` package, which will install the required dynamic libraries and headers. For SONiC, this happens when we create the slave container.
+Let's say our binary `:foo` depends on `libhiredis` being installed and present in the system. Outside Bazel, what we would do is install the `libhiredis-dev` package, which will install the required dynamic libraries and headers. For SONiC, this happens when we create the slave container.
 
-`rules_distroless` allows us to translate this pattern easily into Bazel. First, we list `libc6-dev` as a dependency we want to fetch from `apt`:
+`rules_distroless` allows us to translate this pattern easily into Bazel. First, we list `libhiredis-dev` as a dependency we want to fetch from `apt`:
 
 ```starlark
 # MODULE.bazel
 apt.install(
-    dependency_set = "bookworm",
+    dependency_set = "trixie",
     packages = [
-        "libc6-dev",
+        "libhiredis-dev",
         ...
     ],
     suites = [
-        "bookworm",
-        "bookworm-updates",
-        "bookworm-security",
+        "trixie",
+        "trixie-updates",
+        "trixie-security",
     ],
 )
 ```
 
-This will automatically create the `@bokworm/libc6-dev` bazel module, along with the handy `@bookworm//libc6-dev:libc` target. This is a target that bundles `libc6`'s `so` files and headers:
+This will automatically create the `@trixie/libhiredis-dev` bazel module, along with the handy `@trixie//libhiredis-dev:libc` target. This is a target that bundles `libhiredis`'s `so` files and headers:
 
 ```starlark
-➜ bazel query --output label_kind @bookworm//libc6-dev/...
-alias rule @bookworm//libc6-dev:control
-alias rule @bookworm//libc6-dev:data
-alias rule @bookworm//libc6-dev:libc6
-filegroup rule @bookworm//libc6-dev:libc6-dev
-filegroup rule @bookworm//libc6-dev/amd64:amd64
-alias rule @bookworm//libc6-dev/amd64:control
-alias rule @bookworm//libc6-dev/amd64:data
+➜ bazel query --output label_kind '@trixie//libhiredis-dev/...'
+alias rule @trixie//libhiredis-dev:control
+alias rule @trixie//libhiredis-dev:data
+alias rule @trixie//libhiredis-dev:libhiredis
+filegroup rule @trixie//libhiredis-dev:libhiredis-dev
+filegroup rule @trixie//libhiredis-dev/amd64:amd64
+alias rule @trixie//libhiredis-dev/amd64:control
+alias rule @trixie//libhiredis-dev/amd64:data
+filegroup rule @trixie//libhiredis-dev/arm64:arm64
+alias rule @trixie//libhiredis-dev/arm64:control
+alias rule @trixie//libhiredis-dev/arm64:data
 ```
 
 So, to make it available to `:foo`, we should be able to depend on it:
@@ -282,12 +286,12 @@ So, to make it available to `:foo`, we should be able to depend on it:
 cc_binary(
 	name = "foo",
 	deps = [
-		"@libc-dev//:libc",
+		"@trixie//libhiredis-dev:libhiredis",
 	],
 )
 ```
 
-As `rules_distroless` creates standard Bazel `rules_cc` targets, this new dependency will work just as well as if we'd had vendored the source code from `libc`.
+As `rules_distroless` creates standard Bazel `rules_cc` targets, this new dependency will work just as well as if we'd had vendored the source code from `libhiredis`.
 
 ## End-to-end Example: Migrating `docker-sysmgr`
 
@@ -601,8 +605,8 @@ cc_binary(
     name = "libswsscommon_consolidated_base",
     srcs = [
         # Include static libraries directly to force static linking and bypass linker scripts
-        "@@rules_distroless++apt+bookworm_libbsd-dev-amd64_0.11.7-2//:usr/lib/x86_64-linux-gnu/libbsd.a",
-        "@@rules_distroless++apt+bookworm_libmd-dev-amd64_1.0.4-2//:usr/lib/x86_64-linux-gnu/libmd.a",
+        "@@rules_distroless++apt+trixie_libbsd-dev-amd64_0.11.7-2//:usr/lib/x86_64-linux-gnu/libbsd.a",
+        "@@rules_distroless++apt+trixie_libmd-dev-amd64_1.0.4-2//:usr/lib/x86_64-linux-gnu/libmd.a",
     ],
     linkshared = True,
     linkopts = [
@@ -782,7 +786,7 @@ load("//tools/bazel/oci:docker_archive_to_oci.bzl", "docker_archive_to_oci_layou
 
 docker_archive_to_oci_layout(
     name = "config_engine_base_layout",
-    src = "//:target/docker-config-engine-bookworm.gz",
+    src = "//:target/docker-config-engine-trixie.gz",
 )
 ```
 
@@ -854,7 +858,7 @@ RUN apt-get update        && \
         libdbus-c++-1-0v5
 ```
 
-These are the apt packages that our image needs at runtime. Referring back to [Translating Debian Dependencies](#translating-debian-dependencies), we know that we can just refer to the `@bookworm` dependencies we imported via `rules_distroless`.
+These are the apt packages that our image needs at runtime. Referring back to [Translating Debian Dependencies](#translating-debian-dependencies), we know that we can just refer to the `@trixie` dependencies we imported via `rules_distroless`.
 
 ```starlark
 # dockers/docker-sysmgr/BUILD.bazel
@@ -863,11 +867,11 @@ flatten(                   # Flatten them so that all deps are one layer.
     name = "apt_deps",
     deduplicate = True,
     tars = [
-        "@bookworm//libdbus-1-3",
-        "@bookworm//libdbus-c++-1-0v5",
+        "@trixie//libdbus-1-3",
+        "@trixie//libdbus-c++-1-0v5",
 
         # We can add protobuf here, since it is listed in `RDEPS`
-        "@bookworm//libprotobuf32",
+        "@trixie//libprotobuf32t64",
     ],
 )
 
