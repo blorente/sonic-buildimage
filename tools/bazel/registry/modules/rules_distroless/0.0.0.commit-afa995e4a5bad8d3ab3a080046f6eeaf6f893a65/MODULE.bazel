@@ -1,11 +1,13 @@
-# This is rules_distroless pinned to an unreleased upstream commit.
-# Pinned commit: https://github.com/bazel-contrib/rules_distroless/commit/ebfd74a2e07b83235e064bb63ace98a1a5223e02
+# This is rules_distroless pinned to an unreleased commit on a fork.
+# Pinned commit: https://github.com/blorente/rules_distroless/commit/afa995e4a5bad8d3ab3a080046f6eeaf6f893a65
 #
-# Once a release containing this commit is cut, replace this with the
-# upstream version and remove this registry entry.
+# Carries the leaf-filemap lockfile fix and the Architecture: all expansion,
+# neither of which is on bazel-contrib yet. Once they land upstream and a
+# release is cut, replace this with the upstream version and remove this
+# registry entry.
 module(
     name = "rules_distroless",
-    version = "0.0.0.commit-ebfd74a2e07b83235e064bb63ace98a1a5223e02",
+    version = "0.0.0.commit-afa995e4a5bad8d3ab3a080046f6eeaf6f893a65",
     compatibility_level = 1,
 )
 

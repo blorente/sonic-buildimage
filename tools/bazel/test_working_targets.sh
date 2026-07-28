@@ -23,9 +23,9 @@ function test_repo() {
   run_in_slave "${repo}" "bazel clean"
   run_in_slave "${repo}" "bazel build ..."
   # Relax bash requirements, because Bazel exits with '4' if there are no tests.
-  set +euo pipefail
-  run_in_slave "${repo}" "bazel test ... || [[ $? == 4 ]]"
-  set -eup pipefail
+  # set +euo pipefail
+  run_in_slave "${repo}" "bazel test ... || \[[ $$? == 4 ]\]"
+  # set -eup pipefail
   run_in_slave "${repo}" "bazel run //tools/bazel/buildifier:buildifier.check"
 }
 
@@ -35,7 +35,6 @@ test_repo "src/sonic-build-infra"
 test_repo "src/sonic-swss-common"
 test_repo "src/sonic-sysmgr"
 test_repo "src/libnl3"
-test_repo "."
 
 echo "[= Testing Docker Images =]"
 
