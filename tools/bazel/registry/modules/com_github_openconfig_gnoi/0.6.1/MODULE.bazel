@@ -2,7 +2,10 @@
 # (src/sonic-sysmgr/gnoi). gnoi ships only an empty WORKSPACE-style MODULE.bazel,
 # so we provide the module declaration and the deps its BUILD files load here in the
 # registry instead of patching the submodule. source.json supplies the repo content.
-module(name = "com_github_openconfig_gnoi", version = "0.6.1")
+module(
+    name = "com_github_openconfig_gnoi",
+    version = "0.6.1",
+)
 
 # Repos referenced by the gnoi BUILD files we actually load (//types + //:common.bzl).
 bazel_dep(name = "rules_go", version = "0.60.0.sonic-patched", repo_name = "io_bazel_rules_go")

@@ -1,3 +1,5 @@
+"""Common flags used througout the project."""
+
 CFLAGS_COMMON = [
     # This differs from the Make version because recent versions of protobuf and abseil
     # need to be compiled against C++17

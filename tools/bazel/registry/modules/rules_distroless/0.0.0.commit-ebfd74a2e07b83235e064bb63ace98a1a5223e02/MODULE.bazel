@@ -5,8 +5,8 @@
 # upstream version and remove this registry entry.
 module(
     name = "rules_distroless",
-    compatibility_level = 1,
     version = "0.0.0.commit-ebfd74a2e07b83235e064bb63ace98a1a5223e02",
+    compatibility_level = 1,
 )
 
 bazel_dep(name = "aspect_bazel_lib", version = "2.14.0")

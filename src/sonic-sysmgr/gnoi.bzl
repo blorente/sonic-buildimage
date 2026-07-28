@@ -1,3 +1,5 @@
+"""Utilities to build gnoi."""
+
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@sonic_build_infra//proto:extract_proto_headers.bzl", "extract_proto_headers")
 

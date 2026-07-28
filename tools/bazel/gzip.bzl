@@ -2,6 +2,7 @@
 
 def _gzip_impl(ctx):
     out = ctx.actions.declare_file(ctx.label.name)
+
     # pigz only writes the compressed stream to stdout (-c); redirect it to the
     # declared output.
     #
