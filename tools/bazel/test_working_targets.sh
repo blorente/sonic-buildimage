@@ -17,18 +17,25 @@ function run_in_slave() {
 
 function test_repo() {
   repo=$1
-  cmd=$2
 
-  echo "[slave] ${repo}: ${cmd}"
-  run_in_slave "${repo}" "bazel clean && ${cmd}"
+  echo "[test_repo] ${repo}"
+  # TODO(bazel-ready): Formalize and standardize these checks when we have a better idea of what we need.
+  run_in_slave "${repo}" "bazel clean"
+  run_in_slave "${repo}" "bazel build ..."
+  # Relax bash requirements, because Bazel exits with '4' if there are no tests.
+  set +euo pipefail
+  run_in_slave "${repo}" "bazel test ... || [[ $? == 4 ]]"
+  set -eup pipefail
+  run_in_slave "${repo}" "bazel run //tools/bazel/buildifier:buildifier.check"
 }
 
 echo "[= Testing Dependent Repositories =]"
 
-test_repo "src/sonic-build-infra" "bazel build ..."
-test_repo "src/sonic-swss-common" "bazel build ..."
-test_repo "src/sonic-sysmgr" "bazel build ... && bazel run //tools/bazel/buildifier:buildifier.check"
-test_repo "src/libnl3" "bazel build ..."
+test_repo "src/sonic-build-infra"
+test_repo "src/sonic-swss-common"
+test_repo "src/sonic-sysmgr"
+test_repo "src/libnl3"
+test_repo "."
 
 echo "[= Testing Docker Images =]"
 
