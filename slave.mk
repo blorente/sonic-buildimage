@@ -1416,13 +1416,13 @@ SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES))
 $(addprefix $(TARGET_PATH)/, $(SONIC_BAZEL_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform \
 		$$(addprefix $(TARGET_PATH)/,$$($$*.gz_BAZEL_BASE))
 	$(HEADER)
-	bazel run --config=slave //dockers/$*:write_$*.gz $(LOG)
+	bazel run //dockers/$*:write_$*.gz $(LOG)
 	$(FOOTER)
 
 $(addprefix $(TARGET_PATH)/, $(SONIC_BAZEL_DBG_DOCKER_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAGE_MARK).gz : .platform \
 		$$(addprefix $(TARGET_PATH)/,$$($$*.gz_BAZEL_BASE))
 	$(HEADER)
-	bazel run --config=slave //dockers/$*:write_$*-$(DBG_IMAGE_MARK).gz $(LOG)
+	bazel run //dockers/$*:write_$*-$(DBG_IMAGE_MARK).gz $(LOG)
 	$(FOOTER)
 
 SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_BAZEL_DOCKER_IMAGES))

@@ -26,5 +26,5 @@ common --@sonic_swss_common//bazel:yang_modules=False
 #
 # Please see the documentation of `SONIC_BAZEL_CACHE_SOURCE` in `rules/config` for more information.
 
-common:slave --repository_cache=/bazel_cache/repository_cache
-common:slave --disk_cache=/bazel_cache/disk_cache
+# Note: The cache settings for the slave container are set in tools/bazel/slave.bazelrc
+# Please see comments there for context.

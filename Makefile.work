@@ -412,6 +412,11 @@ endif
 # See the documentation in rules/config for more information
 ifneq ($(SONIC_BAZEL_CACHE_SOURCE),)
 	DOCKER_RUN += -v "$(SONIC_BAZEL_CACHE_SOURCE):/bazel_cache:rw"
+	# Persist bazelisk downloads in the cache
+	DOCKER_RUN += -e "BAZELISK_HOME=/bazel_cache/bazelisk"
+	# Apply the slave Bazel cache config as a system RC file, which Bazel reads regardless of cwd.
+	# Ref: https://bazel.build/run/bazelrc#bazelrc-file-locations
+	DOCKER_RUN += -v "$(PWD)/tools/bazel/slave.bazelrc:/etc/bazel.bazelrc:ro"
 endif
 
 # User name and tag for "docker-*" images created by native dockerd mode.

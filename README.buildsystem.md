@@ -191,7 +191,7 @@ SONIC_DOCKER_IMAGES += $(SOME_DOCKER) # add docker to this group
 
 **SONIC_BAZEL_DOCKER_IMAGES**
 Target group for docker images that are built with [Bazel](https://bazel.build/) instead of the legacy `docker build` flow.
-A docker in this group is built by running `bazel run --config=slave //dockers/<name>:write_<name>.gz`, which produces the same `target/<name>.gz` artifact as the normal docker rule.
+A docker in this group is built by running `bazel run //dockers/<name>:write_<name>.gz`, which produces the same `target/<name>.gz` artifact as the normal docker rule.
 This is opt-in: a recipe only registers the image here when `BUILD_WITH_BAZEL_WHEN_AVAILABLE=y` (see **rules/config**); otherwise it falls back to `SONIC_DOCKER_IMAGES`.
 Bazel currently only supports bookworm-based images.
 Define:
