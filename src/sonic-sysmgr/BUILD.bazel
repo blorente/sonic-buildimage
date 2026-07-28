@@ -22,7 +22,7 @@ sonic_deb(
     data = ":sysmgr_pkg",
     depends = [
         "libswsscommon",
-        "libprotobuf32", # In trixie this is libprotobuf32t64, but it Provides libprotobuf32 as a virtual package, so it's fine.
+        "libprotobuf32",  # In trixie this is libprotobuf32t64, but it Provides libprotobuf32 as a virtual package, so it's fine.
     ],
     description = "This package contains sysmgr service.",
     maintainer = "Runming Wu <runmingwu@google.com>",
