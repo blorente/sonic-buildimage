@@ -13,7 +13,7 @@ python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.11.6")
 
 # Dependencies from the local Bazel registry in tools/bazel/registry
-bazel_dep(name = "rules_distroless", version = "0.0.0.commit-afa995e4a5bad8d3ab3a080046f6eeaf6f893a65")
+bazel_dep(name = "rules_distroless", version = "0.0.0.commit-2a2bd7a1df9e90e29d795ea5ddcb981cf447a1ee")
 bazel_dep(name = "sonic-build-infra", version = "0.0.0", repo_name = "sonic_build_infra")
 bazel_dep(name = "sonic-sysmgr", version = "0.0.0", repo_name = "sonic_sysmgr")
 bazel_dep(name = "sonic-swss-common", version = "0.0.0", repo_name = "sonic_swss_common")
