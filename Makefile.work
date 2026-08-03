@@ -202,8 +202,7 @@ export SONIC_VERSION_CACHE SONIC_VERSION_CACHE_SOURCE
 $(shell test -d $(SONIC_VERSION_CACHE_SOURCE) || \
     mkdir -p $(SONIC_VERSION_CACHE_SOURCE) && chmod -f 777 $(SONIC_VERSION_CACHE_SOURCE) 2>/dev/null )
 
-$(shell test -d $(SONIC_BAZEL_CACHE_SOURCE) || \
-    mkdir -p $(SONIC_BAZEL_CACHE_SOURCE) && chmod -f 777 $(SONIC_BAZEL_CACHE_SOURCE) 2>/dev/null )
+$(shell mkdir -p $(SONIC_BAZEL_CACHE_SOURCE) && chmod -f 777 $(SONIC_BAZEL_CACHE_SOURCE) 2>/dev/null )
 
 # Generate the version control build info
 $(shell \
