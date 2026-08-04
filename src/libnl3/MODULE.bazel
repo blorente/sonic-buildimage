@@ -15,12 +15,9 @@ bazel_dep(name = "sonic-build-infra", version = "0.0.0", repo_name = "sonic_buil
 
 register_toolchains("@sonic_build_infra//toolchains/gcc:all")
 
-# TODO(bazel-ready): Make work with all relevant versions of libnl.
-# For now, we only resolve the version pinned in @bookworm from our selected debian snapshot.
-LIBNL_3_VERSION = "3.7.0"
-
 libnl3_src = use_repo_rule("//:libnl3_src.bzl", "libnl3_src")
 
+# TODO(bazel-ready): Make work with all relevant versions of libnl.
 libnl3_src(
     name = "libnl3_src",
     build_file_template = "//:libnl3.BUILD",
@@ -28,8 +25,8 @@ libnl3_src(
         "//:patch/0003-Adding-support-for-RTA_NH_ID-attribute.patch",
     ],
     sha256 = "9fe43ccbeeea72c653bdcf8c93332583135cda46a79507bfd0a483bb57f65939",
-    strip_prefix = "libnl-{}".format(LIBNL_3_VERSION),
-    urls = ["http://debian-archive.trafficmanager.net/debian/pool/main/libn/libnl3/libnl3_{}.orig.tar.gz".format(LIBNL_3_VERSION)],
+    strip_prefix = "libnl-3.7.0",
+    urls = ["http://debian-archive.trafficmanager.net/debian/pool/main/libn/libnl3/libnl3_3.7.0.orig.tar.gz"],
 )
 
 bazel_dep(name = "rules_flex", version = "0.4")
