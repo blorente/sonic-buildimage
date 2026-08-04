@@ -1,4 +1,9 @@
+# Try to read from our local registry first.
 common --registry=file://%workspace%/tools/bazel/registry
+# Then, try to read from sonic-bazel-registry.
+# We don't expect any of these versions to win (because local versions are 9999.99.99), but Bazel needs to resolve every dependency before deciding on the local one.
+common --registry=https://raw.githubusercontent.com/blorente/sonic-bazel-registry/main
+
 common --registry=https://raw.githubusercontent.com/aspect-build/bazel-central-registry/aspect_rules_py-v1.7.1
 common --registry=https://bcr.bazel.build
 

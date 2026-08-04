@@ -17,7 +17,7 @@ bazel_dep(name = "grpc", version = "1.56.3.bcr.1", repo_name = "com_github_grpc_
 bazel_dep(name = "rules_proto", version = "7.1.0")
 bazel_dep(name = "com_github_openconfig_gnoi", version = "0.6.1")
 bazel_dep(name = "rules_distroless", version = "0.0.0.commit-01bb79d7eef4eb3ce9511d3dfaf0ab386bd8d12d")
-bazel_dep(name = "sonic-build-infra", version = "0.0.0", repo_name = "sonic_build_infra")
+bazel_dep(name = "sonic-build-infra", version = "9999.99.99.sonic-buildimage", repo_name = "sonic_build_infra")
 
 register_toolchains("@sonic_build_infra//toolchains/gcc:all")
 

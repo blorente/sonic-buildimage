@@ -11,7 +11,9 @@ bazel_dep(name = "rules_cc", version = "0.2.14")
 bazel_dep(name = "tar.bzl", version = "0.10.5")
 bazel_dep(name = "rules_distroless", version = "0.0.0.commit-01bb79d7eef4eb3ce9511d3dfaf0ab386bd8d12d")
 bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "sonic-build-infra", version = "0.0.0", repo_name = "sonic_build_infra")
+# TODO BL: Solve before publishing, probably by linking to the published build-infra
+# bazel_dep(name = "sonic-build-infra", version = "0.0.0", repo_name = "sonic_build_infra")
+bazel_dep(name = "sonic-build-infra", version = "9999.99.99.sonic-buildimage", repo_name = "sonic_build_infra")
 
 register_toolchains("@sonic_build_infra//toolchains/gcc:all")
 
