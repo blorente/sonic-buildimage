@@ -33,3 +33,10 @@ py_test(
     data = ["//tools/bazel:submodule-config.bazelrc"],
     deps = [":registry_lib"],
 )
+
+py_test(
+    name = "registry_lib_test",
+    size = "small",
+    srcs = ["registry_lib_test.py"],
+    deps = [":registry_lib"],
+)

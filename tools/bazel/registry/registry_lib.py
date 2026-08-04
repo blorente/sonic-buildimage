@@ -9,10 +9,33 @@ REPO_ROOT = (SCRIPT_DIR / "../../..").resolve()
 MODULES_DIR = SCRIPT_DIR / "modules"
 
 
+def _find_matching_close_paren(text: str, open_paren_index: int) -> int:
+    """Return the index of the ')' matching the '(' at open_paren_index."""
+    depth = 0
+    for i in range(open_paren_index, len(text)):
+        if text[i] == "(":
+            depth += 1
+        elif text[i] == ")":
+            depth -= 1
+            if depth == 0:
+                return i
+    raise ValueError("Unbalanced parentheses")
+
+
+def _extract_module_call_span(text: str) -> tuple[int, int] | None:
+    """Return (start, end) indices of the module(...) call's argument text, or None if absent."""
+    match = re.search(r"module\(", text)
+    if match is None:
+        return None
+    open_paren = text.index("(", match.start())
+    close_paren = _find_matching_close_paren(text, open_paren)
+    return open_paren + 1, close_paren
+
+
 def _extract_module_call(text: str) -> str | None:
     """Return the argument text of the module(...) call, or None if absent."""
-    match = re.search(r"module\((.*?)\)", text, re.DOTALL)
-    return match.group(1) if match else None
+    span = _extract_module_call_span(text)
+    return text[span[0] : span[1]] if span else None
 
 
 def parse_module_declaration(module_bazel: Path) -> tuple[str, str] | None:
@@ -36,17 +59,70 @@ def parse_module_declaration(module_bazel: Path) -> tuple[str, str] | None:
 
 def rewrite_module_version(text: str, new_version: str) -> str:
     """Return MODULE.bazel text with the module() call's version field set to new_version."""
-    match = re.search(r"module\((.*?)\)", text, re.DOTALL)
-    if match is None:
+    span = _extract_module_call_span(text)
+    if span is None:
         raise ValueError("No module() call found")
+    start, end = span
 
-    module_call = match.group(1)
+    module_call = text[start:end]
     if re.search(r'version\s*=\s*"[^"]*"', module_call):
         new_module_call = re.sub(r'version\s*=\s*"[^"]*"', f'version = "{new_version}"', module_call, count=1)
     else:
         new_module_call = module_call.rstrip() + f',\n    version = "{new_version}",\n'
 
-    return text[: match.start()] + "module(" + new_module_call + ")" + text[match.end() :]
+    return text[:start] + new_module_call + text[end:]
+
+
+def rewrite_bazel_dep_version(text: str, dep_name: str, new_version: str) -> str:
+    """Return text with the version field of a specific bazel_dep(name=dep_name, ...) call set."""
+    match = re.search(r'bazel_dep\(\s*name\s*=\s*"' + re.escape(dep_name) + r'"', text)
+    if match is None:
+        raise ValueError(f"No bazel_dep found for {dep_name!r}")
+
+    open_paren = text.index("(", match.start())
+    close_paren = _find_matching_close_paren(text, open_paren)
+    call_text = text[open_paren + 1 : close_paren]
+
+    if re.search(r'version\s*=\s*"[^"]*"', call_text):
+        new_call_text = re.sub(r'version\s*=\s*"[^"]*"', f'version = "{new_version}"', call_text, count=1)
+    else:
+        # bazel_dep(name=...) without a version is valid Bazel; re.sub would
+        # silently no-op here, so add the field explicitly instead.
+        new_call_text = call_text.rstrip() + f', version = "{new_version}"'
+
+    return text[: open_paren + 1] + new_call_text + text[close_paren:]
+
+
+def extract_repo_rule_call(text: str, rule_name: str) -> str:
+    """Return the argument text of a `<rule_name>(...)` invocation.
+
+    Distinct from a `<rule_name> = use_repo_rule(...)` assignment: that has
+    `=` between the name and the paren, so `\\s*\\(` right after the name
+    only matches the actual call.
+    """
+    match = re.search(rf"\n{re.escape(rule_name)}\s*\(", text)
+    if match is None:
+        raise ValueError(f"No {rule_name}(...) call found")
+
+    open_paren = text.index("(", match.start())
+    close_paren = _find_matching_close_paren(text, open_paren)
+    return text[open_paren + 1 : close_paren]
+
+
+def extract_str_kwarg(call_text: str, kwarg: str) -> str:
+    """Extract a plain string-literal kwarg's value from a call's argument text."""
+    match = re.search(rf'{re.escape(kwarg)}\s*=\s*"([^"]*)"', call_text)
+    if match is None:
+        raise ValueError(f"No string kwarg {kwarg!r} found")
+    return match.group(1)
+
+
+def extract_single_item_list_kwarg(call_text: str, kwarg: str) -> str:
+    """Extract the one string-literal element of a single-item list kwarg (e.g. urls = ["..."])."""
+    match = re.search(rf'{re.escape(kwarg)}\s*=\s*\[\s*"([^"]*)"\s*,?\s*\]', call_text)
+    if match is None:
+        raise ValueError(f"No single-element list kwarg {kwarg!r} found")
+    return match.group(1)
 
 
 def load_submodule_paths() -> set[str]:

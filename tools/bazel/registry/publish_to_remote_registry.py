@@ -21,7 +21,10 @@ import subprocess
 import tempfile
 import urllib.error
 import urllib.request
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 
 import click
@@ -29,15 +32,71 @@ import click
 from registry_lib import (
     MODULES_DIR,
     REPO_ROOT,
+    extract_repo_rule_call,
+    extract_single_item_list_kwarg,
+    extract_str_kwarg,
     is_git_submodule,
     load_submodule_paths,
     load_submodule_urls,
     parse_module_declaration,
+    rewrite_bazel_dep_version,
     rewrite_module_version,
     submodule_root_for,
 )
 
 REGISTRY_REPO_URL = "https://github.com/blorente/sonic-bazel-registry"
+
+
+@dataclass(frozen=True)
+class PublishCandidate:
+    """A module found by one of the three discover_*_modules(), normalized so
+    main() only needs one skip-if-published/write/report loop. write(registry_dir)
+    does all its own (possibly expensive, e.g. a network fetch) work lazily,
+    only once actually called."""
+
+    name: str
+    version: str
+    write: Callable[[Path], None]
+
+
+@dataclass(frozen=True)
+class OverlayModule:
+    name: str
+    version: str
+    wrapper_dir: str
+    # Name of the repository_rule call inside <wrapper_dir>/MODULE.bazel that
+    # fetches the real upstream source.
+    #
+    # url/sha256/strip_prefix for the registry's own archive are extracted from it.
+    repo_rule_name: str
+    overlay_files: list[str]
+
+
+# Applied to every OVERLAY_MODULES entry's MODULE.bazel.
+# Kept in sync by hand with whatever version of each dependency is currently published externally.
+BAZEL_DEP_VERSION_OVERRIDES = {
+    "sonic-build-infra": "0.0.0-d2283ad0aebb0eb78821920635e7f9ab54c6f146",
+}
+
+# Patched external dependencies, where we fetch the source from somewhere else,
+# patch it, and overlay a Bazel build on top.
+#
+# We assume these change rarely, and hence are okay with hardcoding values like the version.
+OVERLAY_MODULES = [
+    OverlayModule(
+        name="libnl3",
+        version="3.7.0",
+        wrapper_dir="src/libnl3",
+        repo_rule_name="libnl3_src",
+        overlay_files=[
+            "MODULE.bazel",
+            "BUILD.bazel",
+            "libnl3_src.bzl",
+            "libnl3.BUILD",
+            "patch/0003-Adding-support-for-RTA_NH_ID-attribute.patch",
+        ],
+    ),
+]
 
 
 def check_repo_is_clean() -> None:
@@ -122,6 +181,17 @@ def parse_github_org_repo(url: str) -> tuple[str, str]:
     return match.group(1), match.group(2)
 
 
+def sha256_hex_to_integrity(sha256_hex: str) -> str:
+    """Convert a plain hex sha256 digest to Bazel's "sha256-<base64>" integrity format."""
+    return "sha256-" + base64.b64encode(bytes.fromhex(sha256_hex)).decode("ascii")
+
+
+def file_integrity(path: Path) -> str:
+    """Return the Bazel-style sha256 integrity string for a file's contents."""
+    digest = hashlib.sha256(path.read_bytes()).digest()
+    return "sha256-" + base64.b64encode(digest).decode("ascii")
+
+
 def compute_archive_integrity(archive_url: str) -> str:
     """Download the archive at archive_url and return its Bazel-style sha256 integrity string."""
     try:
@@ -153,9 +223,14 @@ def clone_registry() -> Path:
     return tmp_dir
 
 
+def registry_version_dir(registry_dir: Path, name: str, version: str) -> Path:
+    """The modules/<name>/<version>/ path within a registry checkout."""
+    return registry_dir / "modules" / name / version
+
+
 def is_already_published(registry_dir: Path, name: str, target_version: str) -> bool:
     """Check whether modules/<name>/<target_version>/ already exists in the registry clone."""
-    return (registry_dir / "modules" / name / target_version).is_dir()
+    return registry_version_dir(registry_dir, name, target_version).is_dir()
 
 
 def update_metadata(registry_dir: Path, name: str, target_version: str) -> None:
@@ -171,6 +246,16 @@ def update_metadata(registry_dir: Path, name: str, target_version: str) -> None:
 
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
     metadata_path.write_text(json.dumps(metadata, indent=2) + "\n")
+
+
+def write_source_json(version_dir: Path, source_json: dict) -> None:
+    """Write source.json into version_dir."""
+    (version_dir / "source.json").write_text(json.dumps(source_json, indent=2) + "\n")
+
+
+def write_module_bazel(version_dir: Path, module_bazel_text: str) -> None:
+    """Write the top-level MODULE.bazel into version_dir."""
+    (version_dir / "MODULE.bazel").write_text(module_bazel_text)
 
 
 def build_version_patch(original_text: str, new_version: str) -> tuple[str, str]:
@@ -192,10 +277,22 @@ def build_version_patch(original_text: str, new_version: str) -> tuple[str, str]
 
 
 def write_module_entry(
-    registry_dir: Path, name: str, target_version: str, src_path: str, source_json: dict
+    registry_dir: Path, name: str, target_version: str, src_path: str, org: str, repo: str, commit: str
 ) -> None:
-    """Write source.json, a version-bumped MODULE.bazel, its patch, and metadata.json."""
-    version_dir = registry_dir / "modules" / name / target_version
+    """Write source.json, a version-bumped MODULE.bazel, its patch, and metadata.json.
+
+    Fetches the archive's integrity itself (rather than taking a pre-built
+    source.json) so that, like the other two writers, nothing expensive
+    happens until this is actually called for a not-yet-published module.
+    """
+    archive_url = f"https://github.com/{org}/{repo}/archive/{commit}.tar.gz"
+    source_json = {
+        "url": archive_url,
+        "strip_prefix": f"{repo}-{commit}",
+        "integrity": compute_archive_integrity(archive_url),
+    }
+
+    version_dir = registry_version_dir(registry_dir, name, target_version)
     version_dir.mkdir(parents=True)
 
     original_text = (REPO_ROOT / src_path / "MODULE.bazel").read_text()
@@ -207,16 +304,59 @@ def write_module_entry(
     patch_integrity = "sha256-" + base64.b64encode(hashlib.sha256(patch_text.encode()).digest()).decode("ascii")
 
     source_json = {**source_json, "patches": {patch_name: patch_integrity}, "patch_strip": 1}
-    (version_dir / "source.json").write_text(json.dumps(source_json, indent=2) + "\n")
-    (version_dir / "MODULE.bazel").write_text(patched_text)
-
+    write_source_json(version_dir, source_json)
+    write_module_bazel(version_dir, patched_text)
     update_metadata(registry_dir, name, target_version)
 
 
-def write_external_module_entry(registry_dir: Path, name: str, version: str, version_dir: Path) -> None:
+def write_external_module_entry(registry_dir: Path, name: str, version: str, source_version_dir: Path) -> None:
     """Copy an already-complete external registry entry, and update metadata.json"""
-    shutil.copytree(version_dir, registry_dir / "modules" / name / version)
+    shutil.copytree(source_version_dir, registry_version_dir(registry_dir, name, version))
     update_metadata(registry_dir, name, version)
+
+
+def write_overlay_module_entry(registry_dir: Path, entry: OverlayModule) -> None:
+    """Publish an OVERLAY_MODULES entry: an upstream archive carrying the
+    wrapper's own files as an overlay, unmodified except a version bump."""
+    version_dir = registry_version_dir(registry_dir, entry.name, entry.version)
+    version_dir.mkdir(parents=True)
+
+    wrapper_dir = REPO_ROOT / entry.wrapper_dir
+    module_bazel_text = (wrapper_dir / "MODULE.bazel").read_text()
+    repo_rule_call = extract_repo_rule_call(module_bazel_text, entry.repo_rule_name)
+
+    source_json = {
+        "url": extract_single_item_list_kwarg(repo_rule_call, "urls"),
+        "strip_prefix": extract_str_kwarg(repo_rule_call, "strip_prefix"),
+        "integrity": sha256_hex_to_integrity(extract_str_kwarg(repo_rule_call, "sha256")),
+    }
+
+    overlay_dir = version_dir / "overlay"
+    overlay_dir.mkdir()
+
+    final_module_bazel_text = None
+    for rel_path in entry.overlay_files:
+        src = wrapper_dir / rel_path
+        dst = overlay_dir / rel_path
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if rel_path == "MODULE.bazel":
+            final_module_bazel_text = rewrite_module_version(module_bazel_text, entry.version)
+            for dep_name, dep_version in BAZEL_DEP_VERSION_OVERRIDES.items():
+                final_module_bazel_text = rewrite_bazel_dep_version(final_module_bazel_text, dep_name, dep_version)
+            dst.write_text(final_module_bazel_text)
+        else:
+            shutil.copy(src, dst)
+
+    overlay_integrities = {
+        str(f.relative_to(overlay_dir)): file_integrity(f)
+        for f in sorted(overlay_dir.rglob("*"))
+        if f.is_file()
+    }
+    source_json["overlay"] = overlay_integrities
+
+    write_source_json(version_dir, source_json)
+    write_module_bazel(version_dir, final_module_bazel_text)
+    update_metadata(registry_dir, entry.name, entry.version)
 
 
 def commit_changes(registry_dir: Path, published: list[tuple[str, str]]) -> str:
@@ -257,6 +397,49 @@ def push_and_create_pr(registry_dir: Path, branch_name: str, published: list[tup
     return result.stdout.strip()
 
 
+def gather_candidates(modules, external_modules) -> list[PublishCandidate]:
+    candidates: list[PublishCandidate] = []
+
+    for name, version, src_path in modules:
+        root = submodule_root_for(src_path, submodule_paths)
+        org, repo = parse_github_org_repo(submodule_urls[root])
+        commit = resolve_commit(src_path)
+        target_version = f"{version}-{commit}"
+        candidates.append(PublishCandidate(
+            name=name,
+            version=target_version,
+            write=partial(write_module_entry, name=name, target_version=target_version, src_path=src_path, org=org, repo=repo, commit=commit),
+        ))
+
+    for name, version, source_version_dir in external_modules:
+        candidates.append(PublishCandidate(
+            name=name,
+            version=version,
+            write=partial(write_external_module_entry, name=name, version=version, source_version_dir=source_version_dir),
+        ))
+
+    for entry in OVERLAY_MODULES:
+        candidates.append(PublishCandidate(
+            name=entry.name,
+            version=entry.version,
+            write=partial(write_overlay_module_entry, entry=entry),
+        ))
+
+    return candidates
+
+def publish_candidates(registry_dir: Path, candidates: list[PublishCandidate]) -> list[tuple[str, str]]:
+    published = []
+    for candidate in candidates:
+        if is_already_published(registry_dir, candidate.name, candidate.version):
+            print(f"skip (already published): {candidate.name} {candidate.version}")
+            continue
+
+        candidate.write(registry_dir)
+        published.append((candidate.name, candidate.version))
+        print(f"new: {candidate.name} {candidate.version}")
+
+    return published
+
 @click.command()
 def main() -> None:
     """Publish git-submodule-backed and external (BCR-style) modules to the remote registry."""
@@ -265,49 +448,19 @@ def main() -> None:
     modules = discover_submodule_modules()
     external_modules = discover_external_modules()
 
-    if not modules and not external_modules:
+    if not modules and not external_modules and not OVERLAY_MODULES:
         print("No modules found to publish.")
         return
 
     submodule_paths = load_submodule_paths()
     submodule_urls = load_submodule_urls()
 
-    candidates = []
-    for name, version, src_path in modules:
-        root = submodule_root_for(src_path, submodule_paths)
-        org, repo = parse_github_org_repo(submodule_urls[root])
-        commit = resolve_commit(src_path)
-        target_version = f"{version}-{commit}"
-        candidates.append((name, target_version, src_path, org, repo, commit))
+    candidates: list[PublishCandidate] = gather_candidates(modules, external_modules)
 
     registry_dir = clone_registry()
     print(f"Cloned {REGISTRY_REPO_URL} to {registry_dir}")
 
-    published = []
-    for name, target_version, src_path, org, repo, commit in candidates:
-        if is_already_published(registry_dir, name, target_version):
-            print(f"skip (already published): {name} {target_version}")
-            continue
-
-        archive_url = f"https://github.com/{org}/{repo}/archive/{commit}.tar.gz"
-        source_json = {
-            "url": archive_url,
-            "strip_prefix": f"{repo}-{commit}",
-            "integrity": compute_archive_integrity(archive_url),
-        }
-        write_module_entry(registry_dir, name, target_version, src_path, source_json)
-        published.append((name, target_version))
-        print(f"new: {name} {target_version}")
-
-    for name, version, version_dir in external_modules:
-        if is_already_published(registry_dir, name, version):
-            print(f"skip (already published): {name} {version}")
-            continue
-
-        write_external_module_entry(registry_dir, name, version, version_dir)
-        published.append((name, version))
-        print(f"new: {name} {version}")
-
+    published: list[tuple[str, str]] = publish_candidates(registry_dir, candidates)
     if not published:
         print("Nothing new to publish.")
         return
