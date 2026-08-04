@@ -3,6 +3,8 @@
 
 load("@rules_distroless//distroless:defs.bzl", "flatten")
 
+exports_files(["submodule-config.bazelrc"])
+
 flatten(
     name = "debug_utils_pkg",
     deduplicate = True,

@@ -10,44 +10,30 @@ Usage:
 
 import json
 import os
-import re
 import shutil
 from pathlib import Path
 
 import click
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-REPO_ROOT = (SCRIPT_DIR / "../../..").resolve()
-MODULES_DIR = SCRIPT_DIR / "modules"
+from registry_lib import REPO_ROOT, is_git_submodule, load_submodule_paths, parse_module_declaration
 
-
-def parse_module_declaration(module_bazel: Path) -> tuple[str, str] | None:
-    """Extract (name, version) from a MODULE.bazel's module() declaration.
-
-    Returns None if the file has no module() call or no name field.
-    """
-    text = module_bazel.read_text()
-    m = re.search(
-        r'module\s*\('
-        r'[^)]*?name\s*=\s*"([^"]+)"'
-        r'(?:[^)]*?version\s*=\s*"([^"]+)")?',
-        text,
-        re.DOTALL,
-    )
-    if not m:
-        return None
-    name = m.group(1)
-    version = m.group(2) or "0.0.0"
-    return name, version
+MODULES_DIR = Path(__file__).resolve().parent / "modules"
+LOCAL_VERSION_SUFFIX = ".sonic-buildimage"
 
 
 def discover_modules() -> list[tuple[str, str, str]]:
     """Find all MODULE.bazel files under src/ and return (name, version, path).
 
     The path is relative to the repo root (e.g. "src/sonic-swss-common").
+
+    Modules that resolve locally to sonic-buildimage itself (i.e. their
+    directory under src/ is not a git submodule) have LOCAL_VERSION_SUFFIX
+    appended to their version, so they can't collide with the same module
+    name/version published from its own upstream repo.
     """
     modules = []
     src_dir = REPO_ROOT / "src"
+    submodule_paths = load_submodule_paths()
 
     for module_bazel in sorted(src_dir.rglob("MODULE.bazel")):
         result = parse_module_declaration(module_bazel)
@@ -55,6 +41,10 @@ def discover_modules() -> list[tuple[str, str, str]]:
             continue
         name, version = result
         src_path = str(module_bazel.parent.relative_to(REPO_ROOT))
+        if not is_git_submodule(src_path, submodule_paths) and not version.endswith(
+            LOCAL_VERSION_SUFFIX
+        ):
+            version += LOCAL_VERSION_SUFFIX
         modules.append((name, version, src_path))
 
     return modules

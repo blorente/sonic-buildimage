@@ -29,6 +29,10 @@ function test_repo() {
   run_in_slave "${repo}" "bazel run //tools/bazel/buildifier:buildifier.check"
 }
 
+echo "[= Testing sonic-buildimage =]"
+
+run_in_slave "." "bazel test ..."
+
 echo "[= Testing Dependent Repositories =]"
 
 test_repo "src/sonic-build-infra"

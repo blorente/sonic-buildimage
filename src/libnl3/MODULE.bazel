@@ -1,6 +1,6 @@
 module(
     name = "libnl3",
-    version = "3.7.0",
+    version = "3.7.0.sonic-buildimage",
 )
 
 bazel_dep(name = "buildifier_prebuilt", version = "8.5.1.2", dev_dependency = True)

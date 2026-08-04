@@ -1,7 +1,35 @@
 load("@rules_python//python:py_binary.bzl", "py_binary")
+load("@rules_python//python:py_library.bzl", "py_library")
+load("@rules_python//python:py_test.bzl", "py_test")
+
+py_library(
+    name = "registry_lib",
+    srcs = ["registry_lib.py"],
+    imports = ["."],
+)
 
 py_binary(
     name = "generate_registry",
     srcs = ["generate_registry.py"],
-    deps = ["@pypi//click"],
+    deps = [
+        ":registry_lib",
+        "@pypi//click",
+    ],
+)
+
+py_binary(
+    name = "publish_to_remote_registry",
+    srcs = ["publish_to_remote_registry.py"],
+    deps = [
+        ":registry_lib",
+        "@pypi//click",
+    ],
+)
+
+py_test(
+    name = "submodule_config_test",
+    size = "small",
+    srcs = ["submodule_config_test.py"],
+    data = ["//tools/bazel:submodule-config.bazelrc"],
+    deps = [":registry_lib"],
 )
