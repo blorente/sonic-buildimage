@@ -6,6 +6,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = (SCRIPT_DIR / "../../..").resolve()
+MODULES_DIR = SCRIPT_DIR / "modules"
 
 
 def _extract_module_call(text: str) -> str | None:

@@ -11,13 +11,17 @@ Usage:
 import json
 import os
 import shutil
-from pathlib import Path
 
 import click
 
-from registry_lib import REPO_ROOT, is_git_submodule, load_submodule_paths, parse_module_declaration
+from registry_lib import (
+    MODULES_DIR,
+    REPO_ROOT,
+    is_git_submodule,
+    load_submodule_paths,
+    parse_module_declaration,
+)
 
-MODULES_DIR = Path(__file__).resolve().parent / "modules"
 LOCAL_VERSION_SUFFIX = ".sonic-buildimage"
 
 

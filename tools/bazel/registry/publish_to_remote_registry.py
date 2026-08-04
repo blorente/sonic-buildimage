@@ -16,6 +16,7 @@ import difflib
 import hashlib
 import json
 import re
+import shutil
 import subprocess
 import tempfile
 import urllib.error
@@ -26,6 +27,7 @@ from pathlib import Path
 import click
 
 from registry_lib import (
+    MODULES_DIR,
     REPO_ROOT,
     is_git_submodule,
     load_submodule_paths,
@@ -72,6 +74,26 @@ def discover_submodule_modules() -> list[tuple[str, str, str]]:
             continue
         name, version = result
         modules.append((name, version, src_path))
+
+    return modules
+
+
+def discover_external_modules() -> list[tuple[str, str, Path]]:
+    """Find manually-maintained registry entries whose source is a real archive.
+
+    These are modules like rules_go/rules_distroles, which come from the BCR but we need to patch.
+
+    Returns a list of (name, version, version_dir).
+    """
+    modules = []
+    for source_json in sorted(MODULES_DIR.glob("*/*/source.json")):
+        source = json.loads(source_json.read_text())
+        if source.get("type", "archive") != "archive":
+            continue
+        version_dir = source_json.parent
+        name = version_dir.parent.name
+        version = version_dir.name
+        modules.append((name, version, version_dir))
 
     return modules
 
@@ -191,6 +213,12 @@ def write_module_entry(
     update_metadata(registry_dir, name, target_version)
 
 
+def write_external_module_entry(registry_dir: Path, name: str, version: str, version_dir: Path) -> None:
+    """Copy an already-complete external registry entry, and update metadata.json"""
+    shutil.copytree(version_dir, registry_dir / "modules" / name / version)
+    update_metadata(registry_dir, name, version)
+
+
 def commit_changes(registry_dir: Path, published: list[tuple[str, str]]) -> str:
     """Create a branch and commit all newly-written module files. Returns the branch name."""
     branch_name = "publish/" + datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -231,13 +259,14 @@ def push_and_create_pr(registry_dir: Path, branch_name: str, published: list[tup
 
 @click.command()
 def main() -> None:
-    """Publish git-submodule-backed modules to the remote registry."""
+    """Publish git-submodule-backed and external (BCR-style) modules to the remote registry."""
     check_repo_is_clean()
 
     modules = discover_submodule_modules()
+    external_modules = discover_external_modules()
 
-    if not modules:
-        print("No git-submodule-backed modules found under src/")
+    if not modules and not external_modules:
+        print("No modules found to publish.")
         return
 
     submodule_paths = load_submodule_paths()
@@ -269,6 +298,15 @@ def main() -> None:
         write_module_entry(registry_dir, name, target_version, src_path, source_json)
         published.append((name, target_version))
         print(f"new: {name} {target_version}")
+
+    for name, version, version_dir in external_modules:
+        if is_already_published(registry_dir, name, version):
+            print(f"skip (already published): {name} {version}")
+            continue
+
+        write_external_module_entry(registry_dir, name, version, version_dir)
+        published.append((name, version))
+        print(f"new: {name} {version}")
 
     if not published:
         print("Nothing new to publish.")
