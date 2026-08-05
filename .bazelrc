@@ -1,11 +1,18 @@
 # Try to read from our local registry first.
 common --registry=file://%workspace%/tools/bazel/registry
-# Then, try to read from sonic-bazel-registry.
-# We don't expect any of these versions to win (because local versions are 9999.99.99), but Bazel needs to resolve every dependency before deciding on the local one.
+# Then, try to read from sonic-bazel-registry, for modules published there but
+# not hand-authored in our local registry.
 common --registry=https://raw.githubusercontent.com/blorente/sonic-bazel-registry/main
 
 common --registry=https://raw.githubusercontent.com/aspect-build/bazel-central-registry/aspect_rules_py-v1.7.1
 common --registry=https://bcr.bazel.build
+
+# Always build our own src/ modules from the checked-out tree, regardless of
+# what version any consumer's bazel_dep declares -- see the file's header
+# comment for why. Enabled unconditionally (not opt-in) since this is only
+# ever imported by sonic-buildimage's own root .bazelrc.
+try-import %workspace%/tools/bazel/root-unpinned-modules-config.bazelrc
+common --config=local-modules
 
 common --per_file_copt=.*external.*@-w
 common --cxxopt=-std=c++17 --host_cxxopt=-std=c++17

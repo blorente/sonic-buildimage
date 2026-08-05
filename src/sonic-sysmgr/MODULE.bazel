@@ -17,11 +17,11 @@ bazel_dep(name = "grpc", version = "1.56.3.bcr.1", repo_name = "com_github_grpc_
 bazel_dep(name = "rules_proto", version = "7.1.0")
 bazel_dep(name = "com_github_openconfig_gnoi", version = "0.6.1")
 bazel_dep(name = "rules_distroless", version = "0.0.0.commit-01bb79d7eef4eb3ce9511d3dfaf0ab386bd8d12d")
-bazel_dep(name = "sonic-build-infra", version = "9999.99.99.sonic-buildimage", repo_name = "sonic_build_infra")
+bazel_dep(name = "sonic-build-infra", version = "0.0.0-d2283ad0aebb0eb78821920635e7f9ab54c6f146", repo_name = "sonic_build_infra")
 
 register_toolchains("@sonic_build_infra//toolchains/gcc:all")
 
-bazel_dep(name = "sonic-swss-common", version = "9999.99.99.sonic-buildimage", repo_name = "sonic_swss_common")
+bazel_dep(name = "sonic-swss-common", version = "0.0.0-0bbc08794128e4e1d7df043c3e3f3c4cd3ec9750", repo_name = "sonic_swss_common")
 
 # The actual dependencies are listed in sonic-build-infra, and re-exported.
 apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")

@@ -9,15 +9,6 @@ py_library(
 )
 
 py_binary(
-    name = "generate_registry",
-    srcs = ["generate_registry.py"],
-    deps = [
-        ":registry_lib",
-        "@pypi//click",
-    ],
-)
-
-py_binary(
     name = "publish_to_remote_registry",
     srcs = ["publish_to_remote_registry.py"],
     deps = [
@@ -31,6 +22,14 @@ py_test(
     size = "small",
     srcs = ["submodule_config_test.py"],
     data = ["//tools/bazel:submodule-config.bazelrc"],
+    deps = [":registry_lib"],
+)
+
+py_test(
+    name = "root_config_test",
+    size = "small",
+    srcs = ["root_config_test.py"],
+    data = ["//tools/bazel:root-unpinned-modules-config.bazelrc"],
     deps = [":registry_lib"],
 )
 

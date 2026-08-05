@@ -58,12 +58,23 @@ endif
 
 There is a Bazel Registry in [`tools/bazel/registry`](/tools/bazel/registry).
 
-In it, we host:
+In it, we host hand-authored entries for:
 
-- Entries for every first-party component, as local Bazel modules. For instance, if `src/libnl3` needs `src/sonic-build-infra`, it will be resolved through this registry. These entries are generated automatically by [`tools/bazel/registry/generate_registry.py`](/tools/bazel/registry/generate_registry.py).
-- Any rulesets we need to patch from the Bazel Central Registry (e.g. `tools/bazel/registry/modules/rules_go`). These are often temporary until the patches have been merged and released upstream.
+- Modules we can't get from an upstream registry as-is. For instance, `com_github_openconfig_gnoi` is hand-authored because upstream hasn't migrated to bzlmod yet.
+- Rulesets we need to patch from the Bazel Central Registry (e.g. `tools/bazel/registry/modules/rules_go`). These are often temporary until the patches have been merged and released upstream.
+
+First-party `src/` modules (e.g. `sonic-build-infra`, `sonic-swss-common`, `sonic-sysmgr`, `libnl3`) are *not* in this registry.
+Instead, they are published onto an upstream registry, `blorente/sonic-bazel-registry` (soon to be `sonic-net/sonic-bazel-registry`).
+
+For development inside `sonic-buildimage`, `sonic-buildimage`'s own `.bazelrc` unconditionally overrides them with
+`--override_module` to build from `src/` tree, regardless of what version any consumer's `bazel_dep` declares.
+See [`tools/bazel/root-unpinned-modules-config.bazelrc`](/tools/bazel/root-unpinned-modules-config.bazelrc), kept complete by [`tools/bazel/registry/root_config_test.py`](/tools/bazel/registry/root_config_test.py).
+
+Each module still declares a real, externally-meaningful pinned version in its own `MODULE.bazel`, for when it's built standalone (or published) outside of `sonic-buildimage`.
 
 You can find further documentation on how we handle Bazel dependencies in [Depending on Other Modules](/tools/bazel/docs/patterns-detail.md#depending-on-other-modules).
+
+TODO BL: Talk about how to unpin dependencies when building from a submodule.
 
 ## Debian Dependencies
 

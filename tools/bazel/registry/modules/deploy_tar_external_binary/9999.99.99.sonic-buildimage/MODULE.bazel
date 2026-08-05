@@ -1,8 +1,0 @@
-# A separate bazel module, used to prove that sonic_deploy_tar can strip
-# and package binaries that come from a different module
-module(
-    name = "deploy_tar_external_binary",
-    version = "9999.99.99.sonic-buildimage",
-)
-
-bazel_dep(name = "rules_cc", version = "0.2.14")

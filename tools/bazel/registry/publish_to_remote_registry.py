@@ -60,6 +60,16 @@ class PublishCandidate:
 
 
 @dataclass(frozen=True)
+class ExternalModule:
+    """A manually-maintained registry entry whose source is a real archive
+    (e.g. rules_go, rules_distroless) -- already complete, just needs copying."""
+
+    name: str
+    version: str
+    version_dir: Path
+
+
+@dataclass(frozen=True)
 class OverlayModule:
     name: str
     version: str
@@ -85,7 +95,7 @@ BAZEL_DEP_VERSION_OVERRIDES = {
 OVERLAY_MODULES = [
     OverlayModule(
         name="libnl3",
-        version="3.7.0",
+        version="3.7.0.sonic-buildimage",
         wrapper_dir="src/libnl3",
         repo_rule_name="libnl3_src",
         overlay_files=[
@@ -137,12 +147,10 @@ def discover_submodule_modules() -> list[tuple[str, str, str]]:
     return modules
 
 
-def discover_external_modules() -> list[tuple[str, str, Path]]:
+def discover_external_modules() -> list[ExternalModule]:
     """Find manually-maintained registry entries whose source is a real archive.
 
     These are modules like rules_go/rules_distroles, which come from the BCR but we need to patch.
-
-    Returns a list of (name, version, version_dir).
     """
     modules = []
     for source_json in sorted(MODULES_DIR.glob("*/*/source.json")):
@@ -152,7 +160,7 @@ def discover_external_modules() -> list[tuple[str, str, Path]]:
         version_dir = source_json.parent
         name = version_dir.parent.name
         version = version_dir.name
-        modules.append((name, version, version_dir))
+        modules.append(ExternalModule(name=name, version=version, version_dir=version_dir))
 
     return modules
 
@@ -397,7 +405,12 @@ def push_and_create_pr(registry_dir: Path, branch_name: str, published: list[tup
     return result.stdout.strip()
 
 
-def gather_candidates(modules, external_modules) -> list[PublishCandidate]:
+def gather_candidates(
+    modules: list[tuple[str, str, str]],
+    external_modules: list[ExternalModule],
+    submodule_paths: set[str],
+    submodule_urls: dict[str, str],
+) -> list[PublishCandidate]:
     candidates: list[PublishCandidate] = []
 
     for name, version, src_path in modules:
@@ -411,11 +424,16 @@ def gather_candidates(modules, external_modules) -> list[PublishCandidate]:
             write=partial(write_module_entry, name=name, target_version=target_version, src_path=src_path, org=org, repo=repo, commit=commit),
         ))
 
-    for name, version, source_version_dir in external_modules:
+    for module in external_modules:
         candidates.append(PublishCandidate(
-            name=name,
-            version=version,
-            write=partial(write_external_module_entry, name=name, version=version, source_version_dir=source_version_dir),
+            name=module.name,
+            version=module.version,
+            write=partial(
+                write_external_module_entry,
+                name=module.name,
+                version=module.version,
+                source_version_dir=module.version_dir,
+            ),
         ))
 
     for entry in OVERLAY_MODULES:
@@ -455,7 +473,9 @@ def main() -> None:
     submodule_paths = load_submodule_paths()
     submodule_urls = load_submodule_urls()
 
-    candidates: list[PublishCandidate] = gather_candidates(modules, external_modules)
+    candidates: list[PublishCandidate] = gather_candidates(
+        modules, external_modules, submodule_paths, submodule_urls
+    )
 
     registry_dir = clone_registry()
     print(f"Cloned {REGISTRY_REPO_URL} to {registry_dir}")

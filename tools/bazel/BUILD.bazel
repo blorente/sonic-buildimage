@@ -3,7 +3,10 @@
 
 load("@rules_distroless//distroless:defs.bzl", "flatten")
 
-exports_files(["submodule-config.bazelrc"])
+exports_files([
+    "submodule-config.bazelrc",
+    "root-config.bazelrc",
+])
 
 flatten(
     name = "debug_utils_pkg",

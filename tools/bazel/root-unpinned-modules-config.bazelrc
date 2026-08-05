@@ -1,0 +1,19 @@
+# ==============================================================================
+# THIS FILE IS AUTO-GENERATED. Do not hand-edit it -- to add, remove, or refresh
+# entries (including this header), run:
+#
+#     bazel run //tools/bazel/registry:root_config_test -- --fix
+#
+# ==============================================================================
+#
+# Imported unconditionally by sonic-buildimage's own .bazelrc. Always builds
+# these submodule-backed modules from the checked-out src/ tree, regardless of
+# what version any consumer's bazel_dep declares -- this bypasses registry
+# lookup and version-string resolution entirely (unlike local_path_override(),
+# --override_module isn't limited to the root module), so every submodule's
+# own MODULE.bazel is free to declare a real, externally-meaningful pinned
+# version instead of a local-only alias.
+common:local-modules --override_module=libnl3=%workspace%/src/libnl3
+common:local-modules --override_module=sonic-build-infra=%workspace%/src/sonic-build-infra
+common:local-modules --override_module=sonic-swss-common=%workspace%/src/sonic-swss-common
+common:local-modules --override_module=sonic-sysmgr=%workspace%/src/sonic-sysmgr

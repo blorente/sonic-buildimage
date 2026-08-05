@@ -169,3 +169,21 @@ def submodule_root_for(src_path: str, submodule_paths: set[str]) -> str | None:
         if src_path == submodule_path or src_path.startswith(submodule_path + "/"):
             return submodule_path
     return None
+
+
+def discover_top_level_bazel_modules() -> list[tuple[str, str]]:
+    """Return (module_name, src_path) for every directory directly under src/
+    whose own MODULE.bazel has a real module() declaration.
+
+    Includes both git submodules (e.g. sonic-swss-common)
+    and plain vendored directories (e.g. sonic-sysmgr, libnl3)
+    """
+    modules = []
+    for module_bazel in sorted((REPO_ROOT / "src").glob("*/MODULE.bazel")):
+        result = parse_module_declaration(module_bazel)
+        if result is None:
+            continue
+        name, _ = result
+        src_path = str(module_bazel.parent.relative_to(REPO_ROOT))
+        modules.append((name, src_path))
+    return sorted(modules)
