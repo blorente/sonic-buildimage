@@ -110,35 +110,6 @@ def test_rewrite_module_version_adds_missing_version() -> bool:
     )
 
 
-def test_rewrite_bazel_dep_version_replaces_matching_dep_only() -> bool:
-    rewritten = registry_lib.rewrite_bazel_dep_version(MODULE_BAZEL_SAMPLE, "sonic-build-infra", "0.0.0-def456")
-    return check(
-        'bazel_dep(name = "sonic-build-infra", version = "0.0.0-def456"' in rewritten
-        and 'bazel_dep(name = "libnl3", version = "3.7.0.sonic-buildimage")' in rewritten,
-        "rewrite_bazel_dep_version only touches the named dependency",
-    )
-
-
-def test_rewrite_bazel_dep_version_raises_when_missing() -> bool:
-    try:
-        registry_lib.rewrite_bazel_dep_version(MODULE_BAZEL_SAMPLE, "does-not-exist", "1.0.0")
-    except ValueError:
-        return check(True, "rewrite_bazel_dep_version raises ValueError for an unknown dep")
-    return check(False, "rewrite_bazel_dep_version raises ValueError for an unknown dep")
-
-
-def test_rewrite_bazel_dep_version_adds_missing_version_field() -> bool:
-    # bazel_dep(name=...) with no version at all is valid Bazel (inherits
-    # whatever version wins module resolution). A naive regex substitution
-    # would silently no-op instead of setting the version -- this checks
-    # it's added explicitly instead.
-    rewritten = registry_lib.rewrite_bazel_dep_version('bazel_dep(name = "foo")\n', "foo", "9.9.9")
-    return check(
-        'version = "9.9.9"' in rewritten,
-        "rewrite_bazel_dep_version adds a version field when the dep has none, rather than silently no-op'ing",
-    )
-
-
 def test_extract_module_call_handles_nested_parens() -> bool:
     # module() calls elsewhere in the codebase never contain nested parens,
     # but the extraction uses real balanced-paren matching rather than a
@@ -303,9 +274,6 @@ TESTS = [
     test_rewrite_module_version_replaces_existing,
     test_rewrite_module_version_preserves_rest_of_file,
     test_rewrite_module_version_adds_missing_version,
-    test_rewrite_bazel_dep_version_replaces_matching_dep_only,
-    test_rewrite_bazel_dep_version_raises_when_missing,
-    test_rewrite_bazel_dep_version_adds_missing_version_field,
     test_is_git_submodule_matches_exact_and_nested_paths,
     test_submodule_root_for_returns_matching_root_or_none,
     test_extract_repo_rule_call_finds_invocation_not_assignment,

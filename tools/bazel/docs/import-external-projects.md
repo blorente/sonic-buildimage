@@ -73,6 +73,7 @@ And modify `source.json` to load the patches:
 > `openssl dgst -sha256 -binary $FILE | openssl base64 -A`
 
 Please read the [full documentation on Bazel Modules](https://bazel.build/external/registry) to learn more about these files.
+
 ### Tip: Use `--override_module` to make development easier
 
 The workflow above explains how to integrate patches, but it doesn't explain how to _generate_ them.
@@ -173,29 +174,49 @@ alias(
 ... # Other targets
 ```
 
-Now we have fully implemented `@libnl3`, a working Bazel build that downloads some source code, applies some patches, rebuilds, and surfaces the result in a useful way. But how does one depend on `src/libnl3` from other parts of `sonic-buildimage`?
+Now we have fully implemented `@libnl3`, a working Bazel build that downloads some source code, applies some patches, rebuilds, and surfaces the result in a useful way. But how does one depend on `src/libnl3` from other parts of `sonic-buildimage`, and from outside it?
 
-To make it discoverable, we need to add it to the SONiC Bazel Registry:
+Unlike Methods 1 and 2, first-party `src/` modules like `libnl3` are *not* added to the local SONiC Bazel Registry (`tools/bazel/registry`). Instead:
+
+- **For development inside `sonic-buildimage`**: nothing to do. `sonic-buildimage`'s own `.bazelrc` unconditionally overrides every top-level `src/` module with `--override_module`, so it's always built from your checked-out `src/libnl3` tree, regardless of what version any consumer's `bazel_dep` declares. This list is auto-generated -- run the updater to pick up a new module (see [`tools/bazel/root-unpinned-modules-config.bazelrc`](/tools/bazel/root-unpinned-modules-config.bazelrc)):
 
 ```
-$ cd sonic-buildimage
-$ tree tools/bazel/registry/modules/libnl3/
-tools/bazel/registry/modules/libnl3/
-├── 3.7.0
-│   ├── MODULE.bazel -> ../../../../../../src/libnl3/MODULE.bazel
-│   └── source.json
-└── metadata.json
-
-$ cat tools/bazel/registry/modules/libnl3/3.7.0/source.json
-{
-  "type": "local_path",
-  "path": "src/libnl3"
-}
+$ bazel run //tools/bazel/registry:root_config_test -- --fix
+Wrote --override_module=libnl3= for src/libnl3
+Wrote --override_module=sonic-build-infra= for src/sonic-build-infra
+Wrote --override_module=sonic-swss-common= for src/sonic-swss-common
+Wrote --override_module=sonic-sysmgr= for src/sonic-sysmgr
+Regenerated tools/bazel/root-unpinned-modules-config.bazelrc
 ```
 
-As you can see, `MODULE.bazel`is just a symlink to the `src/libnl3/MODULE.bazel` we just created, and `source.json` is just telling Bazel to look in a local directory for the actual implementation of the module.
+- **For consumption outside `sonic-buildimage`** (or to pin a real version other consumers depend on): add an entry to `OVERLAY_MODULES` in [`tools/bazel/registry/publish_to_remote_registry.py`](/tools/bazel/registry/publish_to_remote_registry.py), pointing at the wrapper directory and the repository rule that fetches the real upstream source:
 
-Now, anything that needs `libnl3` can depend on it with `bazel_dep(name = "libnl3", version = "3.7.0")`, and use `@libnl3//:libnl_3` in its build, just like any other package from the BCR. 
+```python
+OverlayModule(
+    name="libnl3",
+    version="3.7.0.sonic-buildimage",  # Not plain "3.7.0": this carries our own patch, so it needs a distinguishing version.
+    wrapper_dir="src/libnl3",
+    source=repo_rule_source(wrapper_dir="src/libnl3", repo_rule_name="libnl3_src"),
+    overlay_files=["MODULE.bazel", "BUILD.bazel", "libnl3_src.bzl", "libnl3.BUILD", "patch/0003-Adding-support-for-RTA_NH_ID-attribute.patch"],
+),
+```
+
+Running the publisher then opens a PR against the external `sonic-bazel-registry`, publishing a real archive-based entry: it fetches the same upstream archive `libnl3_src` already downloads, and overlays our wrapper's files on top:
+
+```
+$ python3 tools/bazel/registry/publish_to_remote_registry.py
+Cloned https://github.com/blorente/sonic-bazel-registry to /tmp/sonic-bazel-registry-erb4ycku
+skip (already published): sonic-build-infra 0.0.0-d2283ad0aebb0eb78821920635e7f9ab54c6f146
+skip (already published): sonic-swss-common 0.0.0-0bbc08794128e4e1d7df043c3e3f3c4cd3ec9750
+new: libnl3 3.7.0.sonic-buildimage
+Opened PR: https://github.com/blorente/sonic-bazel-registry/pull/3
+```
+
+The published entry carries our wrapper's `MODULE.bazel`/`BUILD.bazel`/patches as an `overlay` on top of the real upstream archive.
+See `write_overlay_module_entry` in `publish_to_remote_registry.py` for the details.
+
+Now, anything that needs `libnl3` can depend on it with `bazel_dep(name = "libnl3", version = "3.7.0.sonic-buildimage")`, and use `@libnl3//:libnl_3` in its build, just like any other package from the BCR.
+
 ## Method 4: Build the dependency out of band, and import it into Bazel as an opaque archive.
 
 Sometimes, a dependency's build process is too convoluted, and it's not worth porting to Bazel. For instance, we may need to patch Python itself, a project famous for being hard to compile in the best of times.
@@ -205,16 +226,14 @@ In those cases, we should treat the dependency as opaque artifacts, and download
 1. Patch and build the dependency somewhere outside of the Bazel build, following the project's own build instructions. For instance, this could mean spinning up a development container to build the appropriate version of Python.
 2. Capture the outputs in a way that is consumable by Bazel. Most of the cases, the outputs of this build will be a series of headers and `.so` files that you can bundle into a tar archive. Or, in the case of Python, it may just produce the archive itself as a product of the build.
 3. Place the outputs somewhere reachable, like a cloud bucket or a public GitHub release (e.g. [`gcc-builds`](https://github.com/f0rmiga/gcc-builds) publishes repacks of the gcc toolchain).
-4. Add it to the SONiC Bazel Registry, to make the dependency reachable.
+4. Publish it, to make the dependency reachable (see [below](#add-it-to-the-sonic-bazel-registry)).
 
 > [!warning]
 > As you may have noticed, this method is the worst of them all, because it means we cannot build from source. If we ever have to make a change to our patches, or upgrade the versions of that dependency, we'll have to figure out how to build another artifact, and push it to Artifactory all over again.
 
 ### Add it to the SONiC Bazel Registry
 
-To make the dependency reachable by every project, we should add it to the SONiC Bazel Registry.
-
-To do that, we're going to follow the same pattern as in [Method 3](#then-we-import-the-project-into-the-sonic-build), except this time the `<dependency>.BUILD` file does not need to contain targets to _build_ the dependency, just to _use_ it. We don't have an actual example in the project yet, so we'll walk through a made-up scenario. 
+To make the dependency reachable by every project, we publish it the same way as in [Method 3](#then-we-import-the-project-into-the-sonic-build): a `wrapper_dir` under `src/`, with its own `MODULE.bazel` fetching the real (prebuilt) archive and a `BUILD.bazel` overlay surfacing it. Here, the `<dependency>.BUILD` file does not need to contain targets to _build_ the dependency, just to _use_ it. We don't have an actual example in the project yet, so we'll walk through a made-up scenario. 
 
 Imagine we're building our own Python distribution, and we only care about the interpreter's binary. We have already built the Python distribution we want, and have uploaded it to `https://my.artifactory.xyz/bazel/prebuilt/python-prebuilt.tar.gz`.
 
@@ -256,11 +275,17 @@ alias(
 )
 ```
 
-And we add it to the SONiC Bazel Registry:
+And we add an `OVERLAY_MODULES` entry for it in `tools/bazel/registry/publish_to_remote_registry.py`:
 
+```python
+OverlayModule(
+    name="python",
+    version="3.12.0.sonic-buildimage",
+    wrapper_dir="src/python",
+    source=repo_rule_source(wrapper_dir="src/python", repo_rule_name="http_archive"),
+    overlay_files=["MODULE.bazel", "BUILD.bazel", "python.BUILD"],
+),
 ```
-$ ls tools/bazel/registry/modules
-...
-python
-```
+
+Then `python3 tools/bazel/registry/publish_to_remote_registry.py` publishes it to `sonic-bazel-registry`, the same way as `libnl3` in Method 3.
 

@@ -6,7 +6,6 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = (SCRIPT_DIR / "../../..").resolve()
-MODULES_DIR = SCRIPT_DIR / "modules"
 
 
 def _find_matching_close_paren(text: str, open_paren_index: int) -> int:
@@ -71,26 +70,6 @@ def rewrite_module_version(text: str, new_version: str) -> str:
         new_module_call = module_call.rstrip() + f',\n    version = "{new_version}",\n'
 
     return text[:start] + new_module_call + text[end:]
-
-
-def rewrite_bazel_dep_version(text: str, dep_name: str, new_version: str) -> str:
-    """Return text with the version field of a specific bazel_dep(name=dep_name, ...) call set."""
-    match = re.search(r'bazel_dep\(\s*name\s*=\s*"' + re.escape(dep_name) + r'"', text)
-    if match is None:
-        raise ValueError(f"No bazel_dep found for {dep_name!r}")
-
-    open_paren = text.index("(", match.start())
-    close_paren = _find_matching_close_paren(text, open_paren)
-    call_text = text[open_paren + 1 : close_paren]
-
-    if re.search(r'version\s*=\s*"[^"]*"', call_text):
-        new_call_text = re.sub(r'version\s*=\s*"[^"]*"', f'version = "{new_version}"', call_text, count=1)
-    else:
-        # bazel_dep(name=...) without a version is valid Bazel; re.sub would
-        # silently no-op here, so add the field explicitly instead.
-        new_call_text = call_text.rstrip() + f', version = "{new_version}"'
-
-    return text[: open_paren + 1] + new_call_text + text[close_paren:]
 
 
 def extract_repo_rule_call(text: str, rule_name: str) -> str:

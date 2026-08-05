@@ -1,51 +1,33 @@
 """Verifies that tools/bazel/submodule-config.bazelrc has an entry for every
-git submodule under src/ that is registered as a bazel module in the
-registry (tools/bazel/registry/modules/).
-
-Note this deliberately reads the registry's source.json files rather than
-each submodule's own MODULE.bazel: some submodules (e.g. src/sonic-sysmgr/gnoi)
-ship only an empty, WORKSPACE-style MODULE.bazel with no module() call, and
-are instead given a hand-authored module() declaration directly in the
-registry (see tools/bazel/registry/modules/com_github_openconfig_gnoi/). The
-registry is what bazel actually resolves against, so it's the source of truth
-for "is this submodule a bazel module".
+module directly under src/ (a real module() call in its own MODULE.bazel) --
+whether it's a git submodule or a plain vendored directory.
 
 Run with --fix (via `bazel run`, not `bazel test`) to regenerate the file from scratch:
     bazel run //tools/bazel/registry:submodule_config_test -- --fix
 """
 
 import argparse
-import json
 import sys
 
 import registry_lib
 
 SUBMODULE_CONFIG = registry_lib.REPO_ROOT / "tools/bazel/submodule-config.bazelrc"
-REGISTRY_MODULES = registry_lib.REPO_ROOT / "tools/bazel/registry/modules"
 
 
 def find_submodule_bazel_modules() -> list[tuple[str, str]]:
-    """Return (submodule_path, module_name) for each src/ submodule registered as a bazel module."""
-    submodule_paths = {
-        path for path in registry_lib.load_submodule_paths() if path.startswith("src/")
-    }
-
-    modules = {}
-    for source_json in sorted(REGISTRY_MODULES.glob("*/*/source.json")):
-        entry = json.loads(source_json.read_text())
-        path = entry.get("path")
-        if entry.get("type") != "local_path" or path not in submodule_paths:
-            continue
-        module_name = source_json.parent.parent.name
-        modules[path] = module_name
-    return sorted(modules.items())
+    """Return (src_path, module_name) for each src/ module."""
+    return sorted(
+        (src_path, name) for name, src_path in registry_lib.discover_top_level_bazel_modules()
+    )
 
 
-def find_missing_entries(config_text: str) -> list[tuple[str, str]]:
+def find_missing_entries(
+    modules: list[tuple[str, str]], config_text: str
+) -> list[tuple[str, str]]:
     """Return (submodule_path, module_name) pairs with no `common:unpinned-<name>` stanza."""
     return [
         (submodule_path, name)
-        for submodule_path, name in find_submodule_bazel_modules()
+        for submodule_path, name in modules
         if f"common:unpinned-{name}" not in config_text
     ]
 
@@ -105,7 +87,15 @@ HEADER = """\
 
 def test_submodule_config_has_entry_for_every_bazel_module_submodule() -> bool:
     """Print a PASS/FAIL report and return whether the file is complete."""
-    missing = find_missing_entries(SUBMODULE_CONFIG.read_text())
+    modules = find_submodule_bazel_modules()
+    if not modules:
+        print(
+            "FAIL: find_submodule_bazel_modules() found no modules under src/ -- "
+            "the discovery is broken (this should never legitimately be empty)."
+        )
+        return False
+
+    missing = find_missing_entries(modules, SUBMODULE_CONFIG.read_text())
     if missing:
         print(f"FAIL: {SUBMODULE_CONFIG} is missing entries for:")
         for submodule_path, name in missing:

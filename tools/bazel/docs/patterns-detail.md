@@ -24,70 +24,61 @@ The Bazel build for SONiC has tried to mirror that of the Make-based build:
 
 ### Depending on Other Modules
 
-To resolve dependencies between modules (e.g. `sonic-sysmgr` depends on `sonic-swss-common`), we rely on a custom Bazel registry.
+To resolve dependencies between modules (e.g. `sonic-sysmgr` depends on `sonic-swss-common`), each module declares a normal `bazel_dep`:
 
-A Bazel registry is like npm, or PyPi: A place where we can list versions of Bazel modules. When a build declares a Bazel dependency, Bazel wil look at the available registries to find an appropriate version, and fetch it. Here is the [full documentation](https://bazel.build/external/registry) on Bazel registries.
+```starlark
+bazel_dep(name = "sonic-swss-common", version = "0.0.0-0bbc08794128e4e1d7df043c3e3f3c4cd3ec9750")
+```
 
-Our Bazel registry lives in `sonic-buildimage/tools/bazel/registry`, and links to all the Bazel modules in `src`:
+First-party `src/` modules are published to an external registry, `sonic-bazel-registry`, via [`tools/bazel/registry/publish_to_remote_registry.py`](/tools/bazel/registry/publish_to_remote_registry.py).
+See [Method 3 of Importing External Projects](/tools/bazel/docs/import-external-projects.md#method-3-port-the-dependency-into-bazel) for the mechanics.
+
+This matters when building that module outside of `sonic-buildimage` (e.g. in the CI for `sonic-swss-common`).
+
+*Inside* `sonic-buildimage`, that version string doesn't actually matter for modules under `src/`:
+`sonic-buildimage`'s own `.bazelrc` unconditionally overrides every top-level `src/` module with [`--override_module`](https://bazel.build/reference/command-line-reference#common_options-flag--override_module),
+so Bazel builds it from `src/` instead of resolving it through any registry at all.
+
+These configurations come from [`tools/bazel/root-unpinned-modules-config.bazelrc`](/tools/bazel/root-unpinned-modules-config.bazelrc), which is generated and kept up-to-date by [`tools/bazel/registry/root_config_test.py`](/tools/bazel/registry/root_config_test.py).
+
+TODO BL: Fix this diagram
 
 ```mermaid
 graph TD
     subgraph repo["sonic-buildimage"]
-        subgraph src["src/ — each dir is a git submodule AND a Bazel module"]
+        subgraph src["src/ each dir is a Bazel module"]
             sysmgr["sonic-sysmgr"]
             swss["sonic-swss-common"]
             libnl3["libnl3"]
-            libyang3["libyang3"]
-            infra["sonic-build-infra<br/>(shared build infra)"]
+            infra["sonic-build-infra shared build infra"]
         end
 
-        reg["tools/bazel/registry<br/>(custom Bazel registry)"]
+        rc["root .bazelrc override_module always on"]
+        localreg["tools/bazel/registry hand-authored only: rules_go, rules_distroless, gnoi"]
     end
 
-    %% A module declares bazel_dep; Bazel resolves it via the registry...
-    sysmgr -->|bazel_dep| reg
-    swss -->|bazel_dep| reg
-    libnl3 -.->|bazel_dep| reg
-    libyang3 -.->|bazel_dep| reg
-    infra -.-> reg
+    extreg["sonic-bazel-registry external registry"]
 
-    %% ...and the registry symlinks each entry back to the module's source in src/
-    reg -.->|MODULE.bazel symlinks| src
+    sysmgr -.->|bazel_dep| swss
+    swss -.->|bazel_dep| libnl3
+    sysmgr -.->|bazel_dep| infra
+    swss -.->|bazel_dep| infra
+
+    rc ==>|override_module bypasses all registries| src
+    src -.->|published by publish_to_remote_registry.py| extreg
 
     classDef mod fill:#1f6feb22,stroke:#1f6feb,stroke-width:1px;
     classDef sharedmod fill:#8957e522,stroke:#8957e5,stroke-width:1px;
     classDef regbox fill:#3fb95022,stroke:#3fb950,stroke-width:1px;
-    class sysmgr,swss,libnl3,libyang3 mod;
+    class sysmgr,swss,libnl3 mod;
     class infra sharedmod;
-    class reg regbox;
+    class localreg,rc,extreg regbox;
 ```
 
-This way, any module that needs `sonic-swss-common` can refer to it like this:
-
-```starlark
-bazel_dep(name = "sonic-swss-common", version = "0.0.0")
-```
-
-The same is true for third party dependencies that we patch. For instance, `src/libnl3` contains the Bazel build for a patched `libnl3`. We have a module for it in the custom Bazel registry:
-
-```
-tools/bazel/registry/modules/libnl3
-├── 3.7.0
-│   ├── MODULE.bazel -> ../../../../../../src/libnl3/MODULE.bazel
-│   └── source.json
-└── metadata.json
-```
-
-A component can depend on it exactly as if it were part of the BCR:
-
-```
-bazel_dep(name = "libnl3", version="3.7.1")
-```
+`sonic-buildimage/tools/bazel/registry` (the *local* registry) is reserved for a small number of hand-authored exceptions we can't get from an upstream registry as-is: rulesets we need to patch from the BCR (e.g. `rules_go`), and vendored dependencies with no `module()` of their own (e.g. `com_github_openconfig_gnoi`).
 
 > [!tip]
-> To see how we achieve that, please refer to [`.bazelrc`](/.bazelrc). Specifically, to the values of the `--registry` flag. By specifying multiple registries, we allow our Bazel registry to interoperate with the BCR.
-> 
-> Each submodule has a similar `.bazelrc` file.
+> Each submodule (e.g. `src/sonic-swss-common`) has its own, similar, but *opt-in* mechanism: `--config=unpinned-<name>` stanzas in [`tools/bazel/submodule-config.bazelrc`](/tools/bazel/submodule-config.bazelrc), kept complete by [`tools/bazel/registry/submodule_config_test.py`](/tools/bazel/registry/submodule_config_test.py). Unlike the root, a submodule can't unconditionally override itself, so it opts in per-dependency via `--config` instead.
 
 ### `src/sonic-build-infra`
 

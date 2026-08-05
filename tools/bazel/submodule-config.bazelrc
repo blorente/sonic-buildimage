@@ -27,6 +27,10 @@
 #
 # So, for instance, if we had `sonic-swss-common` in a unified list, Bazel would crash if we were building in `soinc-swss-common`.
 
+# Override libnl3 with a local checkout of src/libnl3.
+common:unpinned-libnl3 --registry=file://%workspace%/../../tools/bazel/registry
+common:unpinned-libnl3 --override_module=libnl3=%workspace%/../../../src/libnl3
+
 # Override sonic-build-infra with a local checkout of src/sonic-build-infra.
 common:unpinned-sonic-build-infra --registry=file://%workspace%/../../tools/bazel/registry
 common:unpinned-sonic-build-infra --override_module=sonic-build-infra=%workspace%/../../../src/sonic-build-infra
@@ -35,6 +39,6 @@ common:unpinned-sonic-build-infra --override_module=sonic-build-infra=%workspace
 common:unpinned-sonic-swss-common --registry=file://%workspace%/../../tools/bazel/registry
 common:unpinned-sonic-swss-common --override_module=sonic-swss-common=%workspace%/../../../src/sonic-swss-common
 
-# Override com_github_openconfig_gnoi with a local checkout of src/sonic-sysmgr/gnoi.
-common:unpinned-com_github_openconfig_gnoi --registry=file://%workspace%/../../tools/bazel/registry
-common:unpinned-com_github_openconfig_gnoi --override_module=com_github_openconfig_gnoi=%workspace%/../../../src/sonic-sysmgr/gnoi
+# Override sonic-sysmgr with a local checkout of src/sonic-sysmgr.
+common:unpinned-sonic-sysmgr --registry=file://%workspace%/../../tools/bazel/registry
+common:unpinned-sonic-sysmgr --override_module=sonic-sysmgr=%workspace%/../../../src/sonic-sysmgr

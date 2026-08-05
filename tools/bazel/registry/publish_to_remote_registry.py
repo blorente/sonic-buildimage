@@ -30,7 +30,6 @@ from pathlib import Path
 import click
 
 from registry_lib import (
-    MODULES_DIR,
     REPO_ROOT,
     extract_repo_rule_call,
     extract_single_item_list_kwarg,
@@ -39,12 +38,16 @@ from registry_lib import (
     load_submodule_paths,
     load_submodule_urls,
     parse_module_declaration,
-    rewrite_bazel_dep_version,
     rewrite_module_version,
     submodule_root_for,
 )
 
 REGISTRY_REPO_URL = "https://github.com/blorente/sonic-bazel-registry"
+
+
+def sha256_hex_to_integrity(sha256_hex: str) -> str:
+    """Convert a plain hex sha256 digest to Bazel's "sha256-<base64>" integrity format."""
+    return "sha256-" + base64.b64encode(bytes.fromhex(sha256_hex)).decode("ascii")
 
 
 @dataclass(frozen=True)
@@ -60,13 +63,31 @@ class PublishCandidate:
 
 
 @dataclass(frozen=True)
-class ExternalModule:
-    """A manually-maintained registry entry whose source is a real archive
-    (e.g. rules_go, rules_distroless) -- already complete, just needs copying."""
+class RuleSource:
+    """A resolved upstream archive: url/strip_prefix/integrity, ready to write
+    into a registry entry's source.json."""
 
-    name: str
-    version: str
-    version_dir: Path
+    url: str
+    strip_prefix: str
+    integrity: str
+
+
+def repo_rule_source(wrapper_dir: str, repo_rule_name: str) -> RuleSource:
+    """Resolve a RuleSource by parsing a `<repo_rule_name>(...)` call out of
+    <wrapper_dir>/MODULE.bazel (e.g. libnl3's `libnl3_src(...)`)."""
+    module_bazel_text = (REPO_ROOT / wrapper_dir / "MODULE.bazel").read_text()
+    repo_rule_call = extract_repo_rule_call(module_bazel_text, repo_rule_name)
+    return RuleSource(
+        url=extract_single_item_list_kwarg(repo_rule_call, "urls"),
+        strip_prefix=extract_str_kwarg(repo_rule_call, "strip_prefix"),
+        integrity=sha256_hex_to_integrity(extract_str_kwarg(repo_rule_call, "sha256")),
+    )
+
+
+def archive_source(url: str, sha256: str, strip_prefix: str) -> RuleSource:
+    """A hand-specified RuleSource: url/sha256/strip_prefix given directly,
+    rather than parsed or resolved from anything else."""
+    return RuleSource(url=url, strip_prefix=strip_prefix, integrity=sha256_hex_to_integrity(sha256))
 
 
 @dataclass(frozen=True)
@@ -74,19 +95,9 @@ class OverlayModule:
     name: str
     version: str
     wrapper_dir: str
-    # Name of the repository_rule call inside <wrapper_dir>/MODULE.bazel that
-    # fetches the real upstream source.
-    #
-    # url/sha256/strip_prefix for the registry's own archive are extracted from it.
-    repo_rule_name: str
+    source: RuleSource
     overlay_files: list[str]
 
-
-# Applied to every OVERLAY_MODULES entry's MODULE.bazel.
-# Kept in sync by hand with whatever version of each dependency is currently published externally.
-BAZEL_DEP_VERSION_OVERRIDES = {
-    "sonic-build-infra": "0.0.0-d2283ad0aebb0eb78821920635e7f9ab54c6f146",
-}
 
 # Patched external dependencies, where we fetch the source from somewhere else,
 # patch it, and overlay a Bazel build on top.
@@ -97,7 +108,7 @@ OVERLAY_MODULES = [
         name="libnl3",
         version="3.7.0.sonic-buildimage",
         wrapper_dir="src/libnl3",
-        repo_rule_name="libnl3_src",
+        source=repo_rule_source(wrapper_dir="src/libnl3", repo_rule_name="libnl3_src"),
         overlay_files=[
             "MODULE.bazel",
             "BUILD.bazel",
@@ -105,6 +116,20 @@ OVERLAY_MODULES = [
             "libnl3.BUILD",
             "patch/0003-Adding-support-for-RTA_NH_ID-attribute.patch",
         ],
+    ),
+    OverlayModule(
+        name="com_github_openconfig_gnoi",
+        version="0.6.1.sonic-buildimage",
+        wrapper_dir="src/sonic-sysmgr/gnoi_overlay",
+        # gnoi ships no repo_rule of its own to fetch its source
+        # (it hasn't migrated to bzlmod yet), so we pin its archive by hand.
+        # Update this by hand when bumping the pinned submodule commit.
+        source=archive_source(
+            url="https://github.com/openconfig/gnoi/archive/2b6ff72de5769839fc68bd019f345a184e3b0bf1.tar.gz",
+            sha256="0f71e9452ec8c50f5a87f54d59f709501a2cb4770a4633d773c443379ca4d4e0",
+            strip_prefix="gnoi-2b6ff72de5769839fc68bd019f345a184e3b0bf1",
+        ),
+        overlay_files=["MODULE.bazel"],
     ),
 ]
 
@@ -147,24 +172,6 @@ def discover_submodule_modules() -> list[tuple[str, str, str]]:
     return modules
 
 
-def discover_external_modules() -> list[ExternalModule]:
-    """Find manually-maintained registry entries whose source is a real archive.
-
-    These are modules like rules_go/rules_distroles, which come from the BCR but we need to patch.
-    """
-    modules = []
-    for source_json in sorted(MODULES_DIR.glob("*/*/source.json")):
-        source = json.loads(source_json.read_text())
-        if source.get("type", "archive") != "archive":
-            continue
-        version_dir = source_json.parent
-        name = version_dir.parent.name
-        version = version_dir.name
-        modules.append(ExternalModule(name=name, version=version, version_dir=version_dir))
-
-    return modules
-
-
 def resolve_commit(src_path: str) -> str:
     """Return the full 40-char SHA of the submodule's currently checked-out commit."""
     result = subprocess.run(
@@ -187,11 +194,6 @@ def parse_github_org_repo(url: str) -> tuple[str, str]:
     if match is None:
         raise click.ClickException(f"Unsupported submodule remote (not a github.com URL): {url}")
     return match.group(1), match.group(2)
-
-
-def sha256_hex_to_integrity(sha256_hex: str) -> str:
-    """Convert a plain hex sha256 digest to Bazel's "sha256-<base64>" integrity format."""
-    return "sha256-" + base64.b64encode(bytes.fromhex(sha256_hex)).decode("ascii")
 
 
 def file_integrity(path: Path) -> str:
@@ -317,12 +319,6 @@ def write_module_entry(
     update_metadata(registry_dir, name, target_version)
 
 
-def write_external_module_entry(registry_dir: Path, name: str, version: str, source_version_dir: Path) -> None:
-    """Copy an already-complete external registry entry, and update metadata.json"""
-    shutil.copytree(source_version_dir, registry_version_dir(registry_dir, name, version))
-    update_metadata(registry_dir, name, version)
-
-
 def write_overlay_module_entry(registry_dir: Path, entry: OverlayModule) -> None:
     """Publish an OVERLAY_MODULES entry: an upstream archive carrying the
     wrapper's own files as an overlay, unmodified except a version bump."""
@@ -331,12 +327,11 @@ def write_overlay_module_entry(registry_dir: Path, entry: OverlayModule) -> None
 
     wrapper_dir = REPO_ROOT / entry.wrapper_dir
     module_bazel_text = (wrapper_dir / "MODULE.bazel").read_text()
-    repo_rule_call = extract_repo_rule_call(module_bazel_text, entry.repo_rule_name)
 
     source_json = {
-        "url": extract_single_item_list_kwarg(repo_rule_call, "urls"),
-        "strip_prefix": extract_str_kwarg(repo_rule_call, "strip_prefix"),
-        "integrity": sha256_hex_to_integrity(extract_str_kwarg(repo_rule_call, "sha256")),
+        "url": entry.source.url,
+        "strip_prefix": entry.source.strip_prefix,
+        "integrity": entry.source.integrity,
     }
 
     overlay_dir = version_dir / "overlay"
@@ -349,8 +344,6 @@ def write_overlay_module_entry(registry_dir: Path, entry: OverlayModule) -> None
         dst.parent.mkdir(parents=True, exist_ok=True)
         if rel_path == "MODULE.bazel":
             final_module_bazel_text = rewrite_module_version(module_bazel_text, entry.version)
-            for dep_name, dep_version in BAZEL_DEP_VERSION_OVERRIDES.items():
-                final_module_bazel_text = rewrite_bazel_dep_version(final_module_bazel_text, dep_name, dep_version)
             dst.write_text(final_module_bazel_text)
         else:
             shutil.copy(src, dst)
@@ -407,7 +400,6 @@ def push_and_create_pr(registry_dir: Path, branch_name: str, published: list[tup
 
 def gather_candidates(
     modules: list[tuple[str, str, str]],
-    external_modules: list[ExternalModule],
     submodule_paths: set[str],
     submodule_urls: dict[str, str],
 ) -> list[PublishCandidate]:
@@ -422,18 +414,6 @@ def gather_candidates(
             name=name,
             version=target_version,
             write=partial(write_module_entry, name=name, target_version=target_version, src_path=src_path, org=org, repo=repo, commit=commit),
-        ))
-
-    for module in external_modules:
-        candidates.append(PublishCandidate(
-            name=module.name,
-            version=module.version,
-            write=partial(
-                write_external_module_entry,
-                name=module.name,
-                version=module.version,
-                source_version_dir=module.version_dir,
-            ),
         ))
 
     for entry in OVERLAY_MODULES:
@@ -464,18 +444,15 @@ def main() -> None:
     check_repo_is_clean()
 
     modules = discover_submodule_modules()
-    external_modules = discover_external_modules()
 
-    if not modules and not external_modules and not OVERLAY_MODULES:
+    if not modules and not OVERLAY_MODULES:
         print("No modules found to publish.")
         return
 
     submodule_paths = load_submodule_paths()
     submodule_urls = load_submodule_urls()
 
-    candidates: list[PublishCandidate] = gather_candidates(
-        modules, external_modules, submodule_paths, submodule_urls
-    )
+    candidates: list[PublishCandidate] = gather_candidates(modules, submodule_paths, submodule_urls)
 
     registry_dir = clone_registry()
     print(f"Cloned {REGISTRY_REPO_URL} to {registry_dir}")
