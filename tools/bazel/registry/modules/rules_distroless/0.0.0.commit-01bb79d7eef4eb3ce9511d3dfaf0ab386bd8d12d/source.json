@@ -1,5 +1,0 @@
-{
-    "integrity": "sha256-vR9s01IaAUtpmd6jE5AddLkgpPEHTTjj5pKZytsdXWM=",
-    "strip_prefix": "rules_distroless-01bb79d7eef4eb3ce9511d3dfaf0ab386bd8d12d",
-    "url": "https://github.com/bazel-contrib/rules_distroless/archive/01bb79d7eef4eb3ce9511d3dfaf0ab386bd8d12d.tar.gz"
-}
