@@ -196,6 +196,26 @@ We should use it whenever we need to use GCC or binutils. Specifically, we shoul
 That toolchain is built by hand, from [blorente/gcc-builds](https://github.com/blorente/gcc-builds).
 We can build other versions if needed (e.g. to fit other versions of Debian when they come out).
 
+Each registered toolchain only matches a target platform that declares a sysroot constraint (e.g. [`@sonic_build_infra//platforms:trixie`](/src/sonic-build-infra/platforms/BUILD.bazel)).
+Every `.bazelrc` that registers `@sonic_build_infra//toolchains/gcc:all` (root, and each first-party `src/` module's own `.bazelrc`) sets this as the default target platform:
+
+```
+common --platforms=@sonic_build_infra//platforms:x86_64_trixie
+common:aarch64 --platforms=@sonic_build_infra//platforms:aarch64_trixie
+```
+
+> [!warning]
+> Without an explicit `--platforms=` selecting a `trixie` platform, *no* hermetic toolchain is compatible, and Bazel silently falls back to whatever C++ toolchain it auto-detects on the host instead of failing loudly.
+> If you're invoking `bazel build`/`bazel test` directly (bypassing the checked-in `.bazelrc`), make sure `--platforms` is still set.
+
+### aarch64 & Cross-Compilation
+ 
+To build for aarch64, we must pass `--config=aarch64`.
+
+Our hermetic toolchains are *host* toolchains (`exec == target == $cpu`), not real cross-compilation, so `--config=aarch64` only resolves a toolchain when Bazel itself is running on an aarch64 machine.
+
+There is no fundametal reason why we can't have cross-compilation, we just haven't implemented it yet.
+
 ### Compiler and linker flags
 
 Avoid hand-writing compiler and linker flags that reference files, such as `-L`, `-I`, `-isystem`, etc.

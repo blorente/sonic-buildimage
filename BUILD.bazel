@@ -4,7 +4,7 @@ _BAZEL_FILES = [
 ]
 
 exports_files(
-  # Capture files produced by Make (e.g. the base docker layers).
-  glob(["target/*"]) +
-  _BAZEL_FILES
+    # Capture files produced by Make (e.g. the base docker layers).
+    glob(["target/*"]) +
+    _BAZEL_FILES,
 )

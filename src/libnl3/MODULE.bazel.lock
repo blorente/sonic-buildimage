@@ -361,8 +361,6 @@
     "https://raw.githubusercontent.com/blorente/sonic-bazel-registry/main/modules/rules_shell/0.2.0/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/blorente/sonic-bazel-registry/main/modules/rules_shell/0.4.1/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/blorente/sonic-bazel-registry/main/modules/rules_shell/0.6.1/MODULE.bazel": "not found",
-    "https://raw.githubusercontent.com/blorente/sonic-bazel-registry/main/modules/sonic-build-infra/0.0.0-d2283ad0aebb0eb78821920635e7f9ab54c6f146/MODULE.bazel": "a1f810b642bec6132bf0ff28857926e56a6364312b0afb1402008fbf31199a12",
-    "https://raw.githubusercontent.com/blorente/sonic-bazel-registry/main/modules/sonic-build-infra/0.0.0-d2283ad0aebb0eb78821920635e7f9ab54c6f146/source.json": "a2acbbddda76f5fc9ea4ca53888849309cc3489e8b62273bc016a4cb17d83e06",
     "https://raw.githubusercontent.com/blorente/sonic-bazel-registry/main/modules/stardoc/0.5.1/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/blorente/sonic-bazel-registry/main/modules/stardoc/0.5.3/MODULE.bazel": "not found",
     "https://raw.githubusercontent.com/blorente/sonic-bazel-registry/main/modules/stardoc/0.5.6/MODULE.bazel": "not found",
@@ -553,7 +551,7 @@
     "@@rules_distroless+//apt:extensions.bzl%apt": {
       "general": {
         "bzlTransitiveDigest": "ASmBNnORZg/5t7mVWeiNrwDKI+5Q/ZqffLISH2orx0E=",
-        "usagesDigest": "1q4Q/u1N+Bf+i5sINVcI+MgbTOckc8xrcBf2Zxw++w0=",
+        "usagesDigest": "e+FxQHdp0ZD7oj/rPaOuKno5Z4bZ8YUMwn4tNiqaFTQ=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
