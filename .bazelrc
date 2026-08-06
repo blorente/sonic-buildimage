@@ -25,7 +25,7 @@ common --features=external_include_paths
 # python toolchain.
 # Until then, disable YANG modules so swss-common builds with the
 # minimal cfg_schema.h stub instead of failing as deliberately-incompatible.
-common --@sonic_swss_common//bazel:yang_modules=False
+common --@sonic_swss_common//tools/bazel:yang_modules=False
 
 # Select the (only) venv configuration for pip dependencies resolved by the `uv`
 # extension in src/sonic-build-infra/deps/pyproject.toml
