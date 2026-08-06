@@ -203,13 +203,11 @@ OverlayModule(
 ),
 ```
 
-Running the publisher then opens a PR against the external `sonic-bazel-registry`, publishing a real archive-based entry: it fetches the same upstream archive `libnl3_src` already downloads, and overlays our wrapper's files on top:
+Running the publisher then opens a PR against the external `sonic-bazel-registry`, publishing a real archive-based entry: it fetches the same upstream archive `libnl3_src` already downloads, and overlays our wrapper's files on top. Passing its path publishes just this one module, and only `src/libnl3` needs to be a clean checkout -- not the rest of the repo:
 
 ```
-$ python3 tools/bazel/registry/publish_to_remote_registry.py
+$ python3 tools/bazel/registry/publish_to_remote_registry.py src/libnl3
 Cloned https://github.com/blorente/sonic-bazel-registry to /tmp/sonic-bazel-registry-erb4ycku
-skip (already published): sonic-build-infra 0.0.0-d2283ad0aebb0eb78821920635e7f9ab54c6f146
-skip (already published): sonic-swss-common 0.0.0-0bbc08794128e4e1d7df043c3e3f3c4cd3ec9750
 new: libnl3 3.7.0.sonic-buildimage
 Opened PR: https://github.com/blorente/sonic-bazel-registry/pull/3
 ```
@@ -307,5 +305,5 @@ OverlayModule(
 ),
 ```
 
-Then `python3 tools/bazel/registry/publish_to_remote_registry.py` publishes it to `sonic-bazel-registry`, the same way as `libnl3` in Method 3.
+Then `python3 tools/bazel/registry/publish_to_remote_registry.py src/python` publishes it to `sonic-bazel-registry`, the same way as `libnl3` in Method 3.
 

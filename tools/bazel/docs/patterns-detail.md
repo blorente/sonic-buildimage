@@ -50,6 +50,18 @@ Opened PR: https://github.com/blorente/sonic-bazel-registry/pull/3
 
 Already-published `(name, version)` pairs are skipped, so it's safe to re-run after every commit.
 
+With no arguments, the whole repo must be a clean checkout (including submodules) before publishing anything. To publish a single module instead, pass its path -- only that path needs to be clean, not the rest of the repo:
+
+```
+$ python3 tools/bazel/registry/publish_to_remote_registry.py src/libnl3
+```
+
+This also works via `bazel run` (note the `--` separating Bazel's own flags from the script's):
+
+```sh
+bazel run //tools/bazel/registry:publish_to_remote_registry -- src/libnl3
+```
+
 #### Unpinned Mode In Buildimage
 
 *Inside* `sonic-buildimage`, that version string doesn't actually matter for modules under `src/`:

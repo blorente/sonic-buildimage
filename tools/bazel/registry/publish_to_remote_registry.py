@@ -9,12 +9,18 @@ TODO: Migrate to sonic-net when we have a repository available.
 
 Usage:
     python3 tools/bazel/registry/publish_to_remote_registry.py
+    python3 tools/bazel/registry/publish_to_remote_registry.py <path>  # publish a single module, e.g. src/libnl3
+
+Or, via Bazel (note the `--` separating Bazel's own flags from this script's):
+    bazel run //tools/bazel/registry:publish_to_remote_registry
+    bazel run //tools/bazel/registry:publish_to_remote_registry -- <path>
 """
 
 import base64
 import difflib
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -59,6 +65,9 @@ class PublishCandidate:
 
     name: str
     version: str
+    # REPO_ROOT-relative directory this candidate is read from.
+    # This path is required to be clean before publishing.
+    path: str
     write: Callable[[Path], None]
 
 
@@ -134,28 +143,61 @@ OVERLAY_MODULES = [
 ]
 
 
-def check_repo_is_clean() -> None:
-    """Abort if sonic-buildimage (including submodules) has uncommitted changes."""
+def check_repo_is_clean(path: str | None = None) -> None:
+    """Abort if there are uncommitted changes (including in submodules).
+
+    If path is given (REPO_ROOT-relative), only that path is checked.
+    """
+    cmd = ["git", "status", "--porcelain", "--ignore-submodules=none"]
+    if path is not None:
+        cmd += ["--", path]
+
     result = subprocess.run(
-        ["git", "status", "--porcelain", "--ignore-submodules=none"],
+        cmd,
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
         check=True,
     )
     if result.stdout.strip():
+        scope = f"{path!r}" if path is not None else "Repo"
         raise click.ClickException(
-            "Repo has uncommitted changes; commit or stash them before publishing:\n"
+            f"{scope} has uncommitted changes; commit or stash them before publishing:\n"
             + result.stdout
         )
 
 
-def discover_submodule_modules() -> list[tuple[str, str, str]]:
-    """Find MODULE.bazel files that live inside git submodules.
+def resolve_module_path(path: str) -> str:
+    """Normalize a user-provided path to a REPO_ROOT-relative string, matching
+    how src_path/wrapper_dir are expressed everywhere else in this script."""
+    absolute = Path(path).expanduser()
+    if not absolute.is_absolute():
+        # Under `bazel run`, the process's own cwd is inside the execroot, not
+        # wherever the user actually invoked `bazel run` from -- Bazel sets
+        # BUILD_WORKING_DIRECTORY for scripts to recover that. Plain
+        # `python3 ...` invocations don't set it, so fall back to Path.cwd().
+        cwd = Path(os.environ.get("BUILD_WORKING_DIRECTORY", Path.cwd()))
+        absolute = cwd / absolute
+    absolute = absolute.resolve()
 
-    Returns a list of (name, version, src_path), where src_path is relative
-    to the repo root (e.g. "src/sonic-sysmgr").
-    """
+    try:
+        return str(absolute.relative_to(REPO_ROOT))
+    except ValueError:
+        raise click.ClickException(f"{path!r} is not inside the repo ({REPO_ROOT}).") from None
+
+
+@dataclass(frozen=True)
+class SubmoduleModule:
+    """A module discovered from a git submodule's own MODULE.bazel."""
+
+    name: str
+    version: str
+    # REPO_ROOT-relative path to the submodule, e.g. "src/sonic-sysmgr".
+    src_path: str
+
+
+def discover_submodule_modules() -> list[SubmoduleModule]:
+    """Find MODULE.bazel files that live inside git submodules."""
     submodule_paths = load_submodule_paths()
     modules = []
 
@@ -167,7 +209,7 @@ def discover_submodule_modules() -> list[tuple[str, str, str]]:
         if result is None:
             continue
         name, version = result
-        modules.append((name, version, src_path))
+        modules.append(SubmoduleModule(name=name, version=version, src_path=src_path))
 
     return modules
 
@@ -399,27 +441,38 @@ def push_and_create_pr(registry_dir: Path, branch_name: str, published: list[tup
 
 
 def gather_candidates(
-    modules: list[tuple[str, str, str]],
+    modules: list[SubmoduleModule],
+    overlay_modules: list[OverlayModule],
     submodule_paths: set[str],
     submodule_urls: dict[str, str],
 ) -> list[PublishCandidate]:
     candidates: list[PublishCandidate] = []
 
-    for name, version, src_path in modules:
-        root = submodule_root_for(src_path, submodule_paths)
+    for module in modules:
+        root = submodule_root_for(module.src_path, submodule_paths)
         org, repo = parse_github_org_repo(submodule_urls[root])
-        commit = resolve_commit(src_path)
-        target_version = f"{version}-{commit}"
+        commit = resolve_commit(module.src_path)
+        target_version = f"{module.version}-{commit}"
         candidates.append(PublishCandidate(
-            name=name,
+            name=module.name,
             version=target_version,
-            write=partial(write_module_entry, name=name, target_version=target_version, src_path=src_path, org=org, repo=repo, commit=commit),
+            path=module.src_path,
+            write=partial(
+                write_module_entry,
+                name=module.name,
+                target_version=target_version,
+                src_path=module.src_path,
+                org=org,
+                repo=repo,
+                commit=commit,
+            ),
         ))
 
-    for entry in OVERLAY_MODULES:
+    for entry in overlay_modules:
         candidates.append(PublishCandidate(
             name=entry.name,
             version=entry.version,
+            path=entry.wrapper_dir,
             write=partial(write_overlay_module_entry, entry=entry),
         ))
 
@@ -439,20 +492,34 @@ def publish_candidates(registry_dir: Path, candidates: list[PublishCandidate]) -
     return published
 
 @click.command()
-def main() -> None:
-    """Publish git-submodule-backed and external (BCR-style) modules to the remote registry."""
-    check_repo_is_clean()
+@click.argument("path", required=False)
+def main(path: str | None) -> None:
+    """Publish git-submodule-backed and external (BCR-style) modules to the remote registry.
+
+    If PATH is given (e.g. src/libnl3), only the module anchored there is
+    published, and only PATH itself needs to be a clean checkout -- not the
+    whole repo.
+    """
+    module_path = resolve_module_path(path) if path is not None else None
+    check_repo_is_clean(module_path)
 
     modules = discover_submodule_modules()
+    overlay_modules = OVERLAY_MODULES
 
-    if not modules and not OVERLAY_MODULES:
+    if module_path is not None:
+        modules = [m for m in modules if m.src_path == module_path]
+        overlay_modules = [e for e in overlay_modules if e.wrapper_dir == module_path]
+        if not modules and not overlay_modules:
+            raise click.ClickException(f"No publishable module found at path {module_path!r}.")
+
+    if not modules and not overlay_modules:
         print("No modules found to publish.")
         return
 
     submodule_paths = load_submodule_paths()
     submodule_urls = load_submodule_urls()
 
-    candidates: list[PublishCandidate] = gather_candidates(modules, submodule_paths, submodule_urls)
+    candidates: list[PublishCandidate] = gather_candidates(modules, overlay_modules, submodule_paths, submodule_urls)
 
     registry_dir = clone_registry()
     print(f"Cloned {REGISTRY_REPO_URL} to {registry_dir}")
