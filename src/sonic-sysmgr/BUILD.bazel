@@ -23,6 +23,7 @@ sonic_deb(
     depends = [
         "libswsscommon",
         "libprotobuf32",  # In trixie this is libprotobuf32t64, but it Provides libprotobuf32 as a virtual package, so it's fine.
+        "libdbus-c++-1-0v5",  # rebootbackend links against @trixie//libdbus-c++-dev; this is its runtime package.
     ],
     description = "This package contains sysmgr service.",
     maintainer = "Runming Wu <runmingwu@google.com>",

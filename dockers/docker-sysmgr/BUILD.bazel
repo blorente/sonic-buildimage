@@ -92,9 +92,10 @@ gzip(
 write_source_files(
     name = "write_docker-sysmgr.gz",
     check_that_out_file_exists = False,
+    diff_test = False,  # We cannot generate diff tests for now. When running in pure Bazel, we can't ensure that we have a base image to build the tars.
     files = {
-        # Root-package label so the file lands in the repo-root target/
-        # (where SONiC expects it), not this package's dir.
+        # Root-package label so the file lands in the repo-root target/,
+        # where SONiC expects it.
         "//:target/docker-sysmgr.gz": ":docker-sysmgr.gz",
     },
 )
@@ -138,9 +139,10 @@ gzip(
 write_source_files(
     name = "write_docker-sysmgr-dbg.gz",
     check_that_out_file_exists = False,
+    diff_test = False,  # We cannot generate diff tests for now. When running in pure Bazel, we can't ensure that we have a base image to build the tars.
     files = {
-        # Root-package label so the file lands in the repo-root target/
-        # (where SONiC expects it), not this package's dir.
+        # Root-package label so the file lands in the repo-root target/,
+        # where SONiC expects it.
         "//:target/docker-sysmgr-dbg.gz": ":docker-sysmgr-dbg.gz",
     },
 )

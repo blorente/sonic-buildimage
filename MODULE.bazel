@@ -27,5 +27,6 @@ register_toolchains("@bsd_tar_toolchains//:all")
 # The actual dependencies are listed in src/sonic-build-infra/MODULE.bazel, and re-exported.
 apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
 use_repo(apt, "trixie")
+
 uv = use_extension("@aspect_rules_py//uv/unstable:extension.bzl", "uv")
 use_repo(uv, "pypi")

@@ -7,7 +7,7 @@ function run_in_slave() {
   repo=$1
   cmd=$2
 
-  # Run the same command inside the sonic-slave-bookworm container.
+  # Run the same command inside the sonic-slave-trixie container.
   if [[ "${SKIP_SLAVE:-0}" != "1" ]]; then
     echo "[slave] ${repo}: ${cmd}"
     make -C "${repo_root}" -f Makefile.work BLDENV=trixie sonic-slave-run \
@@ -54,7 +54,6 @@ for image in ${docker_images[@]}; do
 
     rm -f "target/${image}.gz"
     BUILD_WITH_BAZEL_WHEN_AVAILABLE=true \
-      RUN_BAZEL_IN_SLAVE_CONTAINER=true \
       BLDENV=trixie \
       make "target/${image}.gz"
 done

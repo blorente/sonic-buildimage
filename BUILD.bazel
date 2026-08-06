@@ -1,1 +1,10 @@
-exports_files(glob(["target/*"]))
+# Files needed for the Bazel build
+_BAZEL_FILES = [
+    "MODULE.bazel",
+]
+
+exports_files(
+  # Capture files produced by Make (e.g. the base docker layers).
+  glob(["target/*"]) +
+  _BAZEL_FILES
+)

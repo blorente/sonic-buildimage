@@ -810,6 +810,7 @@ flatten(
 
 flatten(
     name = "libnl-nf-3-dev_pkg",
+    deduplicate = True,
     tars = [
         ":libnl-nf-3_pkg",
         ":libnl-3-dev_pkg",

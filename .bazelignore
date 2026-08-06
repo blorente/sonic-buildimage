@@ -8,3 +8,5 @@ src/sonic-sysmgr
 # TODO(bazel-ready): Make these modules work.
 src/dhcprelay
 src/sonic-genl-packet
+src/sonic-p4rt
+platform

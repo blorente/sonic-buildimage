@@ -3,7 +3,7 @@ common --registry=file://%workspace%/tools/bazel/registry
 # Then, try to read from sonic-bazel-registry, for modules published there but
 # not hand-authored in our local registry.
 common --registry=https://raw.githubusercontent.com/blorente/sonic-bazel-registry/main
-
+# After that, read from upstream sources.
 common --registry=https://raw.githubusercontent.com/aspect-build/bazel-central-registry/aspect_rules_py-v1.7.1
 common --registry=https://bcr.bazel.build
 
@@ -13,6 +13,8 @@ common --registry=https://bcr.bazel.build
 # ever imported by sonic-buildimage's own root .bazelrc.
 try-import %workspace%/tools/bazel/root-unpinned-modules-config.bazelrc
 common --config=local-modules
+
+test --test_output=errors
 
 common --per_file_copt=.*external.*@-w
 common --cxxopt=-std=c++17 --host_cxxopt=-std=c++17

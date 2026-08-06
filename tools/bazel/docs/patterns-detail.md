@@ -1,9 +1,9 @@
-# Bazel for SONiC: A Build Engineer Primer
+# SONiC Bazel Patterns In Detail
 
 > [!warning]
-> This document is meant for folks actively changing the Bazel build of SONiC.
-> If you just want to _use_ the build to generate artifacts,
-> please refer to [The `SONIC_BAZEL_DOCKER_IMAGES` target](/README.buildsystem.md) in the regular build.
+> This document is a companion to the [`README.bazel.md`](./README.bazel.md).
+> It expands on some of the patterns mentioned there, serving as a reference.
+> It is not meant to be read from top to bottom, but rather linked from the README.
 
 ## Pre-requisites
 
@@ -30,10 +30,27 @@ To resolve dependencies between modules (e.g. `sonic-sysmgr` depends on `sonic-s
 bazel_dep(name = "sonic-swss-common", version = "0.0.0-0bbc08794128e4e1d7df043c3e3f3c4cd3ec9750")
 ```
 
-First-party `src/` modules are published to an external registry, `sonic-bazel-registry`, via [`tools/bazel/registry/publish_to_remote_registry.py`](/tools/bazel/registry/publish_to_remote_registry.py).
-See [Method 3 of Importing External Projects](/tools/bazel/docs/import-external-projects.md#method-3-port-the-dependency-into-bazel) for the mechanics.
+SONiC maintains its own Bazel registry, `blorente/sonic-bazel-registry` (soon to be `sonic-net/sonic-bazel-registry`). Everything that isn't a plain upstream BCR dependency lives in that external registry:
 
-This matters when building that module outside of `sonic-buildimage` (e.g. in the CI for `sonic-swss-common`).
+- First-party component modules (e.g. `sonic-build-infra`, `sonic-swss-common`, `sonic-sysmgr`), discovered automatically from `src/`.
+- Modules we can't get from an upstream registry as-is, via the `OVERLAY_MODULES` list in that script. For instance, `com_github_openconfig_gnoi` is published this way because upstream hasn't migrated to bzlmod yet, and `libnl3` carries our own patch on top of the real upstream archive.
+- Rulesets we need to patch from the Bazel Central Registry (e.g. `rules_go`). These are maintained directly in `sonic-bazel-registry` (there's no `sonic-buildimage`-side tooling for them), and are often temporary until the patches have been merged and released upstream.
+
+[`publish_to_remote_registry.py`](/tools/bazel/registry/publish_to_remote_registry.py) holds the tooling to publish these modules into the SONiC Bazel registry.
+It will publish first-party components automatically, plus the hardcoded list in `OVERLAY_MODULES`.
+
+```
+$ python3 tools/bazel/registry/publish_to_remote_registry.py
+Cloned https://github.com/blorente/sonic-bazel-registry to /tmp/sonic-bazel-registry-erb4ycku
+skip (already published): sonic-build-infra 0.0.0-d2283ad0aebb0eb78821920635e7f9ab54c6f146
+skip (already published): sonic-swss-common 0.0.0-0bbc08794128e4e1d7df043c3e3f3c4cd3ec9750
+new: libnl3 3.7.0.sonic-buildimage
+Opened PR: https://github.com/blorente/sonic-bazel-registry/pull/3
+```
+
+Already-published `(name, version)` pairs are skipped, so it's safe to re-run after every commit.
+
+#### Unpinned Mode In Buildimage
 
 *Inside* `sonic-buildimage`, that version string doesn't actually matter for modules under `src/`:
 `sonic-buildimage`'s own `.bazelrc` unconditionally overrides every top-level `src/` module with [`--override_module`](https://bazel.build/reference/command-line-reference#common_options-flag--override_module),
@@ -41,44 +58,21 @@ so Bazel builds it from `src/` instead of resolving it through any registry at a
 
 These configurations come from [`tools/bazel/root-unpinned-modules-config.bazelrc`](/tools/bazel/root-unpinned-modules-config.bazelrc), which is generated and kept up-to-date by [`tools/bazel/registry/root_config_test.py`](/tools/bazel/registry/root_config_test.py).
 
-TODO BL: Fix this diagram
+#### Unpinned Mode In Submodules
 
-```mermaid
-graph TD
-    subgraph repo["sonic-buildimage"]
-        subgraph src["src/ each dir is a Bazel module"]
-            sysmgr["sonic-sysmgr"]
-            swss["sonic-swss-common"]
-            libnl3["libnl3"]
-            infra["sonic-build-infra shared build infra"]
-        end
+By default, building a submodule standalone (e.g. `cd src/sonic-swss-common && bazel build ...`) resolves its dependencies at their real, *pinned* versions from `sonic-bazel-registry`.
+To instead build against your own local, uncommitted checkout of one of those dependencies (e.g. testing a `sonic-build-infra` change together with `sonic-swss-common` before publishing it), pass `--config=unpinned-<name>`:
 
-        rc["root .bazelrc override_module always on"]
-        localreg["tools/bazel/registry hand-authored only: rules_go, rules_distroless, gnoi"]
-    end
-
-    extreg["sonic-bazel-registry external registry"]
-
-    sysmgr -.->|bazel_dep| swss
-    swss -.->|bazel_dep| libnl3
-    sysmgr -.->|bazel_dep| infra
-    swss -.->|bazel_dep| infra
-
-    rc ==>|override_module bypasses all registries| src
-    src -.->|published by publish_to_remote_registry.py| extreg
-
-    classDef mod fill:#1f6feb22,stroke:#1f6feb,stroke-width:1px;
-    classDef sharedmod fill:#8957e522,stroke:#8957e5,stroke-width:1px;
-    classDef regbox fill:#3fb95022,stroke:#3fb950,stroke-width:1px;
-    class sysmgr,swss,libnl3 mod;
-    class infra sharedmod;
-    class localreg,rc,extreg regbox;
+```sh
+cd src/sonic-swss-common
+bazel build --config=unpinned-sonic-build-infra ...
 ```
 
-`sonic-buildimage/tools/bazel/registry` (the *local* registry) is reserved for a small number of hand-authored exceptions we can't get from an upstream registry as-is: rulesets we need to patch from the BCR (e.g. `rules_go`), and vendored dependencies with no `module()` of their own (e.g. `com_github_openconfig_gnoi`).
+This applies `--override_module=sonic-build-infra=<path-to-src/sonic-build-infra>`, the same mechanism the root `.bazelrc` uses unconditionally for every top-level `src/` module.
 
-> [!tip]
-> Each submodule (e.g. `src/sonic-swss-common`) has its own, similar, but *opt-in* mechanism: `--config=unpinned-<name>` stanzas in [`tools/bazel/submodule-config.bazelrc`](/tools/bazel/submodule-config.bazelrc), kept complete by [`tools/bazel/registry/submodule_config_test.py`](/tools/bazel/registry/submodule_config_test.py). Unlike the root, a submodule can't unconditionally override itself, so it opts in per-dependency via `--config` instead.
+> [!warning]
+> Please see [`tools/bazel/submodule-config.bazelrc`](/tools/bazel/submodule-config.bazelrc) for an explanation of the gotchas.
+> This mechanism is subject to change as we learn more about the development experience requirements from the SONiC community.
 
 ### `src/sonic-build-infra`
 
@@ -759,18 +753,10 @@ Lastly, we need to figure out how to build `libswsscommon` itself.
 This is a process that requires reading and understanding the autotools build, and translating it to Bazel. It's hard to generalize, but the end result should be a `cc_binary` or `cc_shared_library` target that we can depend on. This is what we ended up with, after much experimentation:
 
 ```starlark
-
-# TODO BL: Figure out how this looks now that we have fixed linker scripts.
-
 # Release-ready .so library. This should go in the tar.
 # The specific flags of this target were the result of experimentation, please do not assume your library will need the same ones.
 cc_binary(
     name = "libswsscommon_consolidated_base",
-    srcs = [
-        # Include static libraries directly to force static linking and bypass linker scripts
-        "@@rules_distroless++apt+trixie_libbsd-dev-amd64_0.11.7-2//:usr/lib/x86_64-linux-gnu/libbsd.a",
-        "@@rules_distroless++apt+trixie_libmd-dev-amd64_1.0.4-2//:usr/lib/x86_64-linux-gnu/libmd.a",
-    ],
     linkshared = True,
     linkopts = [
         "-static-libstdc++",
@@ -779,9 +765,6 @@ cc_binary(
         # These are resolved at runtime when the .so is loaded
         "-Wl,--allow-shlib-undefined",
         "-Wl,--undefined-version",
-        # Exclude libbsd from dynamic linking - we use static .a files above
-        "-Wl,--exclude-libs,libbsd.a",
-        "-Wl,--exclude-libs,libmd.a",
     ],
     deps = [":common"],
 )

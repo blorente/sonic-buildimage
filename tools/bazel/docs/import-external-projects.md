@@ -13,18 +13,21 @@ When this is the case, we usually just need to add the appropriate dependency to
 bazel_dep(name = "openssl", version = "3.5.5.bcr.4")
 ```
 
-Bazel will then look into the BCR to do dependency resolution, just like npm looks into the npm registry, and pip looks into PyPi. This is the best way to import a library, since we're usually building the resource from source, following Bazel best-principles.
+Bazel will then look into the BCR to do dependency resolution, just like npm looks into the npm registry, and pip looks into PyPi.
+This is the best way to import a library, since we're usually building the resource from source, following Bazel best-principles.
 
-If we need to apply custom patches to the dependency, we can do so in SONiC's Bazel Registry. This registry works exactly like the BCR, but it lives in in `<sonic-buildimage>/tools/bazel/registry` and is unique to the SONiC project. All SONiC projects are configured to look here before looking into the BCR, so we can override dependency versions here if we wish.
+If we need to apply custom patches to the dependency, we can do so in `sonic-bazel-registry`, an external registry maintained by the SONiC community (currently `blorente/sonic-bazel-registry`, soon to be `sonic-net/sonic-bazel-registry`).
 
-To do that, we create a new module in the SONiC Bazel Registry, and we give it a unique version:
+`sonic-bazel-registyr` works exactly like the BCR, but is unique to the SONiC project.
+All SONiC projects are configured to look here before looking into the BCR (see the `--registry` flags in [`.bazelrc`](/.bazelrc)), so we can override dependency versions here if we wish.
+
+To do that, we create a new module in the clone, and give it a unique version:
 
 ```
 # Example: patched version of rules_go v0.60.0
-➜ pwd
-/home/.../sonic-net/sonic-buildimage
-
-➜ ls tools/bazel/registry/modules/rules_go
+➜ git clone https://github.com/blorente/sonic-bazel-registry
+➜ cd sonic-bazel-registry
+➜ ls modules/rules_go
 0.60.0.sonic-patched
 metadata.json
 ```
@@ -32,30 +35,25 @@ metadata.json
 Then, we can copy the contents of the BCR entry we want to start from. For instance, [this](https://github.com/bazelbuild/bazel-central-registry/tree/main/modules/rules_go/0.60.0) is the BCR entry for `rules_go` version 0.60.0, so we copy it here:
 
 ```
-➜ ls tools/bazel/registry/modules/rules_go/
-tools/bazel/registry/modules/rules_go/0.60.0.sonic-patched
-├── MODULE.bazel
-├── patches
-└── source.json
-# We don't need presumbit.yml, that's for BCR's own CI.
+➜ ls modules/rules_go/0.60.0.sonic-patched
+MODULE.bazel
+patches
+source.json
+# We don't need presubmit.yml, that's for BCR's own CI.
 ```
 
 Then, we add the patches we need:
 
 ```
-➜ ls tools/bazel/registry/modules/rules_go/
-tools/bazel/registry/modules/rules_go/0.60.0.sonic-patched
-├── MODULE.bazel
-├── patches
-│   ├── 0001_patch_forward_to_base_of_4574.patch
-│   └── 0002_import_pr_4574.patch
-└── source.json
+➜ ls modules/rules_go/0.60.0.sonic-patched/patches
+0001_patch_forward_to_base_of_4574.patch
+0002_import_pr_4574.patch
 ```
 
 And modify `source.json` to load the patches:
 
 ```
-➜ cat tools/bazel/registry/modules/rules_go/0.60.0.sonic-patched/source.json
+➜ cat modules/rules_go/0.60.0.sonic-patched/source.json
 {
     "integrity": "<integrity>",
     "strip_prefix": "rules_go-0.60.0",
@@ -67,6 +65,8 @@ And modify `source.json` to load the patches:
     "patch_strip": 1
 }
 ```
+
+Finally, commit and open a PR against `sonic-bazel-registry`.
 
 > [!tip]
 > You can generate integrity values with:
@@ -85,7 +85,7 @@ We recommend the flag `--override_module` to make this easier ([docs](https://ba
 - Make changes in your local clone of the dependency as needed, until the build passes. Every time you make a change, Bazel will pick it up.
 - Once your build passes in `sonic-buildimage`, you can head back to your local clone of the ruleset and extract the diff: `cd /home/.../path/to/rules_go && git diff > my_patch.patch`.
 
-That will yield patch files ready to be copied into the SONiC Bazel Registry.
+That will yield patch files ready to be copied into your `sonic-bazel-registry` clone.
 ## Method 2: Pull a Debian archive using `rules_distroless`
 
 This one is simple: If the dependency is available from Debian repositories, and you don't want to patch it, you should be able to import the `deb` directly through [`rules_distroless`](https://github.com/thesayyn/sonic-buildimage/blob/9033053ebfee08c63fc22ef414b9f8cd2b82c766/dockers/docker-base-bookworm/base_bookworm.MODULE.bazel#L1-L160).
@@ -176,7 +176,9 @@ alias(
 
 Now we have fully implemented `@libnl3`, a working Bazel build that downloads some source code, applies some patches, rebuilds, and surfaces the result in a useful way. But how does one depend on `src/libnl3` from other parts of `sonic-buildimage`, and from outside it?
 
-Unlike Methods 1 and 2, first-party `src/` modules like `libnl3` are *not* added to the local SONiC Bazel Registry (`tools/bazel/registry`). Instead:
+Unlike Methods 1 and 2, first-party `src/` modules like `libnl3` are *not* hand-authored in a registry at all.
+`tools/bazel/registry` only holds the tooling that publishes them.
+Instead:
 
 - **For development inside `sonic-buildimage`**: nothing to do. `sonic-buildimage`'s own `.bazelrc` unconditionally overrides every top-level `src/` module with `--override_module`, so it's always built from your checked-out `src/libnl3` tree, regardless of what version any consumer's `bazel_dep` declares. This list is auto-generated -- run the updater to pick up a new module (see [`tools/bazel/root-unpinned-modules-config.bazelrc`](/tools/bazel/root-unpinned-modules-config.bazelrc)):
 
@@ -216,6 +218,24 @@ The published entry carries our wrapper's `MODULE.bazel`/`BUILD.bazel`/patches a
 See `write_overlay_module_entry` in `publish_to_remote_registry.py` for the details.
 
 Now, anything that needs `libnl3` can depend on it with `bazel_dep(name = "libnl3", version = "3.7.0.sonic-buildimage")`, and use `@libnl3//:libnl_3` in its build, just like any other package from the BCR.
+
+`repo_rule_source()` isn't the only way to resolve an `OverlayModule`'s archive.
+`archive_source(url=..., sha256=..., strip_prefix=...)` pins it by hand instead, for wrappers that don't have their own repository rule to parse it from.
+See `com_github_openconfig_gnoi` (vendored at `src/sonic-sysmgr/gnoi`) for an example:
+
+```python
+OverlayModule(
+    name="com_github_openconfig_gnoi",
+    version="0.6.1.sonic-buildimage",
+    wrapper_dir="src/sonic-sysmgr/gnoi_overlay",
+    source=archive_source(
+        url="https://github.com/openconfig/gnoi/archive/2b6ff72de5769839fc68bd019f345a184e3b0bf1.tar.gz",
+        sha256="0f71e9452ec8c50f5a87f54d59f709501a2cb4770a4633d773c443379ca4d4e0",
+        strip_prefix="gnoi-2b6ff72de5769839fc68bd019f345a184e3b0bf1",
+    ),
+    overlay_files=["MODULE.bazel"],
+),
+```
 
 ## Method 4: Build the dependency out of band, and import it into Bazel as an opaque archive.
 

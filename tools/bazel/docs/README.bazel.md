@@ -56,15 +56,15 @@ endif
 
 ## Bazel Rules Dependencies
 
-There is a Bazel Registry in [`tools/bazel/registry`](/tools/bazel/registry).
+SONiC maintains its own Bazel registry, `blorente/sonic-bazel-registry` (soon to be `sonic-net/sonic-bazel-registry`). Everything that isn't a plain upstream BCR dependency lives in that external registry:
 
-In it, we host hand-authored entries for:
+- First-party component modules (e.g. `sonic-build-infra`, `sonic-swss-common`, `sonic-sysmgr`), discovered automatically from `src/`.
+- Modules we can't get from an upstream registry as-is, via the `OVERLAY_MODULES` list in that script. For instance, `com_github_openconfig_gnoi` is published this way because upstream hasn't migrated to bzlmod yet, and `libnl3` carries our own patch on top of the real upstream archive.
+- Rulesets we need to patch from the Bazel Central Registry (e.g. `rules_go`). These are maintained directly in `sonic-bazel-registry` (there's no `sonic-buildimage`-side tooling for them), and are often temporary until the patches have been merged and released upstream.
 
-- Modules we can't get from an upstream registry as-is. For instance, `com_github_openconfig_gnoi` is hand-authored because upstream hasn't migrated to bzlmod yet.
-- Rulesets we need to patch from the Bazel Central Registry (e.g. `tools/bazel/registry/modules/rules_go`). These are often temporary until the patches have been merged and released upstream.
+Please see [Depending on Other Modules](/tools/bazel/docs/patterns-detail.md#depending-on-other-modules) for instructions on how to maintain this registry.
 
-First-party `src/` modules (e.g. `sonic-build-infra`, `sonic-swss-common`, `sonic-sysmgr`, `libnl3`) are *not* in this registry.
-Instead, they are published onto an upstream registry, `blorente/sonic-bazel-registry` (soon to be `sonic-net/sonic-bazel-registry`).
+### Unpinned Mode
 
 For development inside `sonic-buildimage`, `sonic-buildimage`'s own `.bazelrc` unconditionally overrides them with
 `--override_module` to build from `src/` tree, regardless of what version any consumer's `bazel_dep` declares.
@@ -74,7 +74,8 @@ Each module still declares a real, externally-meaningful pinned version in its o
 
 You can find further documentation on how we handle Bazel dependencies in [Depending on Other Modules](/tools/bazel/docs/patterns-detail.md#depending-on-other-modules).
 
-TODO BL: Talk about how to unpin dependencies when building from a submodule.
+> [!tip]
+> Each submodule (e.g. `src/sonic-swss-common`) has its own, similar, but *opt-in* mechanism: `--config=unpinned-<name>` configurations in [`tools/bazel/submodule-config.bazelrc`](/tools/bazel/submodule-config.bazelrc), kept complete by [`tools/bazel/registry/submodule_config_test.py`](/tools/bazel/registry/submodule_config_test.py). See [Unpinned Mode In Submodules](/tools/bazel/docs/patterns-detail.md#unpinned-mode-in-submodules) for more information.
 
 ## Debian Dependencies
 

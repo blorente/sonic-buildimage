@@ -5,14 +5,14 @@ load("@rules_distroless//distroless:defs.bzl", "flatten")
 
 exports_files([
     "submodule-config.bazelrc",
-    "root-config.bazelrc",
+    "root-unpinned-modules-config.bazelrc",
 ])
 
 flatten(
     name = "debug_utils_pkg",
     deduplicate = True,
     tars = [
-        "@trixie//gdb-minimal",
+        "@trixie//gdb",
         "@trixie//gdbserver",
         "@trixie//strace",
         "@trixie//openssh-client",

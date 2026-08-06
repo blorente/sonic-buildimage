@@ -73,12 +73,7 @@ def rewrite_module_version(text: str, new_version: str) -> str:
 
 
 def extract_repo_rule_call(text: str, rule_name: str) -> str:
-    """Return the argument text of a `<rule_name>(...)` invocation.
-
-    Distinct from a `<rule_name> = use_repo_rule(...)` assignment: that has
-    `=` between the name and the paren, so `\\s*\\(` right after the name
-    only matches the actual call.
-    """
+    """Return the argument text of a `<rule_name>(...)` invocation."""
     match = re.search(rf"\n{re.escape(rule_name)}\s*\(", text)
     if match is None:
         raise ValueError(f"No {rule_name}(...) call found")

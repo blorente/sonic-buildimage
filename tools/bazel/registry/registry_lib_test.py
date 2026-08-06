@@ -1,9 +1,6 @@
 """Data tests for registry_lib.py's pure text-manipulation helpers.
 
-Each test feeds a small, hand-written fixture string through one helper and
-checks the result -- no dependency on this repo's actual MODULE.bazel/
-.gitmodules content, so these stay fast and stable regardless of what's
-currently checked out.
+Fixtures should live in memory.
 """
 
 import sys
@@ -197,10 +194,26 @@ def test_extract_str_kwarg_raises_when_missing() -> bool:
     return check(False, "extract_str_kwarg raises ValueError for a missing kwarg")
 
 
+def test_extract_str_kwarg_raises_on_non_string_value() -> bool:
+    try:
+        registry_lib.extract_str_kwarg("sha256 = SOME_CONSTANT", "sha256")
+    except ValueError:
+        return check(True, "extract_str_kwarg raises ValueError for a non-string value")
+    return check(False, "extract_str_kwarg raises ValueError for a non-string value")
+
+
 def test_extract_single_item_list_kwarg_extracts_value() -> bool:
     call = registry_lib.extract_repo_rule_call(REPO_RULE_SAMPLE, "libnl3_src")
     value = registry_lib.extract_single_item_list_kwarg(call, "urls")
     return check(value == "http://example.com/libnl3.tar.gz", "extract_single_item_list_kwarg extracts the one element")
+
+
+def test_extract_single_item_list_kwarg_raises_on_non_string_value() -> bool:
+    try:
+        registry_lib.extract_single_item_list_kwarg("urls = [SOME_CONSTANT]", "urls")
+    except ValueError:
+        return check(True, "extract_single_item_list_kwarg raises ValueError for a non-string value")
+    return check(False, "extract_single_item_list_kwarg raises ValueError for a non-string value")
 
 
 def test_load_submodule_paths_and_urls_read_gitmodules() -> bool:
@@ -238,9 +251,8 @@ def test_load_submodule_paths_empty_without_gitmodules() -> bool:
 
 
 def test_load_submodule_paths_and_urls_skip_malformed_sections() -> bool:
-    # A section missing `path` is meaningless to us and should be dropped
-    # entirely; a section with `path` but no `url` is fine for paths (used by
-    # is_git_submodule) but excluded from urls (which needs both).
+    # A section missing `path` is meaningless to us and should be droppe entirely.
+    # A section with `path` but no `url` is fine for paths (used by is_git_submodule) but excluded from urls (which needs both).
     gitmodules_text = (
         '[submodule "has-url-no-path"]\n'
         "\turl = https://example.com/no-path\n"
@@ -281,9 +293,11 @@ TESTS = [
     test_extract_repo_rule_call_raises_when_rule_absent,
     test_extract_str_kwarg_extracts_value,
     test_extract_str_kwarg_raises_when_missing,
+    test_extract_str_kwarg_raises_on_non_string_value,
     test_extract_single_item_list_kwarg_extracts_value,
     test_extract_single_item_list_kwarg_raises_on_multiple_items,
     test_extract_single_item_list_kwarg_raises_on_empty_list,
+    test_extract_single_item_list_kwarg_raises_on_non_string_value,
     test_load_submodule_paths_and_urls_read_gitmodules,
     test_load_submodule_paths_empty_without_gitmodules,
     test_load_submodule_paths_and_urls_skip_malformed_sections,
