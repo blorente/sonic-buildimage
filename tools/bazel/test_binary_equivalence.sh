@@ -1,0 +1,74 @@
+#!/bin/bash
+# Compares every Bazel-built binary against its Make-built counterpart.
+#
+# Assumes a clean checkout.
+set -Eeuo pipefail
+
+trap 'echo "[FAILED] ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "${repo_root}"
+
+BLDENV="${BLDENV:-trixie}"
+
+# rcache, because we don't want this job writing to the shared cache,
+# but we can read from the shared cache because we assert a clean build.
+# See rules/config for the modes.
+CACHE_OPTIONS="${CACHE_OPTIONS:-SONIC_DPKG_CACHE_METHOD=rcache}"
+
+function run_in_slave() {
+  # SKIP_SLAVE=1 still runs the command, just on the host. Skipping it outright
+  # would make the whole script exit 0 while testing nothing.
+  if [[ "${SKIP_SLAVE:-0}" == "1" ]]; then
+    eval "$1"
+    return
+  fi
+  make -f Makefile.work "BLDENV=${BLDENV}" sonic-slave-run \
+    SONIC_RUN_CMDS="cd /sonic && $1"
+}
+
+# Ensure the tree is clean before proceeding.
+if [[ -n "$(git status --porcelain)" ]]; then
+  if [[ "${ELF_EQUIVALENCE_ALLOW_DIRTY:-0}" != "1" ]]; then
+    echo "ERROR: the checkout is dirty. Both sides must come from the same tree." >&2
+    git status --short >&2
+    echo "Set ELF_EQUIVALENCE_ALLOW_DIRTY=1 to compare anyway." >&2
+    exit 1
+  fi
+  echo "WARNING: comparing on a dirty tree. Results may be inaccurate."
+fi
+
+# Invoked directly rather than through `bazel run`, because the script shells out to Bazel itself.
+compare="PYTHONPATH=tools/bazel/registry python3 tools/bazel/elf_equivalence.py --bldenv ${BLDENV}"
+
+# elfcompare needs abidiff to compare shared libraries, and we haven't migrated abidiff to Bazel yet.
+# We need the `tr` because this travels to the slave, so we need to collapse it into one line to fit in a single CLI.
+#
+# TODO(bazel-ready): Migrate abidiff to Bazel and fetch it from the BCR.
+provision_abidiff=$(tr '\n' ' ' <<'EOF'
+if ! command -v abidiff >/dev/null; then
+  sudo apt-get update &&
+    sudo apt-get install -y --no-install-recommends abigail-tools;
+fi
+EOF
+)
+
+echo "[= Finding the Make debs to compare against =]"
+make_debs_file="target/.elf-equivalence-debs"
+rm -f "${make_debs_file}"
+run_in_slave "${compare} --print-make-debs > ${make_debs_file}"
+mapfile -t make_debs < "${make_debs_file}"
+
+if [[ ${#make_debs[@]} -eq 0 ]]; then
+  echo "ERROR: found no Make debs to compare against." >&2
+  exit 1
+fi
+
+echo "[= Building the Make side =]"
+for deb in "${make_debs[@]}"; do
+  echo "[make] ${deb}"
+  env ${CACHE_OPTIONS} "BLDENV=${BLDENV}" make "${deb}"
+done
+
+echo "[= Comparing =]"
+run_in_slave "${provision_abidiff} && ${compare}"
