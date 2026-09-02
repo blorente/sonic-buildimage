@@ -1,3 +1,4 @@
+import progress
 import registry_lib
 from context import Context
 from diagnostics import (
@@ -5,6 +6,7 @@ from diagnostics import (
     ArtifactType,
     CollectionDiagnosticCodeEnum,
     ComparableArtifact,
+    Modifier,
 )
 from tools import BazelLabel
 
@@ -16,9 +18,9 @@ MAKE_IMAGE_DIR = "target"
 DEBUG_MARK = "-dbg"
 
 
-def _modifiers_for(name: str) -> frozenset[str]:
+def _modifiers_for(name: str) -> frozenset[Modifier]:
     """Whether `name` is the debug variant of an artifact, or the shipped one."""
-    return frozenset({"debug"} if DEBUG_MARK in name else {"runtime"})
+    return frozenset({Modifier.DEBUG if DEBUG_MARK in name else Modifier.RUNTIME})
 
 
 def _bazel_label_identifier(
@@ -44,7 +46,9 @@ def _collect_debs(ctx: Context) -> list[ComparableArtifact]:
     artifacts = []
 
     for module, src_path in registry_lib.discover_top_level_bazel_modules():
+        progress.start(f"LISTING DEBS IN {module}")
         compared, excluded = ctx.bazel.deb_targets(registry_lib.REPO_ROOT / src_path)
+        progress.finish()
 
         skipped = set(excluded)
 
@@ -87,7 +91,9 @@ def _collect_debs(ctx: Context) -> list[ComparableArtifact]:
 def _collect_images(ctx: Context) -> list[ComparableArtifact]:
     """Every oci image the root module declares, paired by name with its Make equivalent."""
     make_dir = registry_lib.REPO_ROOT / MAKE_IMAGE_DIR
+    progress.start("LISTING OCI IMAGES")
     compared, excluded = ctx.bazel.image_targets()
+    progress.finish()
     skipped = set(excluded)
     artifacts = []
 

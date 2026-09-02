@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 from diagnostics import ArtifactIndex, DiagnosticSink
 from tools import Bazel, Tools
@@ -12,3 +13,4 @@ class Context:
     tools: Tools
     needs_build: bool
     debian_release: str
+    workdir: Path
