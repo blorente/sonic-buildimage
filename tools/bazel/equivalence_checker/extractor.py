@@ -1,9 +1,13 @@
 """Unpacks a top-level artifact (OCI image or deb archive) into the individual files worth comparing."""
 
+import gzip
+import json
 import re
+import shutil
+import tarfile
 from collections import defaultdict
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import progress
 from context import Context
@@ -235,8 +239,10 @@ def pair_debug_info(
 
 
 def _roots_for(ctx: Context, artifact: ComparableArtifact) -> tuple[Path, Path]:
-    """Where each side of `artifact` should unpack its contents to, as (make, bazel)."""
-    base = ctx.workdir / artifact.type / artifact.bazelVersion.name
+    """Where each side of `artifact` should unpack its contents to, as (make, bazel). """
+    # A label is not a file name: `/` is the one character a component cannot hold.
+    base = ctx.workdir / artifact.type / artifact.identifier.name.replace("/", "_")
+    base.mkdir(parents=True)
     return base / "make", base / "bazel"
 
 
@@ -257,12 +263,101 @@ def _extract_deb(
     )
 
 
+# A layer entry whose basename carries this prefix deletes what the rest of it names.
+WHITEOUT_PREFIX = ".wh."
+
+# The one whiteout that names no file: it hides everything already in its directory.
+OPAQUE_MARKER = ".wh..wh..opq"
+
+
+def _remove(path: Path) -> None:
+    """Remove `path`, whatever kind of thing it is.
+
+    A whiteout for something no lower layer shipped is legal, and removes nothing.
+    """
+    if path.is_symlink() or path.is_file():
+        path.unlink(missing_ok=True)
+    elif path.is_dir():
+        shutil.rmtree(path)
+
+
+def _apply_whiteout(root: Path, name: str) -> None:
+    """Delete from `root` whatever the whiteout entry `name` removes."""
+    entry = PurePosixPath(name.removeprefix("./"))
+    directory = root / entry.parent
+
+    if entry.name == OPAQUE_MARKER:
+        if directory.is_dir():
+            for child in directory.iterdir():
+                _remove(child)
+        return
+
+    _remove(directory / entry.name.removeprefix(WHITEOUT_PREFIX))
+
+
+def _writable_dirs(member: tarfile.TarInfo, dest: str) -> tarfile.TarInfo | None:
+    """Take every member as it comes, but never leave a directory we cannot write into.
+
+    We can't use the stock `tar_filter`, because images ship absolute symlinks.
+    Because we control the build outputs, we can allow absolute symlinks.
+    """
+    if member.isdir():
+        member.mode |= 0o700
+    return member
+
+
+def _unpack_docker_archive(archive: Path, root: Path) -> None:
+    """Flatten a gzipped docker-archive into the filesystem it describes.
+
+    Both Bazel and Make ship the same format.
+    """
+    root.mkdir(parents=True, exist_ok=True)
+    blobs = root.parent / f"{root.name}.blobs"
+    blobs.mkdir(parents=True, exist_ok=True)
+
+    # The whole archive lands first because manifest.json is written last, and a
+    # stream cannot be rewound to reach the layers it names.
+    with gzip.open(archive, "rb") as compressed:
+        with tarfile.open(fileobj=compressed, mode="r|") as outer:
+            outer.extractall(blobs, filter=_writable_dirs)
+
+    manifest = json.loads((blobs / "manifest.json").read_text())
+    for layer in manifest[0]["Layers"]:
+        with tarfile.open(blobs / layer) as tar:
+            members = tar.getmembers()
+            whiteouts = {
+                member.name
+                for member in members
+                if Path(member.name).name.startswith(WHITEOUT_PREFIX)
+            }
+            # Deletions land before entries
+            for name in sorted(whiteouts):
+                _apply_whiteout(root, name)
+
+            tar.extractall(
+                root,
+                members=[m for m in members if m.name not in whiteouts],
+                filter=_writable_dirs,
+            )
+
+    # The layer tarballs are large, and nothing reads them once they are applied.
+    shutil.rmtree(blobs)
+
+
 def _extract_oci_image(
     ctx: Context, artifact: ComparableArtifact, debug: DebugFiles
 ) -> list[ComparableArtifact]:
-    """Unpack both sides of a container archive and pair the ELFs inside them."""
-    # TODO BL: impelement this later
-    return []
+    """Unpack both sides of a container archive and pair what is inside them."""
+    make_root, bazel_root = _roots_for(ctx, artifact)
+    for root, archive in (
+        (make_root, artifact.makeVersion),
+        (bazel_root, artifact.bazelVersion),
+    ):
+        _unpack_docker_archive(archive, root)
+
+    return _pair(
+        ctx, artifact, _index_tree(make_root), _index_tree(bazel_root), debug
+    )
 
 
 def extract_all(

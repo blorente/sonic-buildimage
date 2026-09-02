@@ -13,4 +13,6 @@ class Context:
     tools: Tools
     needs_build: bool
     debian_release: str
+    # How many comparisons may run at once.
+    jobs: int
     workdir: Path

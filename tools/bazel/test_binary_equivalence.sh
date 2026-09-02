@@ -39,7 +39,7 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 
 # Invoked directly rather than through `bazel run`, because the script shells out to Bazel itself.
-compare="PYTHONPATH=tools/bazel/registry python3 tools/bazel/elf_equivalence.py --bldenv ${BLDENV}"
+compare="PYTHONPATH=tools/bazel/registry python3 tools/bazel/equivalence_checker/equivalence_checker.py --bldenv ${BLDENV}"
 
 # elfcompare needs abidiff to compare shared libraries, and we haven't migrated abidiff to Bazel yet.
 # We need the `tr` because this travels to the slave, so we need to collapse it into one line to fit in a single CLI.
@@ -53,21 +53,31 @@ fi
 EOF
 )
 
-echo "[= Finding the Make debs to compare against =]"
-make_debs_file="target/.elf-equivalence-debs"
-rm -f "${make_debs_file}"
-run_in_slave "${compare} --print-make-debs > ${make_debs_file}"
-mapfile -t make_debs < "${make_debs_file}"
+# Assert that we're not trying to build with Bazel.
+# Otherwise, we'd be comparing Bazel to itself.
+if [[ "${BUILD_WITH_BAZEL_WHEN_AVAILABLE:-n}" != "n" ]]; then
+  echo "ERROR: BUILD_WITH_BAZEL_WHEN_AVAILABLE must be 'n' here, or Make builds the" >&2
+  echo "       container images with Bazel and the comparison proves nothing." >&2
+  exit 1
+fi
 
-if [[ ${#make_debs[@]} -eq 0 ]]; then
-  echo "ERROR: found no Make debs to compare against." >&2
+echo "[= Finding the Make artifacts to compare against =]"
+make_artifacts_file="target/.equivalence-artifacts"
+rm -f "${make_artifacts_file}"
+# abidiff is provisioned even here, because the comparison resolves every tool it
+# might need up front, before it works out what there is to compare.
+run_in_slave "${provision_abidiff} && ${compare} --print-make-paths > ${make_artifacts_file}"
+mapfile -t make_artifacts < "${make_artifacts_file}"
+
+if [[ ${#make_artifacts[@]} -eq 0 ]]; then
+  echo "ERROR: found no Make artifacts to compare against." >&2
   exit 1
 fi
 
 echo "[= Building the Make side =]"
-for deb in "${make_debs[@]}"; do
-  echo "[make] ${deb}"
-  env ${CACHE_OPTIONS} "BLDENV=${BLDENV}" make "${deb}"
+for artifact in "${make_artifacts[@]}"; do
+  echo "[make] ${artifact}"
+  env ${CACHE_OPTIONS} "BLDENV=${BLDENV}" make "${artifact}"
 done
 
 echo "[= Comparing =]"

@@ -1,14 +1,17 @@
 import argparse
+import os
 import sys
 import tempfile
 from pathlib import Path
 
 import registry_lib
+import rules
 from collector import collect_artifacts
 from comparator import compare_artifacts
 from context import Context
 from diagnostics import ArtifactIndex, ComparableArtifact, DiagnosticSink
 from extractor import extract_all
+from reporter import print_report, write_report
 from tools import Bazel, Tools
 
 def main() -> int:
@@ -34,6 +37,21 @@ def main() -> int:
         help="Assume the Bazel artifacts are already built (they are still located with cquery).",
     )
     _ = parser.add_argument(
+        "--print-make-paths",
+        action="store_true",
+        help=(
+            "Print the Make artifacts this comparison needs, one relative path per line."
+        ),
+    )
+    _ = parser.add_argument(
+        "--jobs",
+        type=int,
+        default=os.cpu_count(),
+        help=(
+            "How many artifacts to compare at once. Each comparison may run multiple processes (e.g. readelf, abidiff...)"
+        ),
+    )
+    _ = parser.add_argument(
         "--report",
         type=Path,
         default=Path("target/equivalence-report.json"),
@@ -41,7 +59,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    build = not (args.skip_build or args.print_sources)
+    build = not (args.skip_build or args.print_sources or args.print_make_paths)
 
     bazel = Bazel()
     with tempfile.TemporaryDirectory(prefix="equivalence-") as tmp:
@@ -52,9 +70,18 @@ def main() -> int:
                 tools = Tools.resolve(bazel),
                 needs_build = build,
                 debian_release = args.bldenv,
+                jobs = args.jobs,
                 workdir = Path(tmp),
         )
         return _run(ctx, args)
+
+
+def _relative(path: Path) -> Path:
+    """`path` against the repo root, or as it stands when it lies outside."""
+    try:
+        return path.relative_to(registry_lib.REPO_ROOT)
+    except ValueError:
+        return path
 
 
 def _run(ctx: Context, args: argparse.Namespace) -> int:
@@ -62,6 +89,11 @@ def _run(ctx: Context, args: argparse.Namespace) -> int:
     if not source_artifacts:
         print("No comparable source_artifacts found.")
         return 1
+
+    if args.print_make_paths:
+        for artifact in source_artifacts:
+            print(artifact.makeVersion.relative_to(registry_lib.REPO_ROOT))
+        return 0
 
     if args.print_sources:
         for artifact in source_artifacts:
@@ -78,10 +110,14 @@ def _run(ctx: Context, args: argparse.Namespace) -> int:
     # Compare each artifact, looking at its id, and dispatching: Use compareElf for ELFs (debug and runtime), and use strict file comparison for files.
     compare_artifacts(ctx, artifacts_to_compare)
 
-    # TODO BL: compare each artifact, then hand the outcomes to the reporter.
-    print(f"\n{len(artifacts_to_compare)} artifacts to compare")
-    for diagnostic in ctx.sink.diagnostics:
-        print(f"    {diagnostic.code.code} {diagnostic.artifact}: {diagnostic.msg}")
+    # The rules are applied once, and that answer travels to both reports.
+    classified = rules.classify(ctx.sink.diagnostics, rules.RULES)
+    print_report(ctx, classified)
+
+    report = registry_lib.REPO_ROOT / args.report
+    write_report(ctx, classified, report)
+    print(f"\nReport: {_relative(report)}")
+
     return 0
 
 if __name__ == "__main__":

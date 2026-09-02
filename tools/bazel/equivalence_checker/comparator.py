@@ -1,7 +1,9 @@
 """Compares the two sides of every paired artifact, recording what differs."""
 
+import dataclasses
 import filecmp
 import json
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import progress
@@ -9,6 +11,7 @@ from context import Context
 from diagnostics import (
     ArtifactType,
     ComparableArtifact,
+    DiagnosticSink,
     ElfDiagnosticCodeEnum,
     FileDiagnosticCodeEnum,
 )
@@ -153,20 +156,29 @@ def _compare_link(ctx: Context, artifact: ComparableArtifact) -> None:
     )
 
 
+def _compare_one(ctx: Context, artifact: ComparableArtifact) -> DiagnosticSink:
+    """Compare one artifact, into a sink of its own."""
+    own = dataclasses.replace(ctx, sink=DiagnosticSink())
+    match artifact.type:
+        case ArtifactType.ELF_EXECUTABLE | ArtifactType.ELF_DEBUG_INFO:
+            _compare_elf(own, artifact)
+        case ArtifactType.FILE:
+            _compare_file(own, artifact)
+        case ArtifactType.LINK:
+            _compare_link(own, artifact)
+        case _:
+            raise ValueError(f"nothing knows how to compare a {artifact.type}")
+    return own.sink
+
+
 def compare_artifacts(ctx: Context, artifacts: list[ComparableArtifact]) -> None:
     """Compare every paired artifact, recording differences in the sink.
 
     An artifact the two build systems agree on records nothing.
     """
-    for artifact in artifacts:
-        progress.start(f"COMPARING {artifact.identifier}")
-        match artifact.type:
-            case ArtifactType.ELF_EXECUTABLE | ArtifactType.ELF_DEBUG_INFO:
-                _compare_elf(ctx, artifact)
-            case ArtifactType.FILE:
-                _compare_file(ctx, artifact)
-            case ArtifactType.LINK:
-                _compare_link(ctx, artifact)
-            case _:
-                raise ValueError(f"nothing knows how to compare a {artifact.type}")
-        progress.finish()
+    with ThreadPoolExecutor(max_workers=ctx.jobs) as pool:
+        sinks = pool.map(lambda artifact: _compare_one(ctx, artifact), artifacts)
+        for artifact, sink in zip(artifacts, sinks):
+            progress.step(f"COMPARED {artifact.identifier}")
+            for diagnostic in sink.diagnostics:
+                ctx.sink.record(diagnostic)

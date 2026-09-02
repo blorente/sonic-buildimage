@@ -147,6 +147,9 @@ class ExtractionDiagnosticCodeEnum(enum.StrEnum):
     UNREADABLE = "UNREADABLE"
     # Both sides ship the binary, but only one side ships debug information.
     NO_DEBUG = "NO_DEBUG"
+    # Not a problem: entries both sides took from the same content-addressed layer,
+    # recorded so the report says what was settled without being compared.
+    IDENTICAL_BY_LAYER = "IDENTICAL_BY_LAYER"
 
 @dataclass(frozen=True)
 class ExtractionDiagnosticCode:
@@ -181,14 +184,6 @@ class Diagnostic:
 
 
 @dataclass(frozen=True)
-class AcceptanceRule:
-    sourceMather: list[str]
-    codeMatcher: DiagnosticCode
-    reason: str
-
-
-
-@dataclass(frozen=True)
 class DiagnosticSink:
     diagnostics: list[Diagnostic] = field(default_factory=list)
 
@@ -218,6 +213,18 @@ class DiagnosticSink:
             f"unpaired() takes an extraction code, not {code!r}"
         )
         self.record(Diagnostic(artifact, ExtractionDiagnosticCode(code), msg))
+
+    def identical(self, artifact: ArtifactIdentifier, count: int) -> None:
+        """Note entries settled by layer digest rather than by comparison."""
+        self.record(
+            Diagnostic(
+                artifact,
+                ExtractionDiagnosticCode(
+                    ExtractionDiagnosticCodeEnum.IDENTICAL_BY_LAYER
+                ),
+                f"{count} entries come from layers both builds share",
+            )
+        )
 
     def elf_mismatch(
         self,
