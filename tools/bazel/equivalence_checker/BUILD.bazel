@@ -1,0 +1,21 @@
+load("@rules_python//python:py_binary.bzl", "py_binary")
+load("@rules_python//python:py_library.bzl", "py_library")
+
+py_library(
+    name = "equivalence_checker_lib",
+    srcs = glob(
+        ["*.py"],
+        exclude = [
+            "equivalence_checker.py",
+            "*_test.py",
+        ],
+    ),
+    imports = ["."],
+)
+
+py_binary(
+    name = "equivalence_checker",
+    srcs = ["equivalence_checker.py"],
+    visibility = ["//visibility:public"],
+    deps = [":equivalence_checker_lib"],
+)

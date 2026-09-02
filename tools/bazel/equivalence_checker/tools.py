@@ -1,0 +1,215 @@
+import json
+import os
+import shlex
+import shutil
+import subprocess
+from dataclasses import dataclass
+from pathlib import Path
+from typing import TypeAlias
+
+import registry_lib
+
+# A Bazel label, in any of the forms Bazel accepts or prints: `//pkg:target`,
+# `@repo//pkg:target`, or `@repo//:target`.
+BazelLabel: TypeAlias = str
+
+READELF_LABEL = "@sonic_build_infra//toolchains/binutils:readelf"
+ELFCOMPARE_LABEL = "@compare_elf//:elfcompare"
+
+
+@dataclass(frozen=True)
+class Bazel:
+    """The `bazel` command, run from the repo root unless told otherwise."""
+
+    # `sonic_deb` is a symbolic macro, so we have to query on the actual name of the rule.
+    DEB_RULE_KIND = "_sonic_deb_assemble rule"
+
+    # `sonic_docker_archive` gzips the docker-archive tarball as its last step, so the
+    # gzip target is the one image artifact whose name matches what Make writes.
+    IMAGE_RULE_KIND = "gzip rule"
+
+    # Images are declared in the root module, and only under //dockers. Scoping the
+    # query keeps the vendored oci_image targets under //platform out of it.
+    IMAGE_SCOPE = "//dockers/..."
+
+    EXCLUDE_TAG = "no-elf-equivalence"
+
+    QUERY_FLAGS = ("--keep_going", "--noshow_progress", "--ui_event_filters=-INFO,-WARNING")
+
+    repo_root: Path = registry_lib.REPO_ROOT
+
+    def run(
+        self,
+        *args: str,
+        cwd: Path | None = None,
+        ok_statuses: tuple[int, ...] = (0,),
+    ) -> subprocess.CompletedProcess:
+        """Run one bazel command, in the repo root unless `cwd` says otherwise."""
+        result = subprocess.run(
+            ["bazel", *args],
+            cwd=cwd or self.repo_root,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode not in ok_statuses:
+            raise RuntimeError(
+                f"bazel {args[0]} failed in {result.args} (exit {result.returncode}):\n"
+                f"{result.stderr}"
+            )
+        return result
+
+    def query(self, module_dir: Path, expression: str) -> list[str]:
+        """Run one `bazel query` in `module_dir`, returning the labels it printed.
+
+        --keep_going makes a partial failure exit 3 with usable results on stdout, so
+        only a harder status is worth failing on.
+        """
+        return self._lines(
+            self.run(
+                "query",
+                *self.QUERY_FLAGS,
+                expression,
+                cwd=module_dir,
+                ok_statuses=(0, 3),
+            )
+        )
+
+    def deb_targets(self, module_dir: Path) -> tuple[list[str], list[str]]:
+        """Return (compared, excluded) deb labels declared by the module at `module_dir`."""
+        all_debs = self.query(module_dir, f'kind("{self.DEB_RULE_KIND}", //...)')
+        excluded = self.query(
+            module_dir,
+            f'attr(tags, "{self.EXCLUDE_TAG}", kind("{self.DEB_RULE_KIND}", //...))',
+        )
+        return sorted(set(all_debs) - set(excluded)), sorted(excluded)
+
+    def image_targets(self) -> tuple[list[str], list[str]]:
+        """Return (compared, excluded) container archive labels from the root module."""
+        all_images = self.query(
+            self.repo_root, f'kind("{self.IMAGE_RULE_KIND}", {self.IMAGE_SCOPE})'
+        )
+        excluded = self.query(
+            self.repo_root,
+            f'attr(tags, "{self.EXCLUDE_TAG}", '
+            f'kind("{self.IMAGE_RULE_KIND}", {self.IMAGE_SCOPE}))',
+        )
+        return sorted(set(all_images) - set(excluded)), sorted(excluded)
+
+    def root_repo_names(self) -> dict[str, str]:
+        """Map Bazel module name -> the repo name it is visible as from the root workspace.
+
+        The mapping comes from Bazel, so it is what module resolution actually
+        produced: repo_name defaults, transitive visibility and all.
+        """
+        result = self.run("mod", "dump_repo_mapping", "")
+        return {
+            # A module's canonical repo name is `<module name>+`. Every other shape
+            # belongs to a module extension or a repo rule, which has no module.
+            #
+            # TODO(bazel-ready): We tolerate an instance of canonical repo naming here,
+            # because it's more stable than the alternative (parsing MODULE.bazel files directly).
+            canonical.removesuffix("+"): apparent
+            for apparent, canonical in json.loads(result.stdout).items()
+            if canonical.endswith("+") and canonical.count("+") == 1
+        }
+
+    def output_artifact(self, label: str, output: list[str], build: bool = True) -> Path:
+        """The one path `label` yields under `output`, as built from the root workspace."""
+        if build:
+            self.run("build", "--noshow_progress", label)
+        paths = self._lines(self.run("cquery", *self.QUERY_FLAGS, *output, label))
+        if len(paths) != 1:
+            raise RuntimeError(f"{label} has {len(paths)} outputs, expected exactly 1")
+        return self.repo_root / paths[0]
+
+    def output_file(self, label: str, build: bool = True) -> Path:
+        """The single file `label` produces, as built from the root workspace.
+
+        `build=False` locates the file without producing it, for callers that only need its name.
+        """
+        return self.output_artifact(label, ["--output=files"], build=build)
+
+    def executable_path(self, label: str) -> Path:
+        """The path of the executable `label` runs, without running it."""
+        return self.output_artifact(
+            label,
+            ["--output=starlark", "--starlark:expr=target.files_to_run.executable.path"],
+        )
+
+    @staticmethod
+    def _lines(result: subprocess.CompletedProcess) -> list[str]:
+        """The non-empty stdout lines of a completed command."""
+        return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+@dataclass(frozen=True)
+class Tool:
+    """An external program this script shells out to."""
+
+    name: str
+    argv: tuple[str, ...]
+
+    def run(
+        self,
+        *args: str,
+        check: bool = True,
+        env: dict[str, str] | None = None,
+    ) -> subprocess.CompletedProcess:
+        """Run the tool. `check` is off for tools whose exit status is a verdict."""
+        return subprocess.run(
+            [*self.argv, *args],
+            cwd=registry_lib.REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=check,
+            env=os.environ | {"LC_ALL": "C"} | (env or {}),
+        )
+
+    @property
+    def command_line(self) -> str:
+        """The command, quoted for passing through the environment."""
+        return shlex.join(self.argv)
+
+    @classmethod
+    def from_command(cls, name: str, argv: list[str]) -> "Tool":
+        """A tool invoked as `argv`, with its first word resolved through PATH.
+
+        A tool that is not installed is reported here, before any comparison
+        work happens.
+        """
+        executable = shutil.which(argv[0])
+        if executable is None:
+            raise SystemExit(
+                f"{name}: '{argv[0]}' is not on PATH. Install it, or put it on "
+                "PATH, and re-run."
+            )
+        return cls(name, (executable, *argv[1:]))
+
+    @classmethod
+    def from_bazel(cls, name: str, label: str, bazel: Bazel) -> "Tool":
+        """The executable that building `label` produces.
+
+        Because we use some tools with Bazel (e.g. readelf),
+        using actual `bazel run` would create a Bazel-in-Bazel problem if compare_elf calls Bazel.
+        This would create a deadlock when the second `bazel run` tries to acquire the workspace lock.
+        """
+        return cls(name, (str(bazel.executable_path(label)),))
+
+
+@dataclass(frozen=True)
+class Tools:
+    """Every external program the comparison needs."""
+
+    readelf: Tool
+    abidiff: Tool
+    elfcompare: Tool
+    dpkg_deb: Tool
+
+    @classmethod
+    def resolve(cls, bazel: Bazel) -> "Tools":
+        return cls(
+            readelf=Tool.from_bazel("readelf", READELF_LABEL, bazel),
+            abidiff=Tool.from_command("abidiff", ["abidiff"]),
+            elfcompare=Tool.from_bazel("elfcompare", ELFCOMPARE_LABEL, bazel),
+            dpkg_deb=Tool.from_command("dpkg-deb", ["dpkg-deb"]),
+        )
