@@ -84,6 +84,6 @@ test_repo "src/libnl3"
 
 echo "[= Testing Binary Equivalence with Make =]"
 
-ELF_EQUIVALENCE_ALLOW_DIRTY=1 "${repo_root}/tools/bazel/test_binary_equivalence.sh"
+EQUIVALENCE_ALLOW_DIRTY=1 "${repo_root}/tools/bazel/test_equivalence.sh"
 
 echo "[= DONE =]"

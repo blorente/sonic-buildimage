@@ -33,17 +33,5 @@ use_repo(apt, "trixie")
 uv = use_extension("@aspect_rules_py//uv/unstable:extension.bzl", "uv")
 use_repo(uv, "pypi")
 
-http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-# elfcompare, which reports the semantic differences between two ELF artifacts.
-# The upstream sources carry no build files, so both the BUILD file and the
-# patch that lets the tools be selected through the environment come from here.
-http_archive(
-    name = "compare_elf",
-    build_file = "//tools/bazel:compare_elf.BUILD.bazel",
-    patch_args = ["-p1"],
-    patches = ["//tools/bazel:compare_elf_env.patch"],
-    sha256 = "e77de8666533ef29a97064a55234c2ae54526a82cda32428dc65c13caea9172e",
-    strip_prefix = "compareELF-5f79c6208ccaad40d8c769304b8148f8c07a901e",
-    urls = ["https://github.com/dzfdzfdzf/compareELF/archive/5f79c6208ccaad40d8c769304b8148f8c07a901e.tar.gz"],
-)
+# Everything the Make/Bazel equivalence check needs.
+include("//tools/bazel/equivalence_checker:equivalence.MODULE.bazel")
