@@ -360,6 +360,30 @@ def _extract_oci_image(
     )
 
 
+def extract_source(
+    ctx: Context, artifact: ComparableArtifact, debug: DebugFiles
+) -> list[ComparableArtifact]:
+    """Unpack one top-level artifact into the files to compare inside it.
+
+    A side that is not on disk is reported and skipped.
+    """
+    for code, path in (
+        (CollectionDiagnosticCodeEnum.NO_MAKE_ARTIFACT, artifact.makeVersion),
+        (CollectionDiagnosticCodeEnum.NO_BAZEL_ARTIFACT, artifact.bazelVersion),
+    ):
+        if not path.exists():
+            ctx.sink.skip(artifact.identifier, code, f"{path} does not exist")
+            return []
+
+    match artifact.type:
+        case ArtifactType.DEB:
+            return _extract_deb(ctx, artifact, debug)
+        case ArtifactType.OCI_IMAGE:
+            return _extract_oci_image(ctx, artifact, debug)
+        case _:
+            raise ValueError(f"nothing knows how to unpack a {artifact.type}")
+
+
 def extract_all(
     ctx: Context, sources: list[ComparableArtifact]
 ) -> list[ComparableArtifact]:
@@ -378,25 +402,3 @@ def extract_all(
     with_debug = extracted + pair_debug_info(ctx, extracted, debug)
     progress.finish()
     return with_debug
-
-
-def extract_source(
-    ctx: Context, artifact: ComparableArtifact, debug: DebugFiles
-) -> list[ComparableArtifact]:
-    """Unpack one top-level artifact into the files to compare inside it."""
-    # Make builds on demand, so its side of a pair is missing until someone builds it.
-    if not artifact.makeVersion.exists():
-        ctx.sink.skip(
-            artifact.identifier,
-            CollectionDiagnosticCodeEnum.NO_MAKE_ARTIFACT,
-            f"Make has not built {artifact.makeVersion}",
-        )
-        return []
-
-    match artifact.type:
-        case ArtifactType.DEB:
-            return _extract_deb(ctx, artifact, debug)
-        case ArtifactType.OCI_IMAGE:
-            return _extract_oci_image(ctx, artifact, debug)
-        case _:
-            raise ValueError(f"nothing knows how to unpack a {artifact.type}")

@@ -132,6 +132,7 @@ class CollectionDiagnosticCodeEnum(enum.StrEnum):
     EXCLUDED_BY_TAG = "EXCLUDED_BY_TAG"
     MODULE_UNREACHABLE = "MODULE_UNREACHABLE"
     NO_MAKE_ARTIFACT = "NO_MAKE_ARTIFACT"
+    NO_BAZEL_ARTIFACT = "NO_BAZEL_ARTIFACT"
 
 @dataclass(frozen=True)
 class CollectionDiagnosticCode:
