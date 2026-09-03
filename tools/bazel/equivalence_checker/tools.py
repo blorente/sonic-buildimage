@@ -38,7 +38,11 @@ class Bazel:
 
     EXCLUDE_TAG = "no-elf-equivalence"
 
-    QUERY_FLAGS = ("--keep_going", "--noshow_progress", "--ui_event_filters=-INFO,-WARNING")
+    QUERY_FLAGS = (
+        "--keep_going",
+        "--noshow_progress",
+        "--ui_event_filters=-INFO,-WARNING",
+    )
 
     repo_root: Path = registry_lib.REPO_ROOT
 

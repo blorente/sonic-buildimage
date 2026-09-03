@@ -24,8 +24,7 @@ def _modifiers_for(name: str) -> frozenset[Modifier]:
 
 
 def _bazel_label_identifier(
-    label: BazelLabel,
-    module: str | None = None
+    label: BazelLabel, module: str | None = None
 ) -> ArtifactIdentifier:
     """The identity of the artifact `label` produces, including a module if adequate"""
     return ArtifactIdentifier(

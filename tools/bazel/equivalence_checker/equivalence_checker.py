@@ -15,6 +15,7 @@ from extractor import extract_all
 from reporter import print_report, write_report
 from tools import Bazel, Tools
 
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     _ = parser.add_argument(
@@ -65,14 +66,14 @@ def main() -> int:
     bazel = Bazel()
     with tempfile.TemporaryDirectory(prefix="equivalence-") as tmp:
         ctx = Context(
-                sink = DiagnosticSink(),
-                index = ArtifactIndex(),
-                bazel = bazel,
-                tools = Tools.resolve(bazel),
-                needs_build = build,
-                debian_release = args.bldenv,
-                jobs = args.jobs,
-                workdir = Path(tmp),
+            sink=DiagnosticSink(),
+            index=ArtifactIndex(),
+            bazel=bazel,
+            tools=Tools.resolve(bazel),
+            needs_build=build,
+            debian_release=args.bldenv,
+            jobs=args.jobs,
+            workdir=Path(tmp),
         )
         return _run(ctx, args)
 
@@ -120,6 +121,7 @@ def _run(ctx: Context, args: argparse.Namespace) -> int:
     print(f"\nReport: {_relative(report)}")
 
     return 1 if rules_engine.unaccepted(classified) else 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

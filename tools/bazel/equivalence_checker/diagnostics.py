@@ -8,6 +8,7 @@ import registry_lib
 
 ArtifactName: TypeAlias = str
 
+
 class ArtifactType(enum.StrEnum):
     DEB = "DEB"
     OCI_IMAGE = "OCI_IMAGE"
@@ -18,6 +19,7 @@ class ArtifactType(enum.StrEnum):
     FILE = "FILE"
     DIRECTORY = "DIRECTORY"
     LINK = "LINK"
+
 
 class Modifier(enum.StrEnum):
     """Distinguishers for artifacts that share a name."""
@@ -44,7 +46,7 @@ class ArtifactIdentifier:
 
 
 @dataclass()
-class ComparableArtifact():
+class ComparableArtifact:
     identifier: ArtifactIdentifier
     bazelVersion: Path
     makeVersion: Path
@@ -73,7 +75,9 @@ class ArtifactIndex:
     Insertion fails if element is already there, so an identifier names exactly one artifact.
     """
 
-    artifacts: dict[ArtifactIdentifier, ComparableArtifact] = field(default_factory=dict)
+    artifacts: dict[ArtifactIdentifier, ComparableArtifact] = field(
+        default_factory=dict
+    )
 
     def add(self, artifact: ComparableArtifact) -> None:
         existing = self.artifacts.get(artifact.identifier)
@@ -121,6 +125,7 @@ class ElfDiagnosticCodeEnum(enum.StrEnum):
     # elfcompare itself failed, or reported a difference it could not describe.
     ERROR = "ERROR"
 
+
 @dataclass(frozen=True)
 class ElfDiagnosticCode:
     code: ElfDiagnosticCodeEnum
@@ -133,6 +138,7 @@ class CollectionDiagnosticCodeEnum(enum.StrEnum):
     MODULE_UNREACHABLE = "MODULE_UNREACHABLE"
     NO_MAKE_ARTIFACT = "NO_MAKE_ARTIFACT"
     NO_BAZEL_ARTIFACT = "NO_BAZEL_ARTIFACT"
+
 
 @dataclass(frozen=True)
 class CollectionDiagnosticCode:
@@ -149,6 +155,7 @@ class ExtractionDiagnosticCodeEnum(enum.StrEnum):
     # Both sides ship the binary, but only one side ships debug information.
     NO_DEBUG = "NO_DEBUG"
 
+
 @dataclass(frozen=True)
 class ExtractionDiagnosticCode:
     code: ExtractionDiagnosticCodeEnum
@@ -162,9 +169,11 @@ class FileDiagnosticCodeEnum(enum.StrEnum):
     # Two symlinks with the same name, but pointing to different places.
     TARGET_MISMATCH = "TARGET_MISMATCH"
 
+
 @dataclass(frozen=True)
 class FileDiagnosticCode:
     code: FileDiagnosticCodeEnum
+
 
 DiagnosticCode: TypeAlias = (
     ElfDiagnosticCode
@@ -192,9 +201,7 @@ def _every_code() -> dict[str, DiagnosticCode]:
     for family, wrap in _CODE_FAMILIES:
         for member in family:
             if member.name in flat:
-                raise ValueError(
-                    f"{member.name} is defined by two diagnostic families"
-                )
+                raise ValueError(f"{member.name} is defined by two diagnostic families")
             flat[member.name] = wrap(member)
     return flat
 
@@ -226,9 +233,9 @@ class DiagnosticSink:
         msg: str,
     ) -> None:
         """Note something that kept `artifact` out of the comparison."""
-        assert isinstance(code, CollectionDiagnosticCodeEnum), (
-            f"skip() takes a collection code, not {code!r}"
-        )
+        assert isinstance(
+            code, CollectionDiagnosticCodeEnum
+        ), f"skip() takes a collection code, not {code!r}"
         self.record(Diagnostic(artifact, CollectionDiagnosticCode(code), msg))
 
     def unpaired(
@@ -238,9 +245,9 @@ class DiagnosticSink:
         msg: str,
     ) -> None:
         """Note something found while unpacking that has nothing to compare against."""
-        assert isinstance(code, ExtractionDiagnosticCodeEnum), (
-            f"unpaired() takes an extraction code, not {code!r}"
-        )
+        assert isinstance(
+            code, ExtractionDiagnosticCodeEnum
+        ), f"unpaired() takes an extraction code, not {code!r}"
         self.record(Diagnostic(artifact, ExtractionDiagnosticCode(code), msg))
 
     def elf_mismatch(
@@ -250,9 +257,9 @@ class DiagnosticSink:
         msg: str,
     ) -> None:
         """Note one way in which the two sides of an ELF pair disagree."""
-        assert isinstance(code, ElfDiagnosticCodeEnum), (
-            f"elf_mismatch() takes an ELF code, not {code!r}"
-        )
+        assert isinstance(
+            code, ElfDiagnosticCodeEnum
+        ), f"elf_mismatch() takes an ELF code, not {code!r}"
         self.record(Diagnostic(artifact, ElfDiagnosticCode(code), msg))
 
     def file_mismatch(
@@ -262,8 +269,7 @@ class DiagnosticSink:
         msg: str,
     ) -> None:
         """Note that the two sides of a non-ELF pair disagree."""
-        assert isinstance(code, FileDiagnosticCodeEnum), (
-            f"file_mismatch() takes a file code, not {code!r}"
-        )
+        assert isinstance(
+            code, FileDiagnosticCodeEnum
+        ), f"file_mismatch() takes a file code, not {code!r}"
         self.record(Diagnostic(artifact, FileDiagnosticCode(code), msg))
-

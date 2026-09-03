@@ -24,9 +24,7 @@ def print_report(ctx: Context, classified: rules_engine.Classified) -> None:
         ):
             print(f"    {len(found):6d}  {rule_id}")
 
-    by_code = collections.Counter(
-        str(diagnostic.code.code) for diagnostic in remaining
-    )
+    by_code = collections.Counter(str(diagnostic.code.code) for diagnostic in remaining)
     print(f"\n{len(remaining)} not accepted:")
     for code, count in by_code.most_common():
         print(f"    {count:6d}  {code}")
@@ -54,24 +52,24 @@ def write_report(ctx: Context, classified: rules_engine.Classified, path: Path) 
                 ],
                 "diagnostics": {
                     "accepted": [
-                    {
-                        "artifact": str(diagnostic.artifact),
-                        "code": str(diagnostic.code.code),
-                        "msg": diagnostic.msg,
-                        "accepted_by": rule_id,
-                    }
-                    for rule_id, found in classified.items() if rule_id is not None
-                    for diagnostic in found
-                ],
+                        {
+                            "artifact": str(diagnostic.artifact),
+                            "code": str(diagnostic.code.code),
+                            "msg": diagnostic.msg,
+                            "accepted_by": rule_id,
+                        }
+                        for rule_id, found in classified.items()
+                        if rule_id is not None
+                        for diagnostic in found
+                    ],
                     "not_accepted": [
-
-                    {
-                        "artifact": str(diagnostic.artifact),
-                        "code": str(diagnostic.code.code),
-                        "msg": diagnostic.msg,
-                    }
-                    for diagnostic in classified.get(None)
-                    ]
+                        {
+                            "artifact": str(diagnostic.artifact),
+                            "code": str(diagnostic.code.code),
+                            "msg": diagnostic.msg,
+                        }
+                        for diagnostic in classified.get(None)
+                    ],
                 },
             },
             indent=2,

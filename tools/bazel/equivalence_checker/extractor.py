@@ -55,7 +55,7 @@ def _build_id_of_debug_file(install_path: str) -> str:
     Debug files are content-addressed: /usr/lib/debug/.build-id/93/e50c...debug
     belongs to the binary whose build-id is 93e50c...
     """
-    return install_path[len(DEBUG_PREFIX):].removesuffix(".debug").replace("/", "")
+    return install_path[len(DEBUG_PREFIX) :].removesuffix(".debug").replace("/", "")
 
 
 def _build_id_of_binary(path: Path, readelf: Tool) -> str | None:
@@ -78,7 +78,7 @@ def _entry_identifier(
 @dataclass(frozen=True)
 class UnpackedTree:
     """What one side unpacked.
-    
+
     For each ArtifactType, store a map of install path -> real path.
     """
 
@@ -92,7 +92,6 @@ class UnpackedTree:
 
     def all_entries(self) -> set[str]:
         return {path for bucket in self.entries.values() for path in bucket}
-
 
 
 @dataclass(frozen=True)
@@ -126,7 +125,6 @@ def _index_tree(root: Path) -> UnpackedTree:
         if kind is not None:
             tree.entries[kind]["/" + str(path.relative_to(root))] = path
     return tree
-
 
 
 def _harvest_debug(tree: UnpackedTree, into: dict[str, Path]) -> None:
@@ -250,7 +248,7 @@ def pair_debug_info(
 
 
 def _roots_for(ctx: Context, artifact: ComparableArtifact) -> tuple[Path, Path]:
-    """Where each side of `artifact` should unpack its contents to, as (make, bazel). """
+    """Where each side of `artifact` should unpack its contents to, as (make, bazel)."""
     # A label is not a file name: `/` is the one character a component cannot hold.
     base = ctx.workdir / artifact.type / artifact.identifier.name.replace("/", "_")
     base.mkdir(parents=True)
@@ -269,9 +267,7 @@ def _extract_deb(
         root.mkdir(parents=True, exist_ok=True)
         ctx.tools.dpkg_deb.run("-x", str(deb), str(root))
 
-    return _pair(
-        ctx, artifact, _index_tree(make_root), _index_tree(bazel_root), debug
-    )
+    return _pair(ctx, artifact, _index_tree(make_root), _index_tree(bazel_root), debug)
 
 
 # A layer entry whose basename carries this prefix deletes what the rest of it names.
