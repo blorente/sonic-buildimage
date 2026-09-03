@@ -65,6 +65,10 @@ def _compare_elf(ctx: Context, artifact: ComparableArtifact) -> None:
     tools = ctx.tools
     identifier = artifact.identifier
 
+    # If the files are identical, just move on.
+    if filecmp.cmp(artifact.makeVersion, artifact.bazelVersion, shallow=False):
+        return
+
     # With .symtab on one side only there is no function inventory to compare,
     # so elfcompare's answer would not mean anything.
     if _has_symtab(artifact.makeVersion, tools.readelf) != _has_symtab(
