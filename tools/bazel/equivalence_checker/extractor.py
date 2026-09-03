@@ -75,21 +75,6 @@ def _entry_identifier(
     )
 
 
-def _type_of(path: Path) -> ArtifactType | None:
-    """Which kind of artifact `path` is, or None if it is nothing we compare.
-
-    Symlinks are tested first, because `is_dir` and `is_file` both follow them.
-    """
-    if path.is_symlink():
-        return ArtifactType.LINK
-    if path.is_dir():
-        return ArtifactType.DIRECTORY
-    if not path.is_file():
-        # A device, fifo or socket has no contents to compare.
-        return None
-    return ArtifactType.ELF_EXECUTABLE if _is_elf(path) else ArtifactType.FILE
-
-
 @dataclass(frozen=True)
 class UnpackedTree:
     """What one side unpacked.
@@ -104,6 +89,10 @@ class UnpackedTree:
     def of(self, kind: ArtifactType) -> dict[str, Path]:
         """The entries of one kind, keyed by install path."""
         return self.entries[kind]
+
+    def all_entries(self) -> set[str]:
+        return {path for bucket in self.entries.values() for path in bucket}
+
 
 
 @dataclass(frozen=True)
@@ -120,12 +109,24 @@ class DebugFiles:
 
 def _index_tree(root: Path) -> UnpackedTree:
     """Walk `root` once, bucketing every entry by what kind of artifact it is."""
+
+    def _type_of(path: Path) -> ArtifactType | None:
+        if path.is_symlink():
+            return ArtifactType.LINK
+        if path.is_dir():
+            return ArtifactType.DIRECTORY
+        if not path.is_file():
+            # A device, fifo or socket has no contents to compare.
+            return None
+        return ArtifactType.ELF_EXECUTABLE if _is_elf(path) else ArtifactType.FILE
+
     tree = UnpackedTree()
     for path in sorted(root.rglob("*")):
         kind = _type_of(path)
         if kind is not None:
             tree.entries[kind]["/" + str(path.relative_to(root))] = path
     return tree
+
 
 
 def _harvest_debug(tree: UnpackedTree, into: dict[str, Path]) -> None:
@@ -144,10 +145,15 @@ def _pair(
     make: UnpackedTree,
     bazel: UnpackedTree,
     debug: DebugFiles,
+    identical: frozenset[str] = frozenset(),
 ) -> list[ComparableArtifact]:
     """Pair what the two sides unpacked, by kind and install path.
 
-    Debug files are set aside for `pair_debug_info`, which pairs them by build-id rather than by path.
+    Debug files are paired by build-id rather than by path.
+
+    Make and bazel entries that are known to be identical (e.g. because they come from identical layers)
+    are skipped.
+
     If we can't find something to pair against, we report it and move on.
     """
     _harvest_debug(make, debug.make)
@@ -155,7 +161,12 @@ def _pair(
 
     paired = []
     for kind in COMPARABLE_TYPES:
-        make_entries, bazel_entries = make.of(kind), bazel.of(kind)
+        make_entries = {
+            path: real for path, real in make.of(kind).items() if path not in identical
+        }
+        bazel_entries = {
+            path: real for path, real in bazel.of(kind).items() if path not in identical
+        }
 
         for code, install_paths, detail in (
             (
@@ -306,10 +317,18 @@ def _writable_dirs(member: tarfile.TarInfo, dest: str) -> tarfile.TarInfo | None
     return member
 
 
-def _unpack_docker_archive(archive: Path, root: Path) -> None:
+def _install_path_of(member: tarfile.TarInfo) -> str:
+    """The install path a layer member lands at, spelled as `_index_tree` spells it."""
+    return "/" + member.name.removeprefix("./").rstrip("/")
+
+
+def _unpack_docker_archive(archive: Path, root: Path) -> dict[str, str]:
     """Flatten a gzipped docker-archive into the filesystem it describes.
 
     Both Bazel and Make ship the same format.
+
+    Returns the layer each path finally came from. Layers are content-addressed, so
+    a path both sides took from the same layer holds the same bytes on both.
     """
     root.mkdir(parents=True, exist_ok=True)
     blobs = root.parent / f"{root.name}.blobs"
@@ -322,6 +341,7 @@ def _unpack_docker_archive(archive: Path, root: Path) -> None:
             outer.extractall(blobs, filter=_writable_dirs)
 
     manifest = json.loads((blobs / "manifest.json").read_text())
+    came_from: dict[str, str] = {}
     for layer in manifest[0]["Layers"]:
         with tarfile.open(blobs / layer) as tar:
             members = tar.getmembers()
@@ -334,30 +354,43 @@ def _unpack_docker_archive(archive: Path, root: Path) -> None:
             for name in sorted(whiteouts):
                 _apply_whiteout(root, name)
 
-            tar.extractall(
-                root,
-                members=[m for m in members if m.name not in whiteouts],
-                filter=_writable_dirs,
-            )
+            landing = [m for m in members if m.name not in whiteouts]
+            tar.extractall(root, members=landing, filter=_writable_dirs)
+            # This loop may intentionally cause overwrites, if a file overwrites another previously unpacked file.
+            for member in landing:
+                came_from[_install_path_of(member)] = layer
 
-    # The layer tarballs are large, and nothing reads them once they are applied.
     shutil.rmtree(blobs)
+    return came_from
 
 
 def _extract_oci_image(
     ctx: Context, artifact: ComparableArtifact, debug: DebugFiles
 ) -> list[ComparableArtifact]:
-    """Unpack both sides of a container archive and pair what is inside them."""
-    make_root, bazel_root = _roots_for(ctx, artifact)
-    for root, archive in (
-        (make_root, artifact.makeVersion),
-        (bazel_root, artifact.bazelVersion),
-    ):
-        _unpack_docker_archive(archive, root)
+    """Unpack both sides of a container archive and pair what is inside them.
 
-    return _pair(
-        ctx, artifact, _index_tree(make_root), _index_tree(bazel_root), debug
+    Most of an image comes from layers both builds share, and those are settled
+    before any comparison starts.
+    """
+    make_root, bazel_root = _roots_for(ctx, artifact)
+    make_layers = _unpack_docker_archive(artifact.makeVersion, make_root)
+    bazel_layers = _unpack_docker_archive(artifact.bazelVersion, bazel_root)
+
+    make_tree, bazel_tree = _index_tree(make_root), _index_tree(bazel_root)
+    make_present, bazel_present = make_tree.all_entries(), bazel_tree.all_entries()
+
+    # Create a set of "artifacts that come from identical layers".
+    # Note that just because two images share a base layer, it doesn't mean they'll result in identical artifacts.
+    # A later layer may overwrite the base layer file.
+    identical = frozenset(
+        path
+        for path, layer in make_layers.items()
+        if path in make_present
+        and path in bazel_present
+        and bazel_layers.get(path) == layer
     )
+
+    return _pair(ctx, artifact, make_tree, bazel_tree, debug, identical)
 
 
 def extract_source(

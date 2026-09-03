@@ -1,0 +1,3 @@
+# Package marker, so that //:MODULE.bazel can `include()` the file below: an
+# included module file has to resolve as a label, and a label needs a package.
+exports_files(["equivalence.MODULE.bazel"])

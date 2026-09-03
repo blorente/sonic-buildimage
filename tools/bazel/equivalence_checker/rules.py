@@ -4,7 +4,7 @@ Each rule names a difference the two builds produce on purpose, and says why.
 Any diagnostic that is not accepted by a rule here will fail the run.
 """
 
-from diagnostics import Codes
+from diagnostics import Codes, Modifier
 from rules_engine import AcceptanceRule, DiagnosticMatcher, Rules
 
 SYSMGR_DEB = "@sonic-sysmgr//:sysmgr_deb"
@@ -37,6 +37,19 @@ RULES = Rules(
         reason=(
             "In Bazel, rebootbackend links statically against the C++ stdlib and gnoi. "
             "Therefore, it's going to import more symbols."
+        ),
+    ),
+    AcceptanceRule(
+        id="sysmgr-rebootbackend-static-debug-functions",
+        matcher=DiagnosticMatcher(
+            code=Codes.FUNCTION_ADDED,
+            name="/usr/bin/rebootbackend",
+            source=SYSMGR_DEB,
+            modifier=Modifier.DEBUG,
+        ),
+        reason=(
+            "In Bazel, rebootbackend links statically against the C++ stdlib, protobuf "
+            "and Abseil, so their functions land in its own debug information."
         ),
     ),
 )

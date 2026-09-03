@@ -10,7 +10,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import TypeAlias
 
-from diagnostics import Codes, Diagnostic, DiagnosticCode
+from diagnostics import Codes, Diagnostic, DiagnosticCode, Modifier
 
 
 @dataclass(frozen=True)
@@ -30,13 +30,16 @@ class DiagnosticMatcher:
 
     `name` and `source` are fnmatch patterns over a ComparableArtifact's name and source.
     `msg` is also an fnmatch pattern, over the diagnostic's own message.
-    All three default to everything, so a rule states only what it narrows.
+    `modifier` picks one half of an artifact that comes in two, so a rule can reach
+    a binary's debug information without also reaching the binary.
+    All of them default to everything, so a rule states only what it narrows.
     """
 
     code: CodeMatcher
     name: str = "*"
     source: str = "*"
     msg: str = "*"
+    modifier: Modifier | None = None
 
     def matches(self, diagnostic: Diagnostic) -> bool:
         artifact = diagnostic.artifact
@@ -44,10 +47,14 @@ class DiagnosticMatcher:
         source = artifact.source.name if artifact.source is not None else ""
         return (
             self._code_matches(diagnostic.code)
+            and self._modifier_matches(artifact.modifiers)
             and fnmatch.fnmatchcase(artifact.name, self.name)
             and fnmatch.fnmatchcase(source, self.source)
             and fnmatch.fnmatchcase(diagnostic.msg, self.msg)
         )
+
+    def _modifier_matches(self, modifiers: frozenset[Modifier]) -> bool:
+        return self.modifier is None or self.modifier in modifiers
 
     def _code_matches(self, code: DiagnosticCode) -> bool:
         if isinstance(self.code, AnyCode):

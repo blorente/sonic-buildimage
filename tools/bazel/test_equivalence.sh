@@ -41,14 +41,22 @@ fi
 # Invoked directly rather than through `bazel run`, because the script shells out to Bazel itself.
 compare="PYTHONPATH=tools/bazel/registry python3 tools/bazel/equivalence_checker/equivalence_checker.py --bldenv ${BLDENV}"
 
-# elfcompare needs abidiff to compare shared libraries, and we haven't migrated abidiff to Bazel yet.
-# We need the `tr` because this travels to the slave, so we need to collapse it into one line to fit in a single CLI.
+# elfcompare shells out to abidiff for shared libraries, and we haven't migrated
+# abidiff to Bazel yet.
+#
+# The `tr` collapses this to one line, because it travels to the slave as a single CLI.
 #
 # TODO(bazel-ready): Migrate abidiff to Bazel and fetch it from the BCR.
 provision_abidiff=$(tr '\n' ' ' <<'EOF'
 if ! command -v abidiff >/dev/null; then
-  sudo apt-get update &&
-    sudo apt-get install -y --no-install-recommends abigail-tools;
+  # Check that we are inside the slave container.
+  if [ -f /.dockerenv ]; then
+    sudo apt-get update &&
+      sudo apt-get install -y --no-install-recommends abigail-tools;
+  else
+    echo "ERROR: abidiff is not installed. Install abigail-tools, or unset SKIP_SLAVE to run in the slave." >&2;
+    exit 1;
+  fi;
 fi
 EOF
 )
