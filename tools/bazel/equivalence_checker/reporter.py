@@ -52,16 +52,27 @@ def write_report(ctx: Context, classified: rules_engine.Classified, path: Path) 
                     }
                     for artifact in ctx.index.artifacts.values()
                 ],
-                "diagnostics": [
+                "diagnostics": {
+                    "accepted": [
                     {
                         "artifact": str(diagnostic.artifact),
                         "code": str(diagnostic.code.code),
                         "msg": diagnostic.msg,
                         "accepted_by": rule_id,
                     }
-                    for rule_id, found in classified.items()
+                    for rule_id, found in classified.items() if rule_id is not None
                     for diagnostic in found
                 ],
+                    "not_accepted": [
+
+                    {
+                        "artifact": str(diagnostic.artifact),
+                        "code": str(diagnostic.code.code),
+                        "msg": diagnostic.msg,
+                    }
+                    for diagnostic in classified.get(None)
+                    ]
+                },
             },
             indent=2,
         )

@@ -44,17 +44,17 @@ compare="PYTHONPATH=tools/bazel/registry python3 tools/bazel/equivalence_checker
 # elfcompare shells out to abidiff for shared libraries, and we haven't migrated
 # abidiff to Bazel yet.
 #
-# The `tr` collapses this to one line, because it travels to the slave as a single CLI.
+# We use .dockerenv to figure out whether we're in the slave.
+# If we're not in the slave, we shouldn't be installing anything.
 #
 # TODO(bazel-ready): Migrate abidiff to Bazel and fetch it from the BCR.
 provision_abidiff=$(tr '\n' ' ' <<'EOF'
 if ! command -v abidiff >/dev/null; then
-  # Check that we are inside the slave container.
   if [ -f /.dockerenv ]; then
     sudo apt-get update &&
       sudo apt-get install -y --no-install-recommends abigail-tools;
   else
-    echo "ERROR: abidiff is not installed. Install abigail-tools, or unset SKIP_SLAVE to run in the slave." >&2;
+    echo ERROR: abidiff is not installed. Install abigail-tools to run this comparison. >&2;
     exit 1;
   fi;
 fi
