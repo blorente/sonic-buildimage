@@ -8,7 +8,7 @@ from diagnostics import (
     ComparableArtifact,
     Modifier,
 )
-from tools import BazelLabel
+from tools import BazelLabel, BazelOutput
 
 # Make writes debs under target/debs/<bldenv>/, and container archives straight into target/.
 MAKE_DEBS_DIR = "target/debs"
@@ -73,8 +73,10 @@ def _collect_debs(ctx: Context) -> list[ComparableArtifact]:
                 )
                 continue
 
-            built = ctx.bazel.output_file(
-                f"@{repo_names[module]}{label}", build=ctx.needs_build
+            built = ctx.bazel.output_artifact(
+                f"@{repo_names[module]}{label}",
+                BazelOutput.FILE,
+                build=ctx.needs_build,
             )
             artifact = ComparableArtifact(
                 identifier=identifier,
@@ -108,8 +110,9 @@ def _collect_images(ctx: Context) -> list[ComparableArtifact]:
             )
             continue
 
-        # Images live in the root module, so the label is already buildable as it stands.
-        built = ctx.bazel.output_file(label, build=ctx.needs_build)
+        built = ctx.bazel.output_artifact(
+            label, BazelOutput.FILE, build=ctx.needs_build
+        )
         artifact = ComparableArtifact(
             identifier=identifier,
             bazelVersion=built,

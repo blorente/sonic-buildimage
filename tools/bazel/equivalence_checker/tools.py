@@ -1,3 +1,4 @@
+import enum
 import json
 import os
 import shlex
@@ -17,20 +18,23 @@ READELF_LABEL = "@sonic_build_infra//toolchains/binutils:readelf"
 ELFCOMPARE_LABEL = "@compare_elf//:elfcompare"
 
 
+class BazelOutput(enum.Enum):
+    """Which of a target's outputs to ask for.
+
+    A target's default output and the executable it runs may not the same thing,
+    hence the distinction.
+    """
+
+    FILE = ("--output=files",)
+    EXECUTABLE = (
+        "--output=starlark",
+        "--starlark:expr=target.files_to_run.executable.path",
+    )
+
+
 @dataclass(frozen=True)
 class Bazel:
     """The `bazel` command, run from the repo root unless told otherwise."""
-
-    # `sonic_deb` is a symbolic macro, so we have to query on the actual name of the rule.
-    DEB_RULE_KIND = "_sonic_deb_assemble rule"
-
-    # `sonic_docker_archive` gzips the docker-archive tarball as its last step, so the
-    # gzip target is the one image artifact whose name matches what Make writes.
-    IMAGE_RULE_KIND = "gzip rule"
-
-    # Images are declared in the root module, and only under //dockers. Scoping the
-    # query keeps the vendored oci_image targets under //platform out of it.
-    IMAGE_SCOPE = "//dockers/..."
 
     EXCLUDE_TAG = "no-elf-equivalence"
 
@@ -58,42 +62,33 @@ class Bazel:
             )
         return result
 
-    def query(self, module_dir: Path, expression: str) -> list[str]:
-        """Run one `bazel query` in `module_dir`, returning the labels it printed.
-
-        --keep_going makes a partial failure exit 3 with usable results on stdout, so
-        only a harder status is worth failing on.
-        """
+    def query(self, expression: str, cwd: Path | None = None) -> list[str]:
+        """Run one `bazel query`, returning the labels it printed."""
         return self._lines(
             self.run(
-                "query",
-                *self.QUERY_FLAGS,
-                expression,
-                cwd=module_dir,
-                ok_statuses=(0, 3),
+                "query", *self.QUERY_FLAGS, expression, cwd=cwd, ok_statuses=(0, 3)
             )
         )
 
+    def _targets(
+        self, kind: str, scope: str, cwd: Path | None = None
+    ) -> tuple[list[str], list[str]]:
+        """Return (compared, excluded) targets of `kind` under `scope`.
+
+        Excluded ones are named as well as removed, so a caller can say what it
+        passed over rather than quietly shrinking.
+        """
+        matching = f'kind("{kind}", {scope})'
+        everything = self.query(matching, cwd=cwd)
+        excluded = self.query(f'attr(tags, "{self.EXCLUDE_TAG}", {matching})', cwd=cwd)
+        return sorted(set(everything) - set(excluded)), sorted(excluded)
+
     def deb_targets(self, module_dir: Path) -> tuple[list[str], list[str]]:
-        """Return (compared, excluded) deb labels declared by the module at `module_dir`."""
-        all_debs = self.query(module_dir, f'kind("{self.DEB_RULE_KIND}", //...)')
-        excluded = self.query(
-            module_dir,
-            f'attr(tags, "{self.EXCLUDE_TAG}", kind("{self.DEB_RULE_KIND}", //...))',
-        )
-        return sorted(set(all_debs) - set(excluded)), sorted(excluded)
+        # sonic_deb is a macro, we must use the kind of the underlying rule
+        return self._targets("_sonic_deb_assemble rule", "//...", cwd=module_dir)
 
     def image_targets(self) -> tuple[list[str], list[str]]:
-        """Return (compared, excluded) container archive labels from the root module."""
-        all_images = self.query(
-            self.repo_root, f'kind("{self.IMAGE_RULE_KIND}", {self.IMAGE_SCOPE})'
-        )
-        excluded = self.query(
-            self.repo_root,
-            f'attr(tags, "{self.EXCLUDE_TAG}", '
-            f'kind("{self.IMAGE_RULE_KIND}", {self.IMAGE_SCOPE}))',
-        )
-        return sorted(set(all_images) - set(excluded)), sorted(excluded)
+        return self._targets("gzip rule", "//dockers/...")
 
     def root_repo_names(self) -> dict[str, str]:
         """Map Bazel module name -> the repo name it is visible as from the root workspace.
@@ -139,28 +134,20 @@ class Bazel:
             f"Tried to resolve path {path}, but couldn't find it under bazel-out or the execution root."
         )
 
-    def output_artifact(self, label: str, output: list[str], build: bool = True) -> Path:
-        """The one path `label` yields under `output`, as built from the root workspace."""
+    def output_artifact(
+        self, label: BazelLabel, output: BazelOutput, build: bool = True
+    ) -> Path:
+        """The one path `label` yields as `output`, building it first unless told not to.
+
+        `build=False` locates the path without producing it, for callers that only
+        need the name.
+        """
         if build:
             self.run("build", "--noshow_progress", label)
-        paths = self._lines(self.run("cquery", *self.QUERY_FLAGS, *output, label))
+        paths = self._lines(self.run("cquery", *self.QUERY_FLAGS, *output.value, label))
         if len(paths) != 1:
             raise RuntimeError(f"{label} has {len(paths)} outputs, expected exactly 1")
         return self._resolve(paths[0])
-
-    def output_file(self, label: str, build: bool = True) -> Path:
-        """The single file `label` produces, as built from the root workspace.
-
-        `build=False` locates the file without producing it, for callers that only need its name.
-        """
-        return self.output_artifact(label, ["--output=files"], build=build)
-
-    def executable_path(self, label: str) -> Path:
-        """The path of the executable `label` runs, without running it."""
-        return self.output_artifact(
-            label,
-            ["--output=starlark", "--starlark:expr=target.files_to_run.executable.path"],
-        )
 
     @staticmethod
     def _lines(result: subprocess.CompletedProcess) -> list[str]:
@@ -219,7 +206,7 @@ class Tool:
         using actual `bazel run` would create a Bazel-in-Bazel problem if compare_elf calls Bazel.
         This would create a deadlock when the second `bazel run` tries to acquire the workspace lock.
         """
-        return cls(name, (str(bazel.executable_path(label)),))
+        return cls(name, (str(bazel.output_artifact(label, BazelOutput.EXECUTABLE)),))
 
 
 @dataclass(frozen=True)
