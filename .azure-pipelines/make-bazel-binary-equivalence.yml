@@ -43,5 +43,12 @@ jobs:
       CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=$(CACHE_MODE) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/vs"
       make configure PLATFORM=vs
       CACHE_OPTIONS="${CACHE_OPTIONS}" BLDENV=trixie \
-        ./tools/bazel/test_binary_equivalence.sh
+        ./tools/bazel/test_equivalence.sh
     displayName: Compare Bazel and Make binaries
+
+  # Publish the long equivalence report as an artifact.
+  # A summary will be printed on screen.
+  - publish: target/equivalence-report.json
+    artifact: equivalence-report
+    displayName: Archive the equivalence report
+    condition: always()
