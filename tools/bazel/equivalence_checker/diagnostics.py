@@ -148,9 +148,6 @@ class ExtractionDiagnosticCodeEnum(enum.StrEnum):
     UNREADABLE = "UNREADABLE"
     # Both sides ship the binary, but only one side ships debug information.
     NO_DEBUG = "NO_DEBUG"
-    # Not a problem: entries both sides took from the same content-addressed layer,
-    # recorded so the report says what was settled without being compared.
-    IDENTICAL_BY_LAYER = "IDENTICAL_BY_LAYER"
 
 @dataclass(frozen=True)
 class ExtractionDiagnosticCode:
@@ -175,6 +172,37 @@ DiagnosticCode: TypeAlias = (
     | ExtractionDiagnosticCode
     | FileDiagnosticCode
 )
+
+# Each family, with the wrapper that puts one of its codes into the union.
+_CODE_FAMILIES = (
+    (ElfDiagnosticCodeEnum, ElfDiagnosticCode),
+    (CollectionDiagnosticCodeEnum, CollectionDiagnosticCode),
+    (ExtractionDiagnosticCodeEnum, ExtractionDiagnosticCode),
+    (FileDiagnosticCodeEnum, FileDiagnosticCode),
+)
+
+
+def _every_code() -> dict[str, DiagnosticCode]:
+    """Every code from every family, by name.
+
+    Two families using one name would shadow each other silently, so that is an
+    error rather than a surprise later.
+    """
+    flat: dict[str, DiagnosticCode] = {}
+    for family, wrap in _CODE_FAMILIES:
+        for member in family:
+            if member.name in flat:
+                raise ValueError(
+                    f"{member.name} is defined by two diagnostic families"
+                )
+            flat[member.name] = wrap(member)
+    return flat
+
+
+# Every code under one name.
+# This way, a rule can say `Codes.MAKE_ONLY` without knowing which family it came from.
+# We want the internal structure of enums for destructuring, but we want to make writing rules easy.
+Codes = enum.Enum("Codes", _every_code(), module=__name__)
 
 
 @dataclass(frozen=True)
@@ -214,18 +242,6 @@ class DiagnosticSink:
             f"unpaired() takes an extraction code, not {code!r}"
         )
         self.record(Diagnostic(artifact, ExtractionDiagnosticCode(code), msg))
-
-    def identical(self, artifact: ArtifactIdentifier, count: int) -> None:
-        """Note entries settled by layer digest rather than by comparison."""
-        self.record(
-            Diagnostic(
-                artifact,
-                ExtractionDiagnosticCode(
-                    ExtractionDiagnosticCodeEnum.IDENTICAL_BY_LAYER
-                ),
-                f"{count} entries come from layers both builds share",
-            )
-        )
 
     def elf_mismatch(
         self,

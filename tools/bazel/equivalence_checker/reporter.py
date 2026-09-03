@@ -4,22 +4,25 @@ import collections
 import json
 from pathlib import Path
 
-import rules
+import rules_engine
 from context import Context
 
 
-def print_report(ctx: Context, classified: rules.Classified) -> None:
+def print_report(ctx: Context, classified: rules_engine.Classified) -> None:
     """Print how many of each diagnostic the run collected."""
-    accepted = [(d, rule) for d, rule in classified if rule is not None]
-    remaining = [d for d, rule in classified if rule is None]
+    remaining = rules_engine.unaccepted(classified)
+    accepted = {
+        rule_id: found for rule_id, found in classified.items() if rule_id is not None
+    }
 
     print(f"\n{len(ctx.index)} artifacts, {len(ctx.sink.diagnostics)} diagnostics.")
 
     if accepted:
-        by_rule = collections.Counter(rule.id for _, rule in accepted)
-        print(f"\n{len(accepted)} accepted:")
-        for rule_id, count in by_rule.most_common():
-            print(f"    {count:6d}  {rule_id}")
+        print(f"\n{sum(len(found) for found in accepted.values())} accepted:")
+        for rule_id, found in sorted(
+            accepted.items(), key=lambda pair: len(pair[1]), reverse=True
+        ):
+            print(f"    {len(found):6d}  {rule_id}")
 
     by_code = collections.Counter(
         str(diagnostic.code.code) for diagnostic in remaining
@@ -28,8 +31,13 @@ def print_report(ctx: Context, classified: rules.Classified) -> None:
     for code, count in by_code.most_common():
         print(f"    {count:6d}  {code}")
 
+    if remaining:
+        print(f"\nFAIL: {len(remaining)} diagnostics no rule accepts.")
+    else:
+        print("\nPASS: every diagnostic is accounted for by a rule.")
 
-def write_report(ctx: Context, classified: rules.Classified, path: Path) -> None:
+
+def write_report(ctx: Context, classified: rules_engine.Classified, path: Path) -> None:
     """Write every diagnostic the run collected to `path`, as JSON."""
     path.parent.mkdir(parents=True, exist_ok=True)
     _ = path.write_text(
@@ -49,9 +57,10 @@ def write_report(ctx: Context, classified: rules.Classified, path: Path) -> None
                         "artifact": str(diagnostic.artifact),
                         "code": str(diagnostic.code.code),
                         "msg": diagnostic.msg,
-                        "accepted_by": rule.id if rule is not None else None,
+                        "accepted_by": rule_id,
                     }
-                    for diagnostic, rule in classified
+                    for rule_id, found in classified.items()
+                    for diagnostic in found
                 ],
             },
             indent=2,

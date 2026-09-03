@@ -29,10 +29,10 @@ function run_in_slave() {
 
 # Ensure the tree is clean before proceeding.
 if [[ -n "$(git status --porcelain)" ]]; then
-  if [[ "${ELF_EQUIVALENCE_ALLOW_DIRTY:-0}" != "1" ]]; then
+  if [[ "${EQUIVALENCE_ALLOW_DIRTY:-0}" != "1" ]]; then
     echo "ERROR: the checkout is dirty. Both sides must come from the same tree." >&2
     git status --short >&2
-    echo "Set ELF_EQUIVALENCE_ALLOW_DIRTY=1 to compare anyway." >&2
+    echo "Set EQUIVALENCE_ALLOW_DIRTY=1 to compare anyway." >&2
     exit 1
   fi
   echo "WARNING: comparing on a dirty tree. Results may be inaccurate."

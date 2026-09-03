@@ -6,6 +6,7 @@ from pathlib import Path
 
 import registry_lib
 import rules
+import rules_engine
 from collector import collect_artifacts
 from comparator import compare_artifacts
 from context import Context
@@ -111,14 +112,14 @@ def _run(ctx: Context, args: argparse.Namespace) -> int:
     compare_artifacts(ctx, artifacts_to_compare)
 
     # The rules are applied once, and that answer travels to both reports.
-    classified = rules.classify(ctx.sink.diagnostics, rules.RULES)
+    classified = rules_engine.classify(ctx.sink.diagnostics, rules.RULES)
     print_report(ctx, classified)
 
     report = registry_lib.REPO_ROOT / args.report
     write_report(ctx, classified, report)
     print(f"\nReport: {_relative(report)}")
 
-    return 0
+    return 1 if rules_engine.unaccepted(classified) else 0
 
 if __name__ == "__main__":
     sys.exit(main())
