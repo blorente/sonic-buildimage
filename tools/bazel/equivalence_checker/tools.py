@@ -113,6 +113,32 @@ class Bazel:
             if canonical.endswith("+") and canonical.count("+") == 1
         }
 
+    def _execution_root(self) -> Path | None:
+        """Where Bazel actually writes its outputs, or None if it will not say.
+
+        `bazel info` loads the workspace, so it can fail on a tree where `cquery`
+        still answers. That is worth tolerating rather than failing over.
+        """
+        try:
+            lines = self._lines(self.run("info", "execution_root"))
+        except RuntimeError:
+            return None
+        return Path(lines[0]) if lines else None
+
+    def _resolve(self, path: str) -> Path:
+        """The real location of something cquery named."""
+        through_symlink = self.repo_root / path
+        if through_symlink.exists():
+            return through_symlink
+
+        execution_root = self._execution_root()
+        if execution_root is not None and (execution_root / path).exists():
+            return execution_root / path
+
+        raise RuntimeError(
+            f"Tried to resolve path {path}, but couldn't find it under bazel-out or the execution root."
+        )
+
     def output_artifact(self, label: str, output: list[str], build: bool = True) -> Path:
         """The one path `label` yields under `output`, as built from the root workspace."""
         if build:
@@ -120,7 +146,7 @@ class Bazel:
         paths = self._lines(self.run("cquery", *self.QUERY_FLAGS, *output, label))
         if len(paths) != 1:
             raise RuntimeError(f"{label} has {len(paths)} outputs, expected exactly 1")
-        return self.repo_root / paths[0]
+        return self._resolve(paths[0])
 
     def output_file(self, label: str, build: bool = True) -> Path:
         """The single file `label` produces, as built from the root workspace.
