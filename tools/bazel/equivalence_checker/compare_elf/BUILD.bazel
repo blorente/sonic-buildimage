@@ -1,0 +1,7 @@
+# The overlay for the compare_elf http_archive in //:MODULE.bazel: upstream ships no
+# build files, and the patch lets the tools it shells out to be chosen through the
+# environment. It lives beside the equivalence checker because that is its only user.
+exports_files([
+    "compare_elf.BUILD.bazel",
+    "compare_elf_env.patch",
+])
