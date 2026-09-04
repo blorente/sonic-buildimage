@@ -68,7 +68,7 @@ def write_report(ctx: Context, classified: rules_engine.Classified, path: Path) 
                             "code": str(diagnostic.code.code),
                             "msg": diagnostic.msg,
                         }
-                        for diagnostic in classified.get(None)
+                        for diagnostic in rules_engine.unaccepted(classified)
                     ],
                 },
             },

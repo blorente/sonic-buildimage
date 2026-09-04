@@ -9,6 +9,13 @@ from rules_engine import AcceptanceRule, DiagnosticMatcher, Rules
 
 SYSMGR_DEB = "@sonic-sysmgr//:sysmgr_deb"
 
+REBOOTBACKEND = lambda code, modifier=None: DiagnosticMatcher(
+        code=code,
+        name="/usr/bin/rebootbackend",
+        source=SYSMGR_DEB,
+        modifier=modifier,
+)
+
 RULES = Rules(
     AcceptanceRule(
         id="excluded-by-tag",
@@ -17,6 +24,14 @@ RULES = Rules(
             "The target carries the exclusion tag, so it was deliberately left out "
             "of the comparison and has nothing to answer for."
         ),
+    ),
+    AcceptanceRule(
+        id="accept-debian-changelogs",
+        matcher=DiagnosticMatcher(
+            name="*/changelog.gz",
+            code=Codes.MAKE_ONLY,
+        ),
+        reason="We don't ship changelogs in Bazel-built debs.",
     ),
     AcceptanceRule(
         id="sysmgr-librebootgnoi-not-shipped",
@@ -29,24 +44,23 @@ RULES = Rules(
     ),
     AcceptanceRule(
         id="sysmgr-rebootbackend-static-imports-all",
-        matcher=DiagnosticMatcher(
-            code=Codes.IMPORT_ADDED,
-            name="/usr/bin/rebootbackend",
-            source=SYSMGR_DEB,
-        ),
+        matcher=REBOOTBACKEND(Codes.IMPORT_ADDED),
         reason=(
             "In Bazel, rebootbackend links statically against the C++ stdlib and gnoi. "
             "Therefore, it's going to import more symbols."
         ),
     ),
     AcceptanceRule(
-        id="sysmgr-rebootbackend-static-debug-functions",
-        matcher=DiagnosticMatcher(
-            code=Codes.FUNCTION_ADDED,
-            name="/usr/bin/rebootbackend",
-            source=SYSMGR_DEB,
-            modifier=Modifier.DEBUG,
+        id="sysmgr-rebootbackend-init-array",
+        matcher=REBOOTBACKEND(Codes.STARTUP_CALLBACK),
+        reason=(
+            "In Bazel, rebootbackend links statically against the C++ stdlib and gnoi. "
+            "Therefore, it's going to call a lot more startup callbacks."
         ),
+    ),
+    AcceptanceRule(
+        id="sysmgr-rebootbackend-static-debug-functions",
+        matcher=REBOOTBACKEND(Codes.FUNCTION_ADDED, modifier=Modifier.DEBUG),
         reason=(
             "In Bazel, rebootbackend links statically against the C++ stdlib, protobuf "
             "and Abseil, so their functions land in its own debug information."
