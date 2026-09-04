@@ -9,11 +9,12 @@ from rules_engine import AcceptanceRule, DiagnosticMatcher, Rules
 
 SYSMGR_DEB = "@sonic-sysmgr//:sysmgr_deb"
 
-REBOOTBACKEND = lambda code, modifier=None: DiagnosticMatcher(
+REBOOTBACKEND = lambda code, modifier=None, msg="*": DiagnosticMatcher(
         code=code,
         name="/usr/bin/rebootbackend",
         source=SYSMGR_DEB,
         modifier=modifier,
+        msg=msg,
 )
 
 RULES = Rules(
@@ -43,27 +44,25 @@ RULES = Rules(
         reason="In Bazel, rebootbackend links statically against the C++ stdlib and gnoi",
     ),
     AcceptanceRule(
-        id="sysmgr-rebootbackend-static-imports-all",
-        matcher=REBOOTBACKEND(Codes.IMPORT_ADDED),
+        id="sysmgr-rebootbackend-static-gnoi-imports",
+        # `4gnoi` is the gnoi namespace as Itanium mangling spells it, so this
+        # reaches every gnoi symbol, including protobuf templates instantiated
+        # on a gnoi type.
+        matcher=REBOOTBACKEND(Codes.IMPORT_REMOVED, msg="*4gnoi*"),
         reason=(
-            "In Bazel, rebootbackend links statically against the C++ stdlib and gnoi. "
-            "Therefore, it's going to import more symbols."
+            "In Bazel, rebootbackend links the gnoi protos statically, so their "
+            "symbols are defined in the binary instead of imported from "
+            "librebootgnoi.so.0, which Bazel does not ship."
         ),
     ),
     AcceptanceRule(
-        id="sysmgr-rebootbackend-init-array",
-        matcher=REBOOTBACKEND(Codes.STARTUP_CALLBACK),
+        id="sysmgr-rebootbackend-static-protobuf-imports",
+        matcher=REBOOTBACKEND(Codes.IMPORT_REMOVED, msg="*6google8protobuf*"),
         reason=(
-            "In Bazel, rebootbackend links statically against the C++ stdlib and gnoi. "
-            "Therefore, it's going to call a lot more startup callbacks."
-        ),
-    ),
-    AcceptanceRule(
-        id="sysmgr-rebootbackend-static-debug-functions",
-        matcher=REBOOTBACKEND(Codes.FUNCTION_ADDED, modifier=Modifier.DEBUG),
-        reason=(
-            "In Bazel, rebootbackend links statically against the C++ stdlib, protobuf "
-            "and Abseil, so their functions land in its own debug information."
+            "Bazel builds against protobuf 33.4, while Debian trixie ships 3.21.12 as "
+            "libprotobuf.so.32. The util::status_internal::Status API these symbols "
+            "belong to is gone in 33.4, replaced by absl::Status, so there is no shared "
+            "protobuf both builds can link. Bazel links it statically instead."
         ),
     ),
 )
