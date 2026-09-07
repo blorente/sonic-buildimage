@@ -10,6 +10,7 @@ common --config=local-modules
 common --per_file_copt=.*external.*@-w
 common --cxxopt=-std=c++17 --host_cxxopt=-std=c++17
 common --features=external_include_paths
+common --test_output=errors
 
 # TODO(bazel-ready): YANG-driven cfg_schema.h generation (gen_cfg_schema.py) is not
 # wired into the Bazel build yet. It needs the YANG toolchain in the registry plus a
