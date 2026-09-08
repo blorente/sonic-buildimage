@@ -44,6 +44,9 @@ class Bazel:
         "--ui_event_filters=-INFO,-WARNING",
     )
 
+    # sonic_deb is a macro, so we match on the kind of the underlying rule.
+    DEB_RULE = "_sonic_deb_assemble rule"
+
     repo_root: Path = registry_lib.REPO_ROOT
 
     def run(
@@ -66,30 +69,30 @@ class Bazel:
             )
         return result
 
-    def query(self, expression: str, cwd: Path | None = None) -> list[str]:
+    def query(self, expression: str) -> list[str]:
         """Run one `bazel query`, returning the labels it printed."""
         return self._lines(
-            self.run(
-                "query", *self.QUERY_FLAGS, expression, cwd=cwd, ok_statuses=(0, 3)
-            )
+            self.run("query", *self.QUERY_FLAGS, expression, ok_statuses=(0, 3))
         )
 
-    def _targets(
-        self, kind: str, scope: str, cwd: Path | None = None
-    ) -> tuple[list[str], list[str]]:
-        """Return (compared, excluded) targets of `kind` under `scope`.
+    def _is_convenience_symlink(self, label: BazelLabel) -> bool:
+        package = label.partition("//")[2]
+        return package.startswith("bazel-")
 
-        Excluded ones are named as well as removed, so a caller can say what it
-        passed over rather than quietly shrinking.
-        """
+    def _targets(self, kind: str, scope: str) -> tuple[list[str], list[str]]:
+        """Return targets of `kind` under `scope`, partitioned by EXCLUDE_TAG."""
         matching = f'kind("{kind}", {scope})'
-        everything = self.query(matching, cwd=cwd)
-        excluded = self.query(f'attr(tags, "{self.EXCLUDE_TAG}", {matching})', cwd=cwd)
-        return sorted(set(everything) - set(excluded)), sorted(excluded)
+        everything = self.query(matching)
+        excluded = self.query(f'attr(tags, "{self.EXCLUDE_TAG}", {matching})')
+        compared = set(everything) - set(excluded)
+        return (
+            sorted(label for label in compared if not self._is_convenience_symlink(label)),
+            sorted(label for label in excluded if not self._is_convenience_symlink(label)),
+        )
 
-    def deb_targets(self, module_dir: Path) -> tuple[list[str], list[str]]:
-        # sonic_deb is a macro, we must use the kind of the underlying rule
-        return self._targets("_sonic_deb_assemble rule", "//...", cwd=module_dir)
+    def deb_targets(self, repo_name: str) -> tuple[list[str], list[str]]:
+        """The deb targets of one module."""
+        return self._targets(self.DEB_RULE, f"@{repo_name}//...")
 
     def image_targets(self) -> tuple[list[str], list[str]]:
         return self._targets("gzip rule", "//dockers/...")
@@ -113,11 +116,7 @@ class Bazel:
         }
 
     def _execution_root(self) -> Path | None:
-        """Where Bazel actually writes its outputs, or None if it will not say.
-
-        `bazel info` loads the workspace, so it can fail on a tree where `cquery`
-        still answers. That is worth tolerating rather than failing over.
-        """
+        """Where Bazel actually writes its outputs, or None if it will not say."""
         try:
             lines = self._lines(self.run("info", "execution_root"))
         except RuntimeError:

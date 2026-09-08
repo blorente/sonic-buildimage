@@ -44,15 +44,28 @@ def _collect_debs(ctx: Context) -> list[ComparableArtifact]:
     repo_names = ctx.bazel.root_repo_names()
     artifacts = []
 
-    for module, src_path in registry_lib.discover_top_level_bazel_modules():
+    for module, _ in registry_lib.discover_top_level_bazel_modules():
+        # If a module is not in repo_names, it cannot contribute to any image by definition.
+        # So we skip it.
+        if module not in repo_names:
+            ctx.sink.skip(
+                _bazel_label_identifier("//...", module),
+                CollectionDiagnosticCodeEnum.MODULE_UNREACHABLE,
+                f"{module} is not a bazel_dep of the root MODULE.bazel",
+            )
+            continue
+
         progress.start(f"LISTING DEBS IN {module}")
-        compared, excluded = ctx.bazel.deb_targets(registry_lib.REPO_ROOT / src_path)
+        repo_name = repo_names[module]
+        repo_prefix = f"@{repo_name}"
+
+        compared, excluded = ctx.bazel.deb_targets(repo_name)
         progress.finish()
 
         skipped = set(excluded)
 
         for label in excluded + compared:
-            identifier = _bazel_label_identifier(label, module)
+            identifier = _bazel_label_identifier(label.removeprefix(repo_prefix), module)
 
             if label in skipped:
                 ctx.sink.skip(
@@ -62,18 +75,8 @@ def _collect_debs(ctx: Context) -> list[ComparableArtifact]:
                 )
                 continue
 
-            # A module the root workspace cannot see has no buildable label, so none
-            # of its debs can be located.
-            if module not in repo_names:
-                ctx.sink.skip(
-                    identifier,
-                    CollectionDiagnosticCodeEnum.MODULE_UNREACHABLE,
-                    f"{module} is not a bazel_dep of the root MODULE.bazel",
-                )
-                continue
-
             built = ctx.bazel.output_artifact(
-                f"@{repo_names[module]}{label}",
+                label,
                 BazelOutput.FILE,
                 build=ctx.needs_build,
             )

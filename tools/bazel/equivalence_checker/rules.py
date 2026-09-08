@@ -4,140 +4,62 @@ Each rule names a difference the two builds produce on purpose, and says why.
 Any diagnostic that is not accepted by a rule here will fail the run.
 """
 
-from diagnostics import Codes, Modifier
-from rules_engine import AcceptanceRule, DiagnosticMatcher, Rules, literal, ANY_CODE
-
-REBOOTBACKEND = lambda codes, modifier=None, msg="*", msg_exclude=(): DiagnosticMatcher(
-        codes=codes,
-        name="/usr/bin/rebootbackend",
-        modifier=modifier,
-        msg=msg,
-        msg_exclude=msg_exclude,
-)
-
-# The ELF codes that report facts about one symbol,
-# as opposed to the whole binary (e.g. DT_NEEDED discrepancies).
-SYMBOL_CODES = (
-    Codes.EXPORT_ADDED,
-    Codes.EXPORT_CHANGED,
-    Codes.EXPORT_REMOVED,
-    Codes.FUNCTION_ADDED,
-    Codes.FUNCTION_REMOVED,
-    Codes.IMPORT_ADDED,
-    Codes.IMPORT_CHANGED,
-    Codes.IMPORT_REMOVED,
-)
+from diagnostics import Codes
+from rules_engine import AcceptanceRule, DiagnosticMatcher, Rules, literal
 
 
-# Rules that we need because we link libprotobuf and Abseil statically in Bazel.
-REBOOTBACKEND_STATIC_LINK_RULES = [
+LIBREBOOTGNOI = "/usr/lib/x86_64-linux-gnu/librebootgnoi.so.0.0.0"
+
+LIBREBOOTGNOI_RULES = [
     AcceptanceRule(
         id="sysmgr-librebootgnoi-not-shipped",
+        # The shared library itself is shipped now, and its two symlinks with it.
+        # These are the libtool by-products that have no Bazel equivalent.
         matcher=DiagnosticMatcher(
             codes=Codes.MAKE_ONLY,
-            name="/usr/lib/*/librebootgnoi.*",
+            name=(
+                literal("/usr/lib/x86_64-linux-gnu/librebootgnoi.a"),
+                literal("/usr/lib/x86_64-linux-gnu/librebootgnoi.la"),
+            ),
         ),
-        reason="In Bazel, rebootbackend links statically against the C++ stdlib, protobuf, and gnoi",
+        reason="libtool also emits a static archive and its own metadata file; Bazel emits neither.",
     ),
     AcceptanceRule(
-        id="sysmgr-rebootbackend-init-array-count",
-        # We include the counts in the message so that we notice when we introduce new dependencies.
-        matcher=REBOOTBACKEND(
-            codes=Codes.STARTUP_CALLBACK,
-            msg=literal('{"category": "startup-callback", "section": ".init_array", "name": ".init_array.count", "left": 4, "right": 21, "detail": "The number of ordered loader callbacks changed."}'),
-        ),
-        reason=(
-            "Every generated .pb.cc registers its descriptors from a loader callback. "
-            "Bazel links the gnoi protos and protobuf into the binary, so it runs many more inits than Make."
-        ),
-    ),
-    AcceptanceRule(
-        id="sysmgr-rebootbackend-dynamic-needed",
-        matcher=REBOOTBACKEND(
-            codes=Codes.DEPENDENCY,
-            # We include the full lists in the message so that we notice when we introduce new dependencies.
-            msg=literal('{"category": "dependency", "section": ".dynamic", "name": "dynamic.needed", "left": ["libswsscommon.so.0", "libdbus-c++-1.so.0", "libprotobuf.so.32", "librebootgnoi.so.0", "libhiredis.so.1.1.0", "libstdc++.so.6", "libgcc_s.so.1", "libc.so.6"], "right": ["libhiredis.so.1.1.0", "libswsscommon.so.0", "libdbus-c++-1.so.0", "libm.so.6", "libstdc++.so.6", "libgcc_s.so.1", "libc.so.6", "ld-linux-x86-64.so.2"]}'),
-        ),
-        reason=(
-            "Bazel links protobuf, Abseil, gnoi and the C++ runtime into rebootbackend."
-        ),
-    ),
-    AcceptanceRule(
-        id="sysmgr-rebootbackend-os-abi",
-        matcher=REBOOTBACKEND(
-            codes=Codes.ELF,
-            msg=literal('{"category": "elf", "section": "<elf-header>", "name": "elf.os_abi", "left": "UNIX - System V", "right": "UNIX - GNU"}'),
-        ),
-        reason=(
-            "STB_GNU_UNIQUE is a GNU extension, brought in by the statically linked protobuf and Abseil. "
-            "Because of that, the linker stamps the header's OS/ABI byte as GNU."
-        ),
-    ),
-    AcceptanceRule(
-        id="sysmgr-rebootbackend-tls-segment",
-        matcher=REBOOTBACKEND(
-            codes=Codes.RUNTIME,
-            msg=literal('{"category": "runtime", "section": "<program-headers>", "name": "runtime.tls", "left": "<absent>", "right": "R"}'),
-        ),
-        reason=(
-            "protobuf and Abseil declare thread-local variables, which end up in this binary's PT_TLS segment."
-        ),
-    ),
-    AcceptanceRule(
-        id="sysmgr-rebootbackend-glibc-version-floor",
-        matcher=REBOOTBACKEND(
-            codes=Codes.RUNTIME_VERSION,
+        id="sysmgr-exit-handlers",
+        # Named one at a time, because these come from the link line rather than
+        # from the sources, and a new one would mean the link line changed again.
+        matcher=DiagnosticMatcher(
+            codes=(Codes.FUNCTION_ADDED, Codes.IMPORT_ADDED),
+            name=(
+                literal(LIBREBOOTGNOI),
+                literal("/usr/bin/rebootbackend"),
+            ),
             msg=(
-                literal('{"category": "runtime-version", "section": ".gnu.version_r", "name": "versions.required.libc.so.6", "left": ["GLIBC_2.14", "GLIBC_2.2.5", "GLIBC_2.3.4", "GLIBC_2.34", "GLIBC_2.4"], "right": ["GLIBC_2.10", "GLIBC_2.14", "GLIBC_2.16", "GLIBC_2.17", "GLIBC_2.2.5", "GLIBC_2.32", "GLIBC_2.34", "GLIBC_2.38", "GLIBC_2.4"], "detail": "Bazel raises or adds a runtime symbol-version requirement."}'),
-                literal('{"category": "runtime-version", "section": ".gnu.version_r", "name": "versions.required.libm.so.6", "left": [], "right": ["GLIBC_2.2.5", "GLIBC_2.29"], "detail": "Bazel raises or adds a runtime symbol-version requirement."}'),
-                literal('{"category": "runtime-version", "section": ".gnu.version_r", "name": "versions.required.ld-linux-x86-64.so.2", "left": [], "right": ["GLIBC_2.3"], "detail": "Bazel raises or adds a runtime symbol-version requirement."}'),
+                '*"name": "atexit"*',
+                '*"name": "at_quick_exit"*',
+                '*"name": "__cxa_at_quick_exit@GLIBC_2.10"*',
             ),
         ),
         reason=(
-            "We accept GLIBC version floor raises up to 2.38. "
-            "libprotobuf32, the one that Make ships, also requires 2.38, "
-            "and we just surfaced that in rebootbackend by statically linking against protobuf."
+            "The Bazel toolchain links libc_nonshared.a explicitly, which defines these."
         ),
     ),
     AcceptanceRule(
-        id="sysmgr-rebootbackend-libgcc-version-floor",
-        matcher=REBOOTBACKEND(
-            codes=Codes.RUNTIME_VERSION,
-            msg=literal('{"category": "runtime-version", "section": ".gnu.version_r", "name": "versions.required.libgcc_s.so.1", "left": ["GCC_3.0"], "right": ["GCC_3.0", "GCC_3.4"], "detail": "Bazel raises or adds a runtime symbol-version requirement."}'),
-        ),
-        reason=(
-            "By linking statically we accept a libgcc builtin that raises the floor, __popcountdi2."
-            "It arrived in GCC_3.4. Its import is already accepted as a third-party symbol."
-        ),
-    ),
-    AcceptanceRule(
-        id="sysmgr-rebootbackend-third-party-symbols",
-        matcher=REBOOTBACKEND(
-            codes=SYMBOL_CODES,
-            # The symbols rebootbackend's own sources define, mangled spells them.
-            # Everything else in the binary got there through a static link.
-            msg_exclude=(
-                '*"name": "_ZN13rebootbackend*',
-                '*"name": "_ZN15HostServiceDbus*',
-                '*"name": "main"*',
-                '*"name": "_GLOBAL__sub_I_interfaces.cpp"*',
-                '*"name": "_GLOBAL__sub_I_rebootbackend.cpp"*',
-                '*"name": "_GLOBAL__sub_I_rebootbe.cpp"*',
-                '*"name": "_GLOBAL__sub_I_reboot_thread.cpp"*',
+        id="sysmgr-dynamic-needed-order",
+        matcher=DiagnosticMatcher(
+            codes=Codes.DEPENDENCY,
+            name=(
+                literal(LIBREBOOTGNOI),
+                literal("/usr/bin/rebootbackend"),
+            ),
+            msg=(
+                literal('{"category": "dependency", "section": ".dynamic", "name": "dynamic.needed", "left": ["libstdc++.so.6", "libc.so.6", "libgcc_s.so.1"], "right": ["libstdc++.so.6", "libgcc_s.so.1", "libc.so.6"]}'),
+                literal('{"category": "dependency", "section": ".dynamic", "name": "dynamic.needed", "left": ["libswsscommon.so.0", "libdbus-c++-1.so.0", "libprotobuf.so.32", "librebootgnoi.so.0", "libhiredis.so.1.1.0", "libstdc++.so.6", "libgcc_s.so.1", "libc.so.6"], "right": ["librebootgnoi.so.0", "libprotobuf.so.32", "libhiredis.so.1.1.0", "libswsscommon.so.0", "libdbus-c++-1.so.0", "libstdc++.so.6", "libgcc_s.so.1", "libc.so.6"]}'),
             ),
         ),
-        reason=(
-            "Bazel links protobuf, Abseil, gnoi and the C++ runtime into rebootbackend."
-            "Only the symbols rebootbackend's own sources define are compared."
-        ),
-        comment=(
-            "We choose to statically link these libraries because they need different versions in Bazel and Make, "
-            "so we would have to include two runtimes in the image anyway, thus eating any size gains."
-            "The stripped, statically linked rebootbackend takes 8.21MB, compared to 0.5MB for the dynamically linked version."
-        ),
+        reason="The same libraries on both sides, listed in a different order. We accept the difference as it's not going to cause shadowing.",
     ),
 ]
-
 
 PIN_NOT_ENFORCED = """
 Make records the version it used in files/build/versions/**/versions-deb-*, but it does not hold itself to it.
@@ -338,6 +260,6 @@ RULES = Rules(
         ),
     ),
     *UNENFORCED_DEB_PIN_RULES,
-    *REBOOTBACKEND_STATIC_LINK_RULES,
+    *LIBREBOOTGNOI_RULES,
     *NO_DPKG_RULES,
 )
