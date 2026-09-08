@@ -1,0 +1,73 @@
+# Debian's protobuf 3.21.12, the release the Make-built base layer carries.
+#
+# We need this because there is no BCR version that ships the right protobuf,
+# and we want binaries to link against the same protobuf we have in the base layers.
+module(
+    name = "sonic-protobuf",
+    version = "0.0.0.sonic-buildimage",
+)
+
+bazel_dep(name = "buildifier_prebuilt", version = "8.5.1.3", dev_dependency = True)
+
+bazel_dep(name = "rules_cc", version = "0.2.14")
+bazel_dep(name = "sonic-build-infra", version = "0.0.4-83b4e9d963f7f268d06983a8c954fc5d6d93ce2b", repo_name = "sonic_build_infra")
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+extract_tar = use_repo_rule("@sonic_build_infra//tar:extract_tar.bzl", "extract_tar")
+
+# The `.deb`s Make builds in this directory, taken from Debian instead of built.
+#
+# TODO(bazel-ready): amd64 only. Cross-compiling needs protoc on the exec
+# platform and libprotobuf on the target platform, which are different `.deb`s.
+PROTOBUF_DEB = "http://debian-archive.trafficmanager.net/debian/pool/main/p/protobuf"
+
+VERSION = "3.21.12-11+deb13u1"
+
+# (repo name, deb name, sha256, the BUILD file to overlay on the unpacked tree)
+PACKAGES = [
+    (
+        "protobuf_compiler",
+        "protobuf-compiler",
+        "62c6085aeeb8cbcb16747fcf7170aaddcff344874a3aa60a272e423cbeb89b3a",
+        "//:deb_files.BUILD",
+    ),
+    (
+        "libprotoc32",
+        "libprotoc32t64",
+        "8a96715498f10f8e166411248164448c9a892fa1d5b25f1e02a93ea668fa72aa",
+        "//:deb_files.BUILD",
+    ),
+    (
+        "libprotobuf32",
+        "libprotobuf32t64",
+        "38c43ec79a043d2b2659fed321725049a7e457096a66691cf6eb0d3a1a8f0e85",
+        "//:deb_files.BUILD",
+    ),
+    (
+        "libprotobuf_dev",
+        "libprotobuf-dev",
+        "c0328550b6ccd7b09d4e50bc2b325a43638bf8fa5f74148ab6e63d49af7543f3",
+        "//:libprotobuf_dev.BUILD",
+    ),
+]
+
+[
+    http_archive(
+        name = repo + "_data",
+        build_file = "//:deb_files.BUILD",
+        sha256 = sha256,
+        strip_prefix = "{}_{}".format(deb, VERSION),
+        urls = ["{}/{}_{}_amd64.deb".format(PROTOBUF_DEB, deb, VERSION)],
+    )
+    for repo, deb, sha256, _ in PACKAGES
+]
+
+[
+    extract_tar(
+        name = repo,
+        archive = "@{}_data//:data.tar.xz".format(repo),
+        build_file = build_file,
+    )
+    for repo, _, _, build_file in PACKAGES
+]
