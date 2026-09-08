@@ -7,6 +7,10 @@ try-import %workspace%/tools/bazel/common.bazelrc
 try-import %workspace%/tools/bazel/root-unpinned-modules-config.bazelrc
 common --config=local-modules
 
+# Overrides that belong to this checkout rather than to the repository, such as
+# --override_module pointing at a module you are editing locally.
+try-import %workspace%/user.bazelrc
+
 common --per_file_copt=.*external.*@-w
 common --cxxopt=-std=c++17 --host_cxxopt=-std=c++17
 common --features=external_include_paths

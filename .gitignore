@@ -132,3 +132,4 @@ apt-retries-count
 
 # Bazel
 MODULE.bazel.lock
+user.bazelrc
