@@ -19,6 +19,9 @@ _GNOI_IMPORT_PREFIX = "github.com/openconfig/gnoi"
 
 _GEN_ROOT = "gen"
 
+_SONAME = "librebootgnoi.so.0"
+_LIBRARY = _SONAME + ".0.0"
+
 def _generated(proto, extension):
     return "{root}/{prefix}/{stem}.{extension}".format(
         extension = extension,
@@ -60,13 +63,35 @@ def gnoi_cc_protos(name):
         args = protoc_args,
     )
 
+    includes = [
+        _GEN_ROOT,
+        _GEN_ROOT + "/" + _GNOI_IMPORT_PREFIX,
+    ]
+
+    # Replicate Make's librebootgnoi exactly.
+    # This will be shipped in the sysmgr deb package and container image.
+    # TODO(bazel-ready): We may want to statically link this instead when we no longer have to keep Make equivalence.
+    native.cc_binary(
+        name = _LIBRARY,
+        srcs = sources + headers,
+        includes = includes,
+        linkopts = ["-Wl,-soname," + _SONAME],
+        linkshared = True,
+        visibility = ["//:__subpackages__"],
+        deps = ["@sonic_protobuf//:libprotobuf"],
+    )
+
+    native.cc_import(
+        name = name + "_import",
+        shared_library = ":" + _LIBRARY,
+    )
+
     native.cc_library(
         name = name,
-        srcs = sources,
         hdrs = headers,
-        includes = [
-            _GEN_ROOT,
-            _GEN_ROOT + "/" + _GNOI_IMPORT_PREFIX,
+        includes = includes,
+        deps = [
+            ":" + name + "_import",
+            "@sonic_protobuf//:libprotobuf",
         ],
-        deps = ["@sonic_protobuf//:libprotobuf"],
     )
