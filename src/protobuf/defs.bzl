@@ -8,26 +8,26 @@ This is necessary to dynamically link binaries to the protobuf runtime shipped i
 which is different from any protobuf runtime offered in any BCR module.
 """
 
-PROTOC = str(Label("@protobuf_compiler//:usr/bin/protoc"))
+PROTOC = str(Label("//:protoc"))
 
 PROTOC_RUNTIME_LIBS = [
     str(Label(label))
     for label in [
-        "@libprotoc32//:usr/lib/x86_64-linux-gnu/libprotoc.so.32",
-        "@libprotoc32//:usr/lib/x86_64-linux-gnu/libprotoc.so.32.0.12",
-        "@libprotobuf32//:usr/lib/x86_64-linux-gnu/libprotobuf.so.32",
-        "@libprotobuf32//:usr/lib/x86_64-linux-gnu/libprotobuf.so.32.0.12",
+        "//:libprotoc_soname",
+        "//:libprotoc_library",
+        "//:libprotobuf_soname",
+        "//:libprotobuf_library",
     ]
 ]
 
 PROTOC_TOOLS = [PROTOC] + PROTOC_RUNTIME_LIBS
 
-_DESCRIPTOR_PROTO = str(Label("@libprotobuf_dev//:usr/include/google/protobuf/descriptor.proto"))
+_DESCRIPTOR_PROTO = str(Label("//:descriptor_proto"))
 
 # The well-known types, plus one file in the tree used to locate their include root.
 # Add both to the srcs of any genrule compiling a proto that imports them.
 WELL_KNOWN_PROTOS = [
-    str(Label("@libprotobuf_dev//:well_known_protos")),
+    str(Label("//:well_known_protos")),
     _DESCRIPTOR_PROTO,
 ]
 
