@@ -78,7 +78,9 @@ def gnoi_cc_protos(name):
         linkopts = ["-Wl,-soname," + _SONAME],
         linkshared = True,
         visibility = ["//:__subpackages__"],
-        deps = ["@sonic_protobuf//:libprotobuf"],
+        # It is more correct to link against :libprotobuf,
+        # but that's not what Make does, so we should respect it.
+        deps = ["@sonic_protobuf//:libprotobuf_headers"],
     )
 
     native.cc_import(
