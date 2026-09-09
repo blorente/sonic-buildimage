@@ -10,11 +10,11 @@ from diagnostics import (
 )
 from tools import BazelLabel, BazelOutput
 
-# Make writes debs under target/debs/<bldenv>/, and container archives straight into target/.
+# Where Make will write each type of artifact, relative to the root of the repository.
 MAKE_DEBS_DIR = "target/debs"
 MAKE_IMAGE_DIR = "target"
 
-# slave.mk's DBG_IMAGE_MARK. Both build systems spell the debug variant this way.
+# slave.mk's DBG_IMAGE_MARK.
 DEBUG_MARK = "-dbg"
 
 
@@ -130,7 +130,7 @@ def _collect_images(ctx: Context) -> list[ComparableArtifact]:
 def collect_artifacts(ctx: Context) -> list[ComparableArtifact]:
     """Run Bazel queries to find out which top-level artifacts we need to compare (debs and OCI images).
 
-    Collects diagnostics in the diagnostics sink, and returns a merged list of artifacts,
-    containing deb packages and oci images.
+    Collects diagnostics in the diagnostics sink.
+    Returns a merged list of artifacts, containing deb packages and oci images.
     """
     return _collect_debs(ctx) + _collect_images(ctx)

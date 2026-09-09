@@ -192,11 +192,7 @@ _CODE_FAMILIES = (
 
 
 def _every_code() -> dict[str, DiagnosticCode]:
-    """Every code from every family, by name.
-
-    Two families using one name would shadow each other silently, so that is an
-    error rather than a surprise later.
-    """
+    """Every code from every family, by name."""
     flat: dict[str, DiagnosticCode] = {}
     for family, wrap in _CODE_FAMILIES:
         for member in family:
@@ -232,7 +228,6 @@ class DiagnosticSink:
         code: CollectionDiagnosticCodeEnum,
         msg: str,
     ) -> None:
-        """Note something that kept `artifact` out of the comparison."""
         assert isinstance(
             code, CollectionDiagnosticCodeEnum
         ), f"skip() takes a collection code, not {code!r}"
@@ -244,7 +239,6 @@ class DiagnosticSink:
         code: ExtractionDiagnosticCodeEnum,
         msg: str,
     ) -> None:
-        """Note something found while unpacking that has nothing to compare against."""
         assert isinstance(
             code, ExtractionDiagnosticCodeEnum
         ), f"unpaired() takes an extraction code, not {code!r}"
@@ -256,7 +250,6 @@ class DiagnosticSink:
         code: ElfDiagnosticCodeEnum,
         msg: str,
     ) -> None:
-        """Note one way in which the two sides of an ELF pair disagree."""
         assert isinstance(
             code, ElfDiagnosticCodeEnum
         ), f"elf_mismatch() takes an ELF code, not {code!r}"
@@ -268,7 +261,6 @@ class DiagnosticSink:
         code: FileDiagnosticCodeEnum,
         msg: str,
     ) -> None:
-        """Note that the two sides of a non-ELF pair disagree."""
         assert isinstance(
             code, FileDiagnosticCodeEnum
         ), f"file_mismatch() takes a file code, not {code!r}"

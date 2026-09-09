@@ -79,7 +79,7 @@ def main() -> int:
 
 
 def _relative(path: Path) -> Path:
-    """`path` against the repo root, or as it stands when it lies outside."""
+    """Try to resolve `path` against the repo root, but return it as-is if it falls outside it."""
     try:
         return path.relative_to(registry_lib.REPO_ROOT)
     except ValueError:
@@ -109,10 +109,9 @@ def _run(ctx: Context, args: argparse.Namespace) -> int:
             print(artifact.printable)
         return 0
 
-    # Compare each artifact, looking at its id, and dispatching: Use compareElf for ELFs (debug and runtime), and use strict file comparison for files.
+    # Compare each artifact, looking at its id, and dispatching the appropriate comparison for each type.
     compare_artifacts(ctx, artifacts_to_compare)
 
-    # The rules are applied once, and that answer travels to both reports.
     classified = rules_engine.classify(ctx.sink.diagnostics, rules.RULES)
     print_report(ctx, classified)
 

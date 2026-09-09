@@ -1,7 +1,5 @@
 load("@rules_python//python:py_test.bzl", "py_test")
 
-# Package marker, so that //:MODULE.bazel can `include()` the file below: an
-# included module file has to resolve as a label, and a label needs a package.
 exports_files(["equivalence.MODULE.bazel"])
 
 py_test(

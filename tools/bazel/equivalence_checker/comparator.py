@@ -24,7 +24,7 @@ EXIT_DIFFERENT = 1
 EXIT_UNPARSEABLE = 2
 EXIT_INCOMPLETE = 3
 
-# An exit status that says nothing more than itself maps straight onto a code.
+# elfcompare status that don't carry metadata, so they map clearly to diagnostic codes.
 ELFCOMPARE_STATUS_CODES = {
     EXIT_UNPARSEABLE: (
         ElfDiagnosticCodeEnum.UNPARSEABLE,
@@ -46,10 +46,7 @@ def _has_symtab(elf: Path, readelf: Tool) -> bool:
 
 
 def _code_of(finding: dict) -> ElfDiagnosticCodeEnum:
-    """The code for one finding's category.
-
-    The enum spells elfcompare's public categories exactly.
-    """
+    """Mapping from elfcompare finding code to a diagnostic code."""
     try:
         return ElfDiagnosticCodeEnum(finding.get("category"))
     except ValueError:
@@ -59,8 +56,7 @@ def _code_of(finding: dict) -> ElfDiagnosticCodeEnum:
 def _compare_elf(ctx: Context, artifact: ComparableArtifact) -> None:
     """Compare one ELF pair with elfcompare.
 
-    Every finding elfcompare reports becomes its own diagnostic, because one pair
-    can disagree in several unrelated ways at once.
+    Every finding elfcompare reports becomes its own diagnostic.
     """
     tools = ctx.tools
     identifier = artifact.identifier
@@ -77,8 +73,7 @@ def _compare_elf(ctx: Context, artifact: ComparableArtifact) -> None:
         ctx.sink.elf_mismatch(
             identifier,
             ElfDiagnosticCodeEnum.DIFFERENT_STRIP_LEVELS,
-            "only one side retains .symtab, which usually means the two builds strip "
-            "with different flags",
+            "only one side retains .symtab, which usually means the two builds strip with different flags",
         )
         return
 
@@ -149,10 +144,7 @@ def _compare_file(ctx: Context, artifact: ComparableArtifact) -> None:
 
 
 def _compare_link(ctx: Context, artifact: ComparableArtifact) -> None:
-    """Compare where two symlinks point.
-
-    The target is read as it was written, not resolved.
-    """
+    """Compare where two symlinks point, without looking at the files the symlinks point to."""
     make_target = artifact.makeVersion.readlink()
     bazel_target = artifact.bazelVersion.readlink()
     if make_target == bazel_target:
@@ -181,10 +173,7 @@ def _compare_one(ctx: Context, artifact: ComparableArtifact) -> DiagnosticSink:
 
 
 def compare_artifacts(ctx: Context, artifacts: list[ComparableArtifact]) -> None:
-    """Compare every paired artifact, recording differences in the sink.
-
-    An artifact the two build systems agree on records nothing.
-    """
+    """Compare every paired artifact, recording differences in the sink."""
     with ThreadPoolExecutor(max_workers=ctx.jobs) as pool:
         sinks = pool.map(lambda artifact: _compare_one(ctx, artifact), artifacts)
         for artifact, sink in zip(artifacts, sinks):

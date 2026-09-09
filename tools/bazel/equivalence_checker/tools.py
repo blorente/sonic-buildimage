@@ -190,8 +190,7 @@ class Tool:
     def from_command(cls, name: str, argv: list[str]) -> "Tool":
         """A tool invoked as `argv`, with its first word resolved through PATH.
 
-        A tool that is not installed is reported here, before any comparison
-        work happens.
+        Panics if the tool is not available.
         """
         executable = shutil.which(argv[0])
         if executable is None:
@@ -206,7 +205,7 @@ class Tool:
         """The executable that building `label` produces.
 
         Because we use some tools with Bazel (e.g. readelf),
-        using actual `bazel run` would create a Bazel-in-Bazel problem if compare_elf calls Bazel.
+        using actual `bazel run` would create a Bazel-in-Bazel problem if elfcompare calls Bazel.
         This would create a deadlock when the second `bazel run` tries to acquire the workspace lock.
         """
         return cls(name, (str(bazel.output_artifact(label, BazelOutput.EXECUTABLE)),))
