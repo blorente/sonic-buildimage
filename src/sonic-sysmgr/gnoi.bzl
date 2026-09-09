@@ -44,8 +44,6 @@ def gnoi_cc_protos(name):
 
     # @gnoi_protos' root.
     # We need to derive it from a file, because a repository's own path is not accessible in a genrule.
-    # derived from a file in it because a repository's own
-    # path is not otherwise addressable from a genrule.
     gnoi_root = "$$(dirname $$(dirname $(execpath @gnoi_protos//:{proto})))".format(
         proto = _GNOI_PROTOS[0],
     )
