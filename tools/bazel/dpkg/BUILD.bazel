@@ -33,7 +33,7 @@ write_file(
 )
 
 diff_test(
-    name = "includes_test",
+    name = "test_dpkg_patterns_up_to_date",
     size = "small",
     file1 = "declared_includes.txt",
     file2 = "dpkg_includes.txt",

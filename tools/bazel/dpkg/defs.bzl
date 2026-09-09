@@ -11,7 +11,7 @@ _EXCLUDES = "//tools/bazel/dpkg:dpkg_excludes.txt"
 
 # bsdtar can read --excludes from a file, but not includes.
 # So, we need to list the arguments by hand.
-# This is kept in sync with dpkg_01_drop via //tools/bazel/dpkg:includes_test.
+# This is kept in sync with dpkg_01_drop via //tools/bazel/dpkg:test_dpkg_patterns_up_to_date.
 PATH_INCLUDES = [
     "./usr/share/doc/*/copyright",
     "usr/share/doc/*/copyright",
@@ -20,7 +20,7 @@ PATH_INCLUDES = [
 _TAR_ARGS = ["--format", "gnutar"]
 
 def _copy(ctx, mnemonic, bsdtar, output, srcs, add_extra_args = lambda args: args):
-    """One bsdtar run: copy `srcs` into `output`, keeping what `add_extra_args` selects."""
+    """Use bsdtar to copy `srcs` into `output`, using `add_extra_args` to keep or discard entries."""
     args = ctx.actions.args()
     args.add_all(_TAR_ARGS)
     args.add("--create")
@@ -35,7 +35,7 @@ def _copy(ctx, mnemonic, bsdtar, output, srcs, add_extra_args = lambda args: arg
         outputs = [output],
         tools = bsdtar.default.files,
         mnemonic = mnemonic,
-        progress_message = "%s %%{label}" % mnemonic,
+        progress_message = mnemonic + " %%{label}",
     )
 
 def _dpkg_filter_impl(ctx):
@@ -98,7 +98,7 @@ def sonic_layer(name, tars, deduplicate = True, **kwargs):
 
     Args:
         name: the filtered layer.
-        tars: the archives to flatten, as for rules_distroless' flatten().
+        tars: the archives to flatten, as interpreted by rules_distroless' flatten().
         deduplicate: drop duplicate directory entries after flattening.
         **kwargs: passed to the final, filtered layer (e.g. visibility).
     """
