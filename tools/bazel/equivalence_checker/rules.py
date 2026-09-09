@@ -16,7 +16,7 @@ LIBREBOOTGNOI_RULES = [
         # The shared library itself is shipped now, and its two symlinks with it.
         # These are the libtool by-products that have no Bazel equivalent.
         matcher=DiagnosticMatcher(
-            codes=Codes.MAKE_ONLY,
+            codes=Codes.EXTRACTION_MAKE_ONLY,
             name=(
                 literal("/usr/lib/x86_64-linux-gnu/librebootgnoi.a"),
                 literal("/usr/lib/x86_64-linux-gnu/librebootgnoi.la"),
@@ -29,7 +29,7 @@ LIBREBOOTGNOI_RULES = [
         # Named one at a time, because these come from the link line rather than
         # from the sources, and a new one would mean the link line changed again.
         matcher=DiagnosticMatcher(
-            codes=(Codes.FUNCTION_ADDED, Codes.IMPORT_ADDED),
+            codes=(Codes.ELFCOMPARE_FUNCTION_ADDED, Codes.ELFCOMPARE_IMPORT_ADDED),
             name=(
                 literal(LIBREBOOTGNOI),
                 literal("/usr/bin/rebootbackend"),
@@ -47,7 +47,7 @@ LIBREBOOTGNOI_RULES = [
     AcceptanceRule(
         id="sysmgr-dynamic-needed-order",
         matcher=DiagnosticMatcher(
-            codes=Codes.DEPENDENCY,
+            codes=Codes.ELFCOMPARE_DEPENDENCY,
             name=(
                 literal(LIBREBOOTGNOI),
                 literal("/usr/bin/rebootbackend"),
@@ -74,7 +74,7 @@ UNENFORCED_DEB_PIN_RULES = [
     AcceptanceRule(
         id="accept-openssl-provider-legacy-drift",
         matcher=DiagnosticMatcher(
-            codes=Codes.INCOMPLETE,
+            codes=Codes.ELFCOMPARE_INCOMPLETE,
             name=literal("/usr/lib/x86_64-linux-gnu/ossl-modules/legacy.so"),
         ),
         reason="Make ships openssl-provider-legacy 3.5.7-1~deb13u2 where Bazel ships 3.5.6-1~deb13u2.",
@@ -84,7 +84,7 @@ UNENFORCED_DEB_PIN_RULES = [
         id="accept-libexpat-drift",
         # The versioned sonames carry the version, so a different one stops matching.
         matcher=DiagnosticMatcher(
-            codes=(Codes.BAZEL_ONLY, Codes.TARGET_MISMATCH),
+            codes=(Codes.EXTRACTION_BAZEL_ONLY, Codes.FILE_TARGET_MISMATCH),
             name=(
                 literal("/usr/lib/x86_64-linux-gnu/libexpat.so.1"),
                 literal("/usr/lib/x86_64-linux-gnu/libexpat.so.1.10.2"),
@@ -105,7 +105,7 @@ NO_DPKG_RULES = [
     AcceptanceRule(
         id="accept-dpkg-admin-state",
         matcher=DiagnosticMatcher(
-            codes=(Codes.CONTENT_MISMATCH, Codes.MAKE_ONLY),
+            codes=(Codes.FILE_CONTENT_MISMATCH, Codes.EXTRACTION_MAKE_ONLY),
             source="//dockers/*",
             name=(
                 literal("/etc/group"),
@@ -132,7 +132,7 @@ NO_DPKG_RULES = [
     AcceptanceRule(
         id="accept-update-alternatives-not-replayed",
         matcher=DiagnosticMatcher(
-            codes=(Codes.CONTENT_MISMATCH, Codes.MAKE_ONLY),
+            codes=(Codes.FILE_CONTENT_MISMATCH, Codes.EXTRACTION_MAKE_ONLY),
             source="//dockers/*",
             name="/var/lib/dpkg/alternatives/*",
         ),
@@ -143,7 +143,7 @@ NO_DPKG_RULES = [
     AcceptanceRule(
         id="accept-dpkg-diversions-not-replayed",
         matcher=DiagnosticMatcher(
-            codes=(Codes.CONTENT_MISMATCH, Codes.MAKE_ONLY),
+            codes=(Codes.FILE_CONTENT_MISMATCH, Codes.EXTRACTION_MAKE_ONLY),
             source="//dockers/*",
             name=(
                 literal("/var/lib/dpkg/diversions"),
@@ -158,7 +158,7 @@ NO_DPKG_RULES = [
     AcceptanceRule(
         id="accept-systemd-user-units-not-enabled",
         matcher=DiagnosticMatcher(
-            codes=Codes.MAKE_ONLY,
+            codes=Codes.EXTRACTION_MAKE_ONLY,
             source="//dockers/*",
             name=(
                 "/etc/systemd/user/*",
@@ -175,7 +175,7 @@ NO_DPKG_RULES = [
 RULES = Rules(
     AcceptanceRule(
         id="excluded-by-tag",
-        matcher=DiagnosticMatcher(codes=Codes.EXCLUDED_BY_TAG),
+        matcher=DiagnosticMatcher(codes=Codes.COLLECTION_EXCLUDED_BY_TAG),
         reason=(
             "The target carries the exclusion tag, so it was deliberately left out "
             "of the comparison and has nothing to answer for."
@@ -185,7 +185,7 @@ RULES = Rules(
         id="accept-debian-changelogs",
         matcher=DiagnosticMatcher(
             name="*/changelog.gz",
-            codes=Codes.MAKE_ONLY,
+            codes=Codes.EXTRACTION_MAKE_ONLY,
         ),
         reason="We don't ship changelogs in Bazel-built debs.",
     ),
@@ -194,14 +194,14 @@ RULES = Rules(
         matcher=DiagnosticMatcher(
             name="/var/lib/dpkg/info/*",
             source="*dockers/*",
-            codes=Codes.MAKE_ONLY,
+            codes=Codes.EXTRACTION_MAKE_ONLY,
         ),
         reason="Irrelevant entries once we're in the image.",
     ),
     AcceptanceRule(
         id="accept-build-machinery-residue",
         matcher=DiagnosticMatcher(
-            codes=(Codes.CONTENT_MISMATCH, Codes.MAKE_ONLY),
+            codes=(Codes.FILE_CONTENT_MISMATCH, Codes.EXTRACTION_MAKE_ONLY),
             source="//dockers/*",
             # Listed on by one instead of globbed, so that files that can actually cause issues (e.g. rsyslog.conf)
             # will trigger an error when they mismatch.
@@ -240,7 +240,7 @@ RULES = Rules(
         # To do that, we'd have to rely on target/dbs, which we don't want to do for now.
         # Or, alternatively, get the debug information from sonic-swss-common.
         matcher=DiagnosticMatcher(
-            codes=(Codes.NO_DEBUG, Codes.MAKE_ONLY),
+            codes=(Codes.EXTRACTION_NO_DEBUG, Codes.EXTRACTION_MAKE_ONLY),
             name=(
                 literal("/usr/bin/eventd"),
                 literal("/usr/bin/eventdb"),

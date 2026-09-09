@@ -47,12 +47,12 @@ CHANGELOG = ArtifactIdentifier(
 RULES = Rules(
     AcceptanceRule(
         id="changelogs",
-        matcher=DiagnosticMatcher(codes=Codes.MAKE_ONLY, name="*/changelog.gz"),
+        matcher=DiagnosticMatcher(codes=Codes.EXTRACTION_MAKE_ONLY, name="*/changelog.gz"),
         reason="Bazel debs carry no changelog.",
     ),
     AcceptanceRule(
         id="added-imports",
-        matcher=DiagnosticMatcher(codes=Codes.IMPORT_ADDED, name="/usr/bin/example"),
+        matcher=DiagnosticMatcher(codes=Codes.ELFCOMPARE_IMPORT_ADDED, name="/usr/bin/example"),
         reason="A static link imports more.",
     ),
 )
@@ -83,12 +83,12 @@ ARTIFACTS = [
 DIAGNOSTICS = [
     # Accepted by the rules above: one per rule, and one rule twice, so the report
     # has to group as well as label.
-    Diagnostic(CHANGELOG, Codes.MAKE_ONLY.value, "only Make ships this file"),
-    Diagnostic(BINARY, Codes.IMPORT_ADDED.value, '{"name": "_ZN7example3RunEv"}'),
-    Diagnostic(BINARY, Codes.IMPORT_ADDED.value, '{"name": "_ZN7example4StopEv"}'),
+    Diagnostic(CHANGELOG, Codes.EXTRACTION_MAKE_ONLY.value, "only Make ships this file"),
+    Diagnostic(BINARY, Codes.ELFCOMPARE_IMPORT_ADDED.value, '{"name": "_ZN7example3RunEv"}'),
+    Diagnostic(BINARY, Codes.ELFCOMPARE_IMPORT_ADDED.value, '{"name": "_ZN7example4StopEv"}'),
     # Accepted by nothing, so these are what fails the run.
-    Diagnostic(BINARY, Codes.SECURITY.value, '{"name": "security.bind_now"}'),
-    Diagnostic(BINARY_DEBUG, Codes.FUNCTION_REMOVED.value, '{"name": "_ZN7exampleD1Ev"}'),
+    Diagnostic(BINARY, Codes.ELFCOMPARE_SECURITY.value, '{"name": "security.bind_now"}'),
+    Diagnostic(BINARY_DEBUG, Codes.ELFCOMPARE_FUNCTION_REMOVED.value, '{"name": "_ZN7exampleD1Ev"}'),
 ]
 
 

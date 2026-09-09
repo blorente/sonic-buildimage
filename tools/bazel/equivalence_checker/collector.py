@@ -1,10 +1,13 @@
+from collections.abc import Callable
+from pathlib import Path
+
 import progress
 import registry_lib
 from context import Context
 from diagnostics import (
     ArtifactIdentifier,
     ArtifactType,
-    CollectionDiagnosticCodeEnum,
+    Codes,
     ComparableArtifact,
     Modifier,
 )
@@ -34,6 +37,56 @@ def _bazel_label_identifier(
     )
 
 
+def _record_sources(
+    ctx: Context,
+    labels: list[BazelLabel],
+    excluded: set[BazelLabel],
+    identifier_of: Callable[[BazelLabel], ArtifactIdentifier],
+    make_dir: Path,
+    artifact_type: ArtifactType,
+) -> list[ComparableArtifact]:
+    """Pair every label in `labels` with the Make artifact of the same filename.
+
+    A source is a top-level thing to compare: a deb, or a container image.
+
+    Args:
+        ctx: the run's context.
+        labels: the Bazel labels to pair (including those marked `excluded`).
+        excluded: `labels` from targets excluded by a tag.
+        identifier_of: how to name the artifact a label produces.
+        make_dir: where Make writes this kind of artifact.
+        artifact_type: what kind of artifact these labels build.
+
+    Returns:
+        One ComparableArtifact per label that was not excluded, also added to the index.
+    """
+    artifacts = []
+    for label in labels:
+        identifier = identifier_of(label)
+
+        if label in excluded:
+            ctx.sink.record(
+                identifier,
+                Codes.COLLECTION_EXCLUDED_BY_TAG,
+                f"tagged {ctx.bazel.EXCLUDE_TAG}",
+            )
+            continue
+
+        built = ctx.bazel.output_artifact(
+            label, BazelOutput.FILE, build=ctx.needs_build
+        )
+        artifact = ComparableArtifact(
+            identifier=identifier,
+            bazelVersion=built,
+            makeVersion=make_dir / built.name,
+            type=artifact_type,
+        )
+        ctx.index.add(artifact)
+        artifacts.append(artifact)
+
+    return artifacts
+
+
 def _collect_debs(ctx: Context) -> list[ComparableArtifact]:
     """Every deb a top-level Bazel module declares, paired with its Make counterpart.
 
@@ -48,9 +101,9 @@ def _collect_debs(ctx: Context) -> list[ComparableArtifact]:
         # If a module is not in repo_names, it cannot contribute to any image by definition.
         # So we skip it.
         if module not in repo_names:
-            ctx.sink.skip(
+            ctx.sink.record(
                 _bazel_label_identifier("//...", module),
-                CollectionDiagnosticCodeEnum.MODULE_UNREACHABLE,
+                Codes.COLLECTION_MODULE_UNREACHABLE,
                 f"{module} is not a bazel_dep of the root MODULE.bazel",
             )
             continue
@@ -62,69 +115,37 @@ def _collect_debs(ctx: Context) -> list[ComparableArtifact]:
         compared, excluded = ctx.bazel.deb_targets(repo_name)
         progress.finish()
 
-        skipped = set(excluded)
-
-        for label in excluded + compared:
-            identifier = _bazel_label_identifier(label.removeprefix(repo_prefix), module)
-
-            if label in skipped:
-                ctx.sink.skip(
-                    identifier,
-                    CollectionDiagnosticCodeEnum.EXCLUDED_BY_TAG,
-                    f"tagged {ctx.bazel.EXCLUDE_TAG}",
-                )
-                continue
-
-            built = ctx.bazel.output_artifact(
-                label,
-                BazelOutput.FILE,
-                build=ctx.needs_build,
-            )
-            artifact = ComparableArtifact(
-                identifier=identifier,
-                bazelVersion=built,
-                makeVersion=make_dir / built.name,
-                type=ArtifactType.DEB,
-            )
-            ctx.index.add(artifact)
-            artifacts.append(artifact)
+        artifacts += _record_sources(
+            ctx,
+            labels=excluded + compared,
+            excluded=set(excluded),
+            # Queried from the root, a label names the repo it came from. The
+            # identifier spells the module instead, so that it reads the same
+            # whichever workspace the query ran in.
+            identifier_of=lambda label: _bazel_label_identifier(
+                label.removeprefix(repo_prefix), module
+            ),
+            make_dir=make_dir,
+            artifact_type=ArtifactType.DEB,
+        )
 
     return artifacts
 
 
 def _collect_images(ctx: Context) -> list[ComparableArtifact]:
     """Every oci image the root module declares, paired by name with its Make equivalent."""
-    make_dir = registry_lib.REPO_ROOT / MAKE_IMAGE_DIR
     progress.start("LISTING OCI IMAGES")
     compared, excluded = ctx.bazel.image_targets()
     progress.finish()
-    skipped = set(excluded)
-    artifacts = []
 
-    for label in excluded + compared:
-        identifier = _bazel_label_identifier(label)
-
-        if label in skipped:
-            ctx.sink.skip(
-                identifier,
-                CollectionDiagnosticCodeEnum.EXCLUDED_BY_TAG,
-                f"tagged {ctx.bazel.EXCLUDE_TAG}",
-            )
-            continue
-
-        built = ctx.bazel.output_artifact(
-            label, BazelOutput.FILE, build=ctx.needs_build
-        )
-        artifact = ComparableArtifact(
-            identifier=identifier,
-            bazelVersion=built,
-            makeVersion=make_dir / built.name,
-            type=ArtifactType.OCI_IMAGE,
-        )
-        ctx.index.add(artifact)
-        artifacts.append(artifact)
-
-    return artifacts
+    return _record_sources(
+        ctx,
+        labels=excluded + compared,
+        excluded=set(excluded),
+        identifier_of=_bazel_label_identifier,
+        make_dir=registry_lib.REPO_ROOT / MAKE_IMAGE_DIR,
+        artifact_type=ArtifactType.OCI_IMAGE,
+    )
 
 
 def collect_artifacts(ctx: Context) -> list[ComparableArtifact]:

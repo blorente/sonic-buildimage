@@ -95,123 +95,53 @@ class ArtifactIndex:
         return len(self.artifacts)
 
 
-class ElfDiagnosticCodeEnum(enum.StrEnum):
-    """Diagnostics detected when comparing two ELFs. One comparison may generate more than one diagnostic."""
+class Codes(enum.StrEnum):
+    """Every way the two builds can differ, and every reason a pair went uncompared."""
 
-    # Public findings from compareELF
-    ABI = "abi"
-    DEPENDENCY = "dependency"
-    ELF = "elf"
-    EXPORT_ADDED = "export-added"
-    EXPORT_CHANGED = "export-changed"
-    EXPORT_REMOVED = "export-removed"
-    FUNCTION_ADDED = "function-added"
-    FUNCTION_REMOVED = "function-removed"
-    IMPORT_ADDED = "import-added"
-    IMPORT_CHANGED = "import-changed"
-    IMPORT_REMOVED = "import-removed"
-    RUNTIME = "runtime"
-    RUNTIME_VERSION = "runtime-version"
-    SECURITY = "security"
-    STARTUP_CALLBACK = "startup-callback"
+    # Public findings from compareELF.
+    ELFCOMPARE_ABI = "abi"
+    ELFCOMPARE_DEPENDENCY = "dependency"
+    ELFCOMPARE_ELF = "elf"
+    ELFCOMPARE_EXPORT_ADDED = "export-added"
+    ELFCOMPARE_EXPORT_CHANGED = "export-changed"
+    ELFCOMPARE_EXPORT_REMOVED = "export-removed"
+    ELFCOMPARE_FUNCTION_ADDED = "function-added"
+    ELFCOMPARE_FUNCTION_REMOVED = "function-removed"
+    ELFCOMPARE_IMPORT_ADDED = "import-added"
+    ELFCOMPARE_IMPORT_CHANGED = "import-changed"
+    ELFCOMPARE_IMPORT_REMOVED = "import-removed"
+    ELFCOMPARE_RUNTIME = "runtime"
+    ELFCOMPARE_RUNTIME_VERSION = "runtime-version"
+    ELFCOMPARE_SECURITY = "security"
+    ELFCOMPARE_STARTUP_CALLBACK = "startup-callback"
 
-    # Outcomes of a whole comparison.
-    # Only one side kept .symtab, so the function inventory cannot be compared.
-    DIFFERENT_STRIP_LEVELS = "DIFFERENT_STRIP_LEVELS"
-    # Part of elfcompare's analysis did not run.
-    INCOMPLETE = "INCOMPLETE"
-    # A side could not be read as an ELF.
-    UNPARSEABLE = "UNPARSEABLE"
-    # elfcompare itself failed, or reported a difference it could not describe.
-    ERROR = "ERROR"
+    # Outcomes of a whole ELF comparison.
+    ELFCOMPARE_DIFFERENT_STRIP_LEVELS = "DIFFERENT_STRIP_LEVELS"
+    ELFCOMPARE_INCOMPLETE = "INCOMPLETE"
+    ELFCOMPARE_UNPARSEABLE = "UNPARSEABLE"
+    ELFCOMPARE_ERROR = "ERROR"
 
+    # Things that go wrong while working out what there is to compare.
+    COLLECTION_EXCLUDED_BY_TAG = "EXCLUDED_BY_TAG"
+    COLLECTION_MODULE_UNREACHABLE = "MODULE_UNREACHABLE"
+    COLLECTION_NO_MAKE_ARTIFACT = "NO_MAKE_ARTIFACT"
+    COLLECTION_NO_BAZEL_ARTIFACT = "NO_BAZEL_ARTIFACT"
 
-@dataclass(frozen=True)
-class ElfDiagnosticCode:
-    code: ElfDiagnosticCodeEnum
+    # Things that go wrong while unpacking an artifact.
+    EXTRACTION_MAKE_ONLY = "MAKE_ONLY"
+    EXTRACTION_BAZEL_ONLY = "BAZEL_ONLY"
+    EXTRACTION_UNREADABLE = "UNREADABLE"
+    EXTRACTION_NO_DEBUG = "NO_DEBUG"
 
-
-class CollectionDiagnosticCodeEnum(enum.StrEnum):
-    """Things that go wrong while working out what there is to compare."""
-
-    EXCLUDED_BY_TAG = "EXCLUDED_BY_TAG"
-    MODULE_UNREACHABLE = "MODULE_UNREACHABLE"
-    NO_MAKE_ARTIFACT = "NO_MAKE_ARTIFACT"
-    NO_BAZEL_ARTIFACT = "NO_BAZEL_ARTIFACT"
-
-
-@dataclass(frozen=True)
-class CollectionDiagnosticCode:
-    code: CollectionDiagnosticCodeEnum
-
-
-class ExtractionDiagnosticCodeEnum(enum.StrEnum):
-    """Things that go wrong while unpacking an artifact to find what is inside it."""
-
-    MAKE_ONLY = "MAKE_ONLY"
-    BAZEL_ONLY = "BAZEL_ONLY"
-    # The file is unreadable (mode-000).
-    UNREADABLE = "UNREADABLE"
-    # Both sides ship the binary, but only one side ships debug information.
-    NO_DEBUG = "NO_DEBUG"
-
-
-@dataclass(frozen=True)
-class ExtractionDiagnosticCode:
-    code: ExtractionDiagnosticCodeEnum
-
-
-class FileDiagnosticCodeEnum(enum.StrEnum):
-    """How a pair that is not an ELF came out."""
-
-    # Two files which do not hold the same bytes.
-    CONTENT_MISMATCH = "CONTENT_MISMATCH"
-    # Two symlinks with the same name, but pointing to different places.
-    TARGET_MISMATCH = "TARGET_MISMATCH"
-
-
-@dataclass(frozen=True)
-class FileDiagnosticCode:
-    code: FileDiagnosticCodeEnum
-
-
-DiagnosticCode: TypeAlias = (
-    ElfDiagnosticCode
-    | CollectionDiagnosticCode
-    | ExtractionDiagnosticCode
-    | FileDiagnosticCode
-)
-
-# Each family, with the wrapper that puts one of its codes into the union.
-_CODE_FAMILIES = (
-    (ElfDiagnosticCodeEnum, ElfDiagnosticCode),
-    (CollectionDiagnosticCodeEnum, CollectionDiagnosticCode),
-    (ExtractionDiagnosticCodeEnum, ExtractionDiagnosticCode),
-    (FileDiagnosticCodeEnum, FileDiagnosticCode),
-)
-
-
-def _every_code() -> dict[str, DiagnosticCode]:
-    """Every code from every family, by name."""
-    flat: dict[str, DiagnosticCode] = {}
-    for family, wrap in _CODE_FAMILIES:
-        for member in family:
-            if member.name in flat:
-                raise ValueError(f"{member.name} is defined by two diagnostic families")
-            flat[member.name] = wrap(member)
-    return flat
-
-
-# Every code under one name.
-# This way, a rule can say `Codes.MAKE_ONLY` without knowing which family it came from.
-# We want the internal structure of enums for destructuring, but we want to make writing rules easy.
-Codes = enum.Enum("Codes", _every_code(), module=__name__)
+    # How a pair that is not an ELF came out.
+    FILE_CONTENT_MISMATCH = "CONTENT_MISMATCH"
+    FILE_TARGET_MISMATCH = "TARGET_MISMATCH"
 
 
 @dataclass(frozen=True)
 class Diagnostic:
     artifact: ArtifactIdentifier
-    code: DiagnosticCode
+    code: Codes
     msg: str
 
 
@@ -219,49 +149,13 @@ class Diagnostic:
 class DiagnosticSink:
     diagnostics: list[Diagnostic] = field(default_factory=list)
 
-    def record(self, diagnostic: Diagnostic) -> None:
-        self.diagnostics.append(diagnostic)
+    def record(self, artifact: ArtifactIdentifier, code: Codes, msg: str) -> None:
+        """Note one way the two builds differ, or one reason a pair went uncompared."""
+        self.diagnostics.append(Diagnostic(artifact, code, msg))
 
-    def skip(
-        self,
-        artifact: ArtifactIdentifier,
-        code: CollectionDiagnosticCodeEnum,
-        msg: str,
-    ) -> None:
-        assert isinstance(
-            code, CollectionDiagnosticCodeEnum
-        ), f"skip() takes a collection code, not {code!r}"
-        self.record(Diagnostic(artifact, CollectionDiagnosticCode(code), msg))
+    def absorb(self, other: "DiagnosticSink") -> None:
+        """Take everything `other` collected.
 
-    def unpaired(
-        self,
-        artifact: ArtifactIdentifier,
-        code: ExtractionDiagnosticCodeEnum,
-        msg: str,
-    ) -> None:
-        assert isinstance(
-            code, ExtractionDiagnosticCodeEnum
-        ), f"unpaired() takes an extraction code, not {code!r}"
-        self.record(Diagnostic(artifact, ExtractionDiagnosticCode(code), msg))
-
-    def elf_mismatch(
-        self,
-        artifact: ArtifactIdentifier,
-        code: ElfDiagnosticCodeEnum,
-        msg: str,
-    ) -> None:
-        assert isinstance(
-            code, ElfDiagnosticCodeEnum
-        ), f"elf_mismatch() takes an ELF code, not {code!r}"
-        self.record(Diagnostic(artifact, ElfDiagnosticCode(code), msg))
-
-    def file_mismatch(
-        self,
-        artifact: ArtifactIdentifier,
-        code: FileDiagnosticCodeEnum,
-        msg: str,
-    ) -> None:
-        assert isinstance(
-            code, FileDiagnosticCodeEnum
-        ), f"file_mismatch() takes a file code, not {code!r}"
-        self.record(Diagnostic(artifact, FileDiagnosticCode(code), msg))
+        Comparisons run in a pool, each into a sink of its own, and the results are merged here.
+        """
+        self.diagnostics.extend(other.diagnostics)

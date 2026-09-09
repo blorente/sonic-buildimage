@@ -14,9 +14,9 @@ from context import Context
 from diagnostics import (
     ArtifactIdentifier,
     ArtifactType,
-    CollectionDiagnosticCodeEnum,
+    Codes,
     ComparableArtifact,
-    ExtractionDiagnosticCodeEnum,
+    Codes,
     Modifier,
 )
 from tools import Tool
@@ -168,18 +168,18 @@ def _pair(
 
         for code, install_paths, detail in (
             (
-                ExtractionDiagnosticCodeEnum.MAKE_ONLY,
+                Codes.EXTRACTION_MAKE_ONLY,
                 make_entries.keys() - bazel_entries.keys(),
                 "Bazel ships no such entry",
             ),
             (
-                ExtractionDiagnosticCodeEnum.BAZEL_ONLY,
+                Codes.EXTRACTION_BAZEL_ONLY,
                 bazel_entries.keys() - make_entries.keys(),
                 "Make ships no such entry",
             ),
         ):
             for install_path in sorted(install_paths):
-                ctx.sink.unpaired(
+                ctx.sink.record(
                     _entry_identifier(install_path, source.identifier), code, detail
                 )
 
@@ -228,9 +228,9 @@ def pair_debug_info(
 
         if make_debug is None or bazel_debug is None:
             missing = "Make" if make_debug is None else "Bazel"
-            ctx.sink.unpaired(
+            ctx.sink.record(
                 identifier,
-                ExtractionDiagnosticCodeEnum.NO_DEBUG,
+                Codes.EXTRACTION_NO_DEBUG,
                 f"{missing} ships no debug information for this binary",
             )
             continue
@@ -397,11 +397,11 @@ def extract_source(
     A side that is not on disk is reported and skipped.
     """
     for code, path in (
-        (CollectionDiagnosticCodeEnum.NO_MAKE_ARTIFACT, artifact.makeVersion),
-        (CollectionDiagnosticCodeEnum.NO_BAZEL_ARTIFACT, artifact.bazelVersion),
+        (Codes.COLLECTION_NO_MAKE_ARTIFACT, artifact.makeVersion),
+        (Codes.COLLECTION_NO_BAZEL_ARTIFACT, artifact.bazelVersion),
     ):
         if not path.exists():
-            ctx.sink.skip(artifact.identifier, code, f"{path} does not exist")
+            ctx.sink.record(artifact.identifier, code, f"{path} does not exist")
             return []
 
     match artifact.type:

@@ -10,7 +10,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import TypeAlias
 
-from diagnostics import Codes, Diagnostic, DiagnosticCode, Modifier
+from diagnostics import Codes, Diagnostic, Modifier
 
 
 @dataclass(frozen=True)
@@ -81,11 +81,11 @@ class DiagnosticMatcher:
     def _modifier_matches(self, modifiers: frozenset[Modifier]) -> bool:
         return self.modifier is None or self.modifier in modifiers
 
-    def _code_matches(self, code: DiagnosticCode) -> bool:
+    def _code_matches(self, code: Codes) -> bool:
         if isinstance(self.codes, AnyCode):
             return True
         wanted = self.codes if isinstance(self.codes, tuple) else (self.codes,)
-        return any(code == member.value for member in wanted)
+        return code in wanted
 
 
 @dataclass(frozen=True)

@@ -42,7 +42,16 @@ compare="PYTHONPATH=tools/bazel/registry python3 tools/bazel/equivalence_checker
 # We use .dockerenv to figure out whether we're in the slave.
 # If we're not in the slave, we shouldn't be installing anything.
 #
-# TODO(bazel-ready): Migrate abidiff to Bazel and fetch it from the BCR.
+# TODO(bazel-ready): fetch abidiff the way src/protobuf fetches protoc.
+# There is no abigail module in the BCR, but Debian has one in the snapshot we
+# already pin, and abidiff needs nothing exotic to run:
+#
+#     abigail-tools 2.6-2, NEEDED libabigail.so.5 libstdc++.so.6 libgcc_s.so.1 libc.so.6
+#
+# So the two `.deb`s (abigail-tools and libabigail5) plus a LD_LIBRARY_PATH
+# wrapper would do it. The package's python3-git and python3-libarchive-c
+# dependencies belong to abipkgdiff and abidb, not to abidiff, so they can stay
+# out of it.
 provision_abidiff=$(tr '\n' ' ' <<'EOF'
 if ! command -v abidiff >/dev/null; then
   if [ -f /.dockerenv ]; then

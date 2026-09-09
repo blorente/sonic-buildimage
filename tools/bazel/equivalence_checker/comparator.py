@@ -12,8 +12,7 @@ from diagnostics import (
     ArtifactType,
     ComparableArtifact,
     DiagnosticSink,
-    ElfDiagnosticCodeEnum,
-    FileDiagnosticCodeEnum,
+    Codes,
 )
 from tools import Tool
 
@@ -27,11 +26,11 @@ EXIT_INCOMPLETE = 3
 # elfcompare status that don't carry metadata, so they map clearly to diagnostic codes.
 ELFCOMPARE_STATUS_CODES = {
     EXIT_UNPARSEABLE: (
-        ElfDiagnosticCodeEnum.UNPARSEABLE,
+        Codes.ELFCOMPARE_UNPARSEABLE,
         "elfcompare could not read an artifact",
     ),
     EXIT_INCOMPLETE: (
-        ElfDiagnosticCodeEnum.INCOMPLETE,
+        Codes.ELFCOMPARE_INCOMPLETE,
         "part of the analysis did not run",
     ),
 }
@@ -45,12 +44,12 @@ def _has_symtab(elf: Path, readelf: Tool) -> bool:
     return " .symtab" in readelf.run("-S", str(elf)).stdout
 
 
-def _code_of(finding: dict) -> ElfDiagnosticCodeEnum:
+def _code_of(finding: dict) -> Codes:
     """Mapping from elfcompare finding code to a diagnostic code."""
     try:
-        return ElfDiagnosticCodeEnum(finding.get("category"))
+        return Codes(finding.get("category"))
     except ValueError:
-        return ElfDiagnosticCodeEnum.ERROR
+        return Codes.ELFCOMPARE_ERROR
 
 
 def _compare_elf(ctx: Context, artifact: ComparableArtifact) -> None:
@@ -70,9 +69,9 @@ def _compare_elf(ctx: Context, artifact: ComparableArtifact) -> None:
     if _has_symtab(artifact.makeVersion, tools.readelf) != _has_symtab(
         artifact.bazelVersion, tools.readelf
     ):
-        ctx.sink.elf_mismatch(
+        ctx.sink.record(
             identifier,
-            ElfDiagnosticCodeEnum.DIFFERENT_STRIP_LEVELS,
+            Codes.ELFCOMPARE_DIFFERENT_STRIP_LEVELS,
             "only one side retains .symtab, which usually means the two builds strip with different flags",
         )
         return
@@ -92,13 +91,13 @@ def _compare_elf(ctx: Context, artifact: ComparableArtifact) -> None:
 
     if result.returncode == EXIT_UNPARSEABLE:
         code, detail = ELFCOMPARE_STATUS_CODES[EXIT_UNPARSEABLE]
-        ctx.sink.elf_mismatch(identifier, code, detail)
+        ctx.sink.record(identifier, code, detail)
         return
 
     if result.returncode not in (EXIT_DIFFERENT, EXIT_INCOMPLETE):
-        ctx.sink.elf_mismatch(
+        ctx.sink.record(
             identifier,
-            ElfDiagnosticCodeEnum.ERROR,
+            Codes.ELFCOMPARE_ERROR,
             f"unexpected elfcompare exit status {result.returncode}",
         )
         return
@@ -106,28 +105,28 @@ def _compare_elf(ctx: Context, artifact: ComparableArtifact) -> None:
     try:
         findings = json.loads(result.stdout).get("findings", [])
     except json.JSONDecodeError:
-        ctx.sink.elf_mismatch(
+        ctx.sink.record(
             identifier,
-            ElfDiagnosticCodeEnum.ERROR,
+            Codes.ELFCOMPARE_ERROR,
             "elfcompare produced unreadable JSON",
         )
         return
 
     if result.returncode == EXIT_INCOMPLETE:
         code, detail = ELFCOMPARE_STATUS_CODES[EXIT_INCOMPLETE]
-        ctx.sink.elf_mismatch(identifier, code, detail)
+        ctx.sink.record(identifier, code, detail)
 
     if not findings:
         if result.returncode == EXIT_DIFFERENT:
-            ctx.sink.elf_mismatch(
+            ctx.sink.record(
                 identifier,
-                ElfDiagnosticCodeEnum.ERROR,
+                Codes.ELFCOMPARE_ERROR,
                 "elfcompare reported a difference with no findings",
             )
         return
 
     for finding in findings:
-        ctx.sink.elf_mismatch(identifier, _code_of(finding), json.dumps(finding))
+        ctx.sink.record(identifier, _code_of(finding), json.dumps(finding))
 
 
 def _compare_file(ctx: Context, artifact: ComparableArtifact) -> None:
@@ -135,9 +134,9 @@ def _compare_file(ctx: Context, artifact: ComparableArtifact) -> None:
     if filecmp.cmp(artifact.makeVersion, artifact.bazelVersion, shallow=False):
         return
 
-    ctx.sink.file_mismatch(
+    ctx.sink.record(
         artifact.identifier,
-        FileDiagnosticCodeEnum.CONTENT_MISMATCH,
+        Codes.FILE_CONTENT_MISMATCH,
         f"make is {artifact.makeVersion.stat().st_size} bytes, "
         f"bazel is {artifact.bazelVersion.stat().st_size}",
     )
@@ -150,9 +149,9 @@ def _compare_link(ctx: Context, artifact: ComparableArtifact) -> None:
     if make_target == bazel_target:
         return
 
-    ctx.sink.file_mismatch(
+    ctx.sink.record(
         artifact.identifier,
-        FileDiagnosticCodeEnum.TARGET_MISMATCH,
+        Codes.FILE_TARGET_MISMATCH,
         f"make points at {make_target}, bazel points at {bazel_target}",
     )
 
@@ -178,5 +177,4 @@ def compare_artifacts(ctx: Context, artifacts: list[ComparableArtifact]) -> None
         sinks = pool.map(lambda artifact: _compare_one(ctx, artifact), artifacts)
         for artifact, sink in zip(artifacts, sinks):
             progress.step(f"COMPARED {artifact.identifier}")
-            for diagnostic in sink.diagnostics:
-                ctx.sink.record(diagnostic)
+            ctx.sink.absorb(sink)

@@ -43,36 +43,36 @@ def diagnostic(
 
 TAGGED = AcceptanceRule(
     id="tagged",
-    matcher=DiagnosticMatcher(codes=Codes.EXCLUDED_BY_TAG),
+    matcher=DiagnosticMatcher(codes=Codes.COLLECTION_EXCLUDED_BY_TAG),
     reason="a code, and nothing else",
 )
 CHANGELOGS = AcceptanceRule(
     id="changelogs",
-    matcher=DiagnosticMatcher(codes=Codes.MAKE_ONLY, name="*/changelog.gz"),
+    matcher=DiagnosticMatcher(codes=Codes.EXTRACTION_MAKE_ONLY, name="*/changelog.gz"),
     reason="a code and a name glob",
 )
 ONE_LIBRARY = AcceptanceRule(
     id="one-library",
     matcher=DiagnosticMatcher(
-        codes=Codes.MAKE_ONLY, name="/usr/lib/*/libexample.*", source=DEB
+        codes=Codes.EXTRACTION_MAKE_ONLY, name="/usr/lib/*/libexample.*", source=DEB
     ),
     reason="a code, a name glob and a source",
 )
 ADDED_IMPORTS = AcceptanceRule(
     id="added-imports",
-    matcher=DiagnosticMatcher(codes=Codes.IMPORT_ADDED, name=BINARY, source=DEB),
+    matcher=DiagnosticMatcher(codes=Codes.ELFCOMPARE_IMPORT_ADDED, name=BINARY, source=DEB),
     reason="one code on one binary in one package",
 )
 DEBUG_FUNCTIONS = AcceptanceRule(
     id="debug-functions",
     matcher=DiagnosticMatcher(
-        codes=Codes.FUNCTION_ADDED, name=BINARY, source=DEB, modifier=Modifier.DEBUG
+        codes=Codes.ELFCOMPARE_FUNCTION_ADDED, name=BINARY, source=DEB, modifier=Modifier.DEBUG
     ),
     reason="one half of a pair",
 )
 ONE_MESSAGE = AcceptanceRule(
     id="one-message",
-    matcher=DiagnosticMatcher(codes=Codes.SECURITY, msg="*bind_now*"),
+    matcher=DiagnosticMatcher(codes=Codes.ELFCOMPARE_SECURITY, msg="*bind_now*"),
     reason="one finding out of the several a code reports",
 )
 EVERYTHING = AcceptanceRule(
@@ -81,7 +81,7 @@ EVERYTHING = AcceptanceRule(
 STATIC_THIRD_PARTY = AcceptanceRule(
     id="static-third-party",
     matcher=DiagnosticMatcher(
-        codes=Codes.FUNCTION_ADDED,
+        codes=Codes.ELFCOMPARE_FUNCTION_ADDED,
         name=BINARY,
         msg_exclude=OUR_SYMBOLS,
     ),
@@ -110,46 +110,46 @@ class MatcherTestCase:
 MATCHER_CASES = [
     MatcherTestCase(
         "a matcher accepts the code it names, and only that code",
-        DiagnosticMatcher(codes=Codes.MAKE_ONLY),
+        DiagnosticMatcher(codes=Codes.EXTRACTION_MAKE_ONLY),
         [
-            diagnostic(Codes.MAKE_ONLY),
-            diagnostic(Codes.BAZEL_ONLY),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY),
+            diagnostic(Codes.EXTRACTION_BAZEL_ONLY),
             # Two families could one day share a code name, and a rule must not
             # reach across: EXCLUDED_BY_TAG is a collection code, MAKE_ONLY an
             # extraction one.
-            diagnostic(Codes.EXCLUDED_BY_TAG),
+            diagnostic(Codes.COLLECTION_EXCLUDED_BY_TAG),
         ],
         [True, False, False],
     ),
     MatcherTestCase(
         "a tuple of codes accepts every code it names, and nothing else",
-        DiagnosticMatcher(codes=(Codes.MAKE_ONLY, Codes.BAZEL_ONLY)),
+        DiagnosticMatcher(codes=(Codes.EXTRACTION_MAKE_ONLY, Codes.EXTRACTION_BAZEL_ONLY)),
         [
-            diagnostic(Codes.MAKE_ONLY),
-            diagnostic(Codes.BAZEL_ONLY),
-            diagnostic(Codes.CONTENT_MISMATCH),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY),
+            diagnostic(Codes.EXTRACTION_BAZEL_ONLY),
+            diagnostic(Codes.FILE_CONTENT_MISMATCH),
         ],
         [True, True, False],
     ),
     MatcherTestCase(
         "a tuple of one behaves as the bare code it holds",
-        DiagnosticMatcher(codes=(Codes.MAKE_ONLY,)),
-        [diagnostic(Codes.MAKE_ONLY), diagnostic(Codes.BAZEL_ONLY)],
+        DiagnosticMatcher(codes=(Codes.EXTRACTION_MAKE_ONLY,)),
+        [diagnostic(Codes.EXTRACTION_MAKE_ONLY), diagnostic(Codes.EXTRACTION_BAZEL_ONLY)],
         [True, False],
     ),
     MatcherTestCase(
         "an empty tuple names no code, so it accepts nothing",
         DiagnosticMatcher(codes=()),
-        [diagnostic(Codes.MAKE_ONLY), diagnostic(Codes.EXCLUDED_BY_TAG)],
+        [diagnostic(Codes.EXTRACTION_MAKE_ONLY), diagnostic(Codes.COLLECTION_EXCLUDED_BY_TAG)],
         [False, False],
     ),
     MatcherTestCase(
         "a tuple of codes from different families accepts each in its own family",
-        DiagnosticMatcher(codes=(Codes.EXCLUDED_BY_TAG, Codes.FUNCTION_ADDED)),
+        DiagnosticMatcher(codes=(Codes.COLLECTION_EXCLUDED_BY_TAG, Codes.ELFCOMPARE_FUNCTION_ADDED)),
         [
-            diagnostic(Codes.EXCLUDED_BY_TAG),
-            diagnostic(Codes.FUNCTION_ADDED),
-            diagnostic(Codes.MAKE_ONLY),
+            diagnostic(Codes.COLLECTION_EXCLUDED_BY_TAG),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY),
         ],
         [True, True, False],
     ),
@@ -157,25 +157,25 @@ MATCHER_CASES = [
         "ANY_CODE matches a code from every family",
         DiagnosticMatcher(codes=ANY_CODE),
         [
-            diagnostic(Codes.IMPORT_ADDED),
-            diagnostic(Codes.EXCLUDED_BY_TAG),
-            diagnostic(Codes.MAKE_ONLY),
-            diagnostic(Codes.CONTENT_MISMATCH),
+            diagnostic(Codes.ELFCOMPARE_IMPORT_ADDED),
+            diagnostic(Codes.COLLECTION_EXCLUDED_BY_TAG),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY),
+            diagnostic(Codes.FILE_CONTENT_MISMATCH),
         ],
         [True, True, True, True],
     ),
     MatcherTestCase(
         "name, source and msg default to matching everything",
         DiagnosticMatcher(codes=ANY_CODE),
-        [diagnostic(Codes.MAKE_ONLY, name="/anything", source="@x//:y", msg="text")],
+        [diagnostic(Codes.EXTRACTION_MAKE_ONLY, name="/anything", source="@x//:y", msg="text")],
         [True],
     ),
     MatcherTestCase(
         "the name pattern is a glob that does not spill onto a neighbour",
         DiagnosticMatcher(codes=ANY_CODE, name="/usr/lib/*/libexample.*"),
         [
-            diagnostic(Codes.MAKE_ONLY, name="/usr/lib/x86_64-linux-gnu/libexample.so.0"),
-            diagnostic(Codes.MAKE_ONLY, name="/usr/lib/x86_64-linux-gnu/libother.so.0"),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, name="/usr/lib/x86_64-linux-gnu/libexample.so.0"),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, name="/usr/lib/x86_64-linux-gnu/libother.so.0"),
         ],
         [True, False],
     ),
@@ -183,24 +183,24 @@ MATCHER_CASES = [
         "the source pattern is matched against the source artifact",
         DiagnosticMatcher(codes=ANY_CODE, source=DEB),
         [
-            diagnostic(Codes.MAKE_ONLY, source=DEB),
-            diagnostic(Codes.MAKE_ONLY, source=OTHER_DEB),
-            diagnostic(Codes.EXCLUDED_BY_TAG, source=None),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, source=DEB),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, source=OTHER_DEB),
+            diagnostic(Codes.COLLECTION_EXCLUDED_BY_TAG, source=None),
         ],
         [True, False, False],
     ),
     MatcherTestCase(
         "a sourceless diagnostic is still matched by the default source pattern",
         DiagnosticMatcher(codes=ANY_CODE),
-        [diagnostic(Codes.EXCLUDED_BY_TAG, source=None)],
+        [diagnostic(Codes.COLLECTION_EXCLUDED_BY_TAG, source=None)],
         [True],
     ),
     MatcherTestCase(
         "the msg pattern distinguishes two findings of the same code",
         DiagnosticMatcher(codes=ANY_CODE, msg="*bind_now*"),
         [
-            diagnostic(Codes.SECURITY, msg='{"name": "security.bind_now"}'),
-            diagnostic(Codes.SECURITY, msg='{"name": "security.relro"}'),
+            diagnostic(Codes.ELFCOMPARE_SECURITY, msg='{"name": "security.bind_now"}'),
+            diagnostic(Codes.ELFCOMPARE_SECURITY, msg='{"name": "security.relro"}'),
         ],
         [True, False],
     ),
@@ -208,9 +208,9 @@ MATCHER_CASES = [
         "a tuple of name patterns takes a file matching any one of them",
         DiagnosticMatcher(codes=ANY_CODE, name=("/usr/bin/*", "/usr/lib/*")),
         [
-            diagnostic(Codes.MAKE_ONLY, name="/usr/bin/thing"),
-            diagnostic(Codes.MAKE_ONLY, name="/usr/lib/libexample.so.0"),
-            diagnostic(Codes.MAKE_ONLY, name="/etc/passwd"),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, name="/usr/bin/thing"),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, name="/usr/lib/libexample.so.0"),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, name="/etc/passwd"),
         ],
         [True, True, False],
     ),
@@ -218,9 +218,9 @@ MATCHER_CASES = [
         "a tuple of sources reaches several packages without a rule for each",
         DiagnosticMatcher(codes=ANY_CODE, source=(DEB, OTHER_DEB)),
         [
-            diagnostic(Codes.MAKE_ONLY, source=DEB),
-            diagnostic(Codes.MAKE_ONLY, source=OTHER_DEB),
-            diagnostic(Codes.MAKE_ONLY, source="@third//:third_deb"),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, source=DEB),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, source=OTHER_DEB),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, source="@third//:third_deb"),
         ],
         [True, True, False],
     ),
@@ -228,9 +228,9 @@ MATCHER_CASES = [
         "a tuple of msg patterns takes a finding matching any one of them",
         DiagnosticMatcher(codes=ANY_CODE, msg=("*bind_now*", "*relro*")),
         [
-            diagnostic(Codes.SECURITY, msg='{"name": "security.bind_now"}'),
-            diagnostic(Codes.SECURITY, msg='{"name": "security.relro"}'),
-            diagnostic(Codes.SECURITY, msg='{"name": "security.pie"}'),
+            diagnostic(Codes.ELFCOMPARE_SECURITY, msg='{"name": "security.bind_now"}'),
+            diagnostic(Codes.ELFCOMPARE_SECURITY, msg='{"name": "security.relro"}'),
+            diagnostic(Codes.ELFCOMPARE_SECURITY, msg='{"name": "security.pie"}'),
         ],
         [True, True, False],
     ),
@@ -239,8 +239,8 @@ MATCHER_CASES = [
         "msg_exclude written as a single pattern holds that pattern back",
         DiagnosticMatcher(codes=ANY_CODE, msg_exclude='*13rebootbackend*'),
         [
-            diagnostic(Codes.FUNCTION_ADDED, msg=OURS),
-            diagnostic(Codes.FUNCTION_ADDED, msg=THEIRS),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, msg=OURS),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, msg=THEIRS),
         ],
         [False, True],
     ),
@@ -248,8 +248,8 @@ MATCHER_CASES = [
         "literal() pins one message, brackets and all",
         DiagnosticMatcher(codes=ANY_CODE, msg=literal(NEEDED)),
         [
-            diagnostic(Codes.DEPENDENCY, msg=NEEDED),
-            diagnostic(Codes.DEPENDENCY, msg=NEEDED_CHANGED),
+            diagnostic(Codes.ELFCOMPARE_DEPENDENCY, msg=NEEDED),
+            diagnostic(Codes.ELFCOMPARE_DEPENDENCY, msg=NEEDED_CHANGED),
         ],
         [True, False],
     ),
@@ -258,22 +258,22 @@ MATCHER_CASES = [
         # and a quote", which the message itself does not match.
         "a message carrying a list does not match itself unescaped",
         DiagnosticMatcher(codes=ANY_CODE, msg=NEEDED),
-        [diagnostic(Codes.DEPENDENCY, msg=NEEDED)],
+        [diagnostic(Codes.ELFCOMPARE_DEPENDENCY, msg=NEEDED)],
         [False],
     ),
     MatcherTestCase(
         "patterns are case sensitive, so a path is not matched by its lowercasing",
         DiagnosticMatcher(codes=ANY_CODE, name="/usr/bin/Thing"),
-        [diagnostic(Codes.MAKE_ONLY, name="/usr/bin/thing")],
+        [diagnostic(Codes.EXTRACTION_MAKE_ONLY, name="/usr/bin/thing")],
         [False],
     ),
     MatcherTestCase(
         "a modifier reaches one half of a pair and leaves the other alone",
         DiagnosticMatcher(codes=ANY_CODE, modifier=Modifier.DEBUG),
         [
-            diagnostic(Codes.FUNCTION_ADDED, modifiers=DEBUG),
-            diagnostic(Codes.FUNCTION_ADDED, modifiers=RUNTIME),
-            diagnostic(Codes.FUNCTION_ADDED),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, modifiers=DEBUG),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, modifiers=RUNTIME),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED),
         ],
         [True, False, False],
     ),
@@ -281,8 +281,8 @@ MATCHER_CASES = [
         "msg_exclude holds back a diagnostic the rest of the matcher would take",
         DiagnosticMatcher(codes=ANY_CODE, msg_exclude=OUR_SYMBOLS),
         [
-            diagnostic(Codes.FUNCTION_ADDED, msg=THEIRS),
-            diagnostic(Codes.FUNCTION_ADDED, msg=OURS),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, msg=THEIRS),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, msg=OURS),
         ],
         [True, False],
     ),
@@ -290,30 +290,30 @@ MATCHER_CASES = [
         "any one of several msg_exclude patterns is enough to hold a diagnostic back",
         DiagnosticMatcher(codes=ANY_CODE, msg_exclude=OUR_SYMBOLS),
         [
-            diagnostic(Codes.FUNCTION_ADDED, msg=OURS),
-            diagnostic(Codes.FUNCTION_ADDED, msg=OURS_AT_GLOBAL_SCOPE),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, msg=OURS),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, msg=OURS_AT_GLOBAL_SCOPE),
         ],
         [False, False],
     ),
     MatcherTestCase(
         "a matcher naming no msg_exclude holds nothing back",
         DiagnosticMatcher(codes=ANY_CODE),
-        [diagnostic(Codes.FUNCTION_ADDED, msg=OURS)],
+        [diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, msg=OURS)],
         [True],
     ),
     MatcherTestCase(
         "msg_exclude outranks msg, so a narrower pattern cannot reach around it",
         DiagnosticMatcher(codes=ANY_CODE, msg="*get_active*", msg_exclude=OUR_SYMBOLS),
-        [diagnostic(Codes.FUNCTION_ADDED, msg=OURS)],
+        [diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, msg=OURS)],
         [False],
     ),
     MatcherTestCase(
         "a rule naming no modifier reaches both halves, and neither",
         DiagnosticMatcher(codes=ANY_CODE),
         [
-            diagnostic(Codes.FUNCTION_ADDED, modifiers=DEBUG),
-            diagnostic(Codes.FUNCTION_ADDED, modifiers=RUNTIME),
-            diagnostic(Codes.FUNCTION_ADDED),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, modifiers=DEBUG),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, modifiers=RUNTIME),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED),
         ],
         [True, True, True],
     ),
@@ -331,16 +331,16 @@ ACCEPTANCE_CASES = [
     AcceptanceTestCase(
         "a rule naming only a code accepts it wherever it turns up",
         [
-            diagnostic(Codes.EXCLUDED_BY_TAG, name="//dockers/docker-x:x.gz", source=None),
-            diagnostic(Codes.EXCLUDED_BY_TAG, name=BINARY, source=OTHER_DEB),
+            diagnostic(Codes.COLLECTION_EXCLUDED_BY_TAG, name="//dockers/docker-x:x.gz", source=None),
+            diagnostic(Codes.COLLECTION_EXCLUDED_BY_TAG, name=BINARY, source=OTHER_DEB),
         ],
         ["tagged", "tagged"],
     ),
     AcceptanceTestCase(
         "a name glob picks out one file, leaving its neighbours to fail the run",
         [
-            diagnostic(Codes.MAKE_ONLY, name="/usr/share/doc/example/changelog.gz"),
-            diagnostic(Codes.MAKE_ONLY, name=BINARY),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, name="/usr/share/doc/example/changelog.gz"),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, name=BINARY),
         ],
         ["changelogs", None],
     ),
@@ -348,40 +348,40 @@ ACCEPTANCE_CASES = [
         "a rule narrowed by name and source takes neither on its own",
         [
             diagnostic(
-                Codes.MAKE_ONLY,
+                Codes.EXTRACTION_MAKE_ONLY,
                 name="/usr/lib/x86_64-linux-gnu/libexample.so.0",
                 source=DEB,
             ),
             diagnostic(
-                Codes.MAKE_ONLY,
+                Codes.EXTRACTION_MAKE_ONLY,
                 name="/usr/lib/x86_64-linux-gnu/libexample.so.0",
                 source=OTHER_DEB,
             ),
-            diagnostic(Codes.MAKE_ONLY, name="/usr/lib/x86_64-linux-gnu/libother.so.0"),
+            diagnostic(Codes.EXTRACTION_MAKE_ONLY, name="/usr/lib/x86_64-linux-gnu/libother.so.0"),
         ],
         ["one-library", None, None],
     ),
     AcceptanceTestCase(
         "a rule scoped to one package does not accept the same name from another",
         [
-            diagnostic(Codes.IMPORT_ADDED, name=BINARY, source=DEB),
-            diagnostic(Codes.IMPORT_ADDED, name=BINARY, source=OTHER_DEB),
+            diagnostic(Codes.ELFCOMPARE_IMPORT_ADDED, name=BINARY, source=DEB),
+            diagnostic(Codes.ELFCOMPARE_IMPORT_ADDED, name=BINARY, source=OTHER_DEB),
         ],
         ["added-imports", None],
     ),
     AcceptanceTestCase(
         "a rule naming a modifier reaches the debug half only",
         [
-            diagnostic(Codes.FUNCTION_ADDED, name=BINARY, source=DEB, modifiers=DEBUG),
-            diagnostic(Codes.FUNCTION_ADDED, name=BINARY, source=DEB, modifiers=RUNTIME),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, name=BINARY, source=DEB, modifiers=DEBUG),
+            diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, name=BINARY, source=DEB, modifiers=RUNTIME),
         ],
         ["debug-functions", None],
     ),
     AcceptanceTestCase(
         "a msg glob accepts one finding of a code and not the others",
         [
-            diagnostic(Codes.SECURITY, msg='{"name": "security.bind_now"}'),
-            diagnostic(Codes.SECURITY, msg='{"name": "security.relro"}'),
+            diagnostic(Codes.ELFCOMPARE_SECURITY, msg='{"name": "security.bind_now"}'),
+            diagnostic(Codes.ELFCOMPARE_SECURITY, msg='{"name": "security.relro"}'),
         ],
         ["one-message", None],
     ),
@@ -390,12 +390,12 @@ ACCEPTANCE_CASES = [
         [
             diagnostic(code, name=BINARY, source=DEB, modifiers=RUNTIME)
             for code in (
-                Codes.IMPORT_REMOVED,
-                Codes.FUNCTION_REMOVED,
-                Codes.DIFFERENT_STRIP_LEVELS,
-                Codes.BAZEL_ONLY,
-                Codes.CONTENT_MISMATCH,
-                Codes.MODULE_UNREACHABLE,
+                Codes.ELFCOMPARE_IMPORT_REMOVED,
+                Codes.ELFCOMPARE_FUNCTION_REMOVED,
+                Codes.ELFCOMPARE_DIFFERENT_STRIP_LEVELS,
+                Codes.EXTRACTION_BAZEL_ONLY,
+                Codes.FILE_CONTENT_MISMATCH,
+                Codes.COLLECTION_MODULE_UNREACHABLE,
             )
         ],
         [None] * 6,
@@ -404,12 +404,12 @@ ACCEPTANCE_CASES = [
 
 
 # Dagnostics for classification testing
-EXCLUDED = diagnostic(Codes.EXCLUDED_BY_TAG, source=None)
-CHANGELOG = diagnostic(Codes.MAKE_ONLY, name="/usr/share/doc/x/changelog.gz")
-MISMATCH_A = diagnostic(Codes.CONTENT_MISMATCH, name="/a")
-MISMATCH_B = diagnostic(Codes.CONTENT_MISMATCH, name="/b")
-THIRD_PARTY_SYMBOL = diagnostic(Codes.FUNCTION_ADDED, name=BINARY, msg=THEIRS)
-FIRST_PARTY_SYMBOL = diagnostic(Codes.FUNCTION_ADDED, name=BINARY, msg=OURS)
+EXCLUDED = diagnostic(Codes.COLLECTION_EXCLUDED_BY_TAG, source=None)
+CHANGELOG = diagnostic(Codes.EXTRACTION_MAKE_ONLY, name="/usr/share/doc/x/changelog.gz")
+MISMATCH_A = diagnostic(Codes.FILE_CONTENT_MISMATCH, name="/a")
+MISMATCH_B = diagnostic(Codes.FILE_CONTENT_MISMATCH, name="/b")
+THIRD_PARTY_SYMBOL = diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, name=BINARY, msg=THEIRS)
+FIRST_PARTY_SYMBOL = diagnostic(Codes.ELFCOMPARE_FUNCTION_ADDED, name=BINARY, msg=OURS)
 
 @dataclass
 class ClassifyTestCase:

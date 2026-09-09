@@ -24,7 +24,7 @@ def print_report(ctx: Context, classified: rules_engine.Classified) -> None:
         ):
             print(f"    {len(found):6d}  {rule_id}")
 
-    by_code = collections.Counter(str(diagnostic.code.code) for diagnostic in remaining)
+    by_code = collections.Counter(str(diagnostic.code) for diagnostic in remaining)
     print(f"\n{len(remaining)} not accepted:")
     for code, count in by_code.most_common():
         print(f"    {count:6d}  {code}")
@@ -54,7 +54,7 @@ def write_report(ctx: Context, classified: rules_engine.Classified, path: Path) 
                     "accepted": [
                         {
                             "artifact": str(diagnostic.artifact),
-                            "code": str(diagnostic.code.code),
+                            "code": str(diagnostic.code),
                             "msg": diagnostic.msg,
                             "accepted_by": rule_id,
                         }
@@ -65,7 +65,7 @@ def write_report(ctx: Context, classified: rules_engine.Classified, path: Path) 
                     "not_accepted": [
                         {
                             "artifact": str(diagnostic.artifact),
-                            "code": str(diagnostic.code.code),
+                            "code": str(diagnostic.code),
                             "msg": diagnostic.msg,
                         }
                         for diagnostic in rules_engine.unaccepted(classified)
