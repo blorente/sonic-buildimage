@@ -37,7 +37,7 @@ PACKAGES = [
 ]
 
 # Main package for users that want to install
-# "everything make installes in the base image".
+# Main package for users that want to install "everything make installs in the base image".
 filegroup(
     name = "baseimage_installers",
     srcs = [":" + package for package in PACKAGES],
