@@ -1,7 +1,5 @@
 #!/bin/bash
-# Compares every Bazel-built binary against its Make-built counterpart.
-#
-# Assumes a clean checkout.
+# Compares every Bazel-built artifact (.deb archives and container images) against its Make-built counterpart.
 set -Eeuo pipefail
 
 trap 'echo "[FAILED] ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
@@ -11,14 +9,11 @@ cd "${repo_root}"
 
 BLDENV="${BLDENV:-trixie}"
 
-# rcache, because we don't want this job writing to the shared cache,
-# but we can read from the shared cache because we assert a clean build.
+# rcache, because we don't want this job writing to the shared cache.
 # See rules/config for the modes.
 CACHE_OPTIONS="${CACHE_OPTIONS:-SONIC_DPKG_CACHE_METHOD=rcache}"
 
 function run_in_slave() {
-  # SKIP_SLAVE=1 still runs the command, just on the host. Skipping it outright
-  # would make the whole script exit 0 while testing nothing.
   if [[ "${SKIP_SLAVE:-0}" == "1" ]]; then
     eval "$1"
     return
@@ -41,8 +36,8 @@ fi
 # Invoked directly rather than through `bazel run`, because the script shells out to Bazel itself.
 compare="PYTHONPATH=tools/bazel/registry python3 tools/bazel/equivalence_checker/equivalence_checker.py --bldenv ${BLDENV}"
 
-# elfcompare shells out to abidiff for shared libraries, and we haven't migrated
-# abidiff to Bazel yet.
+# elfcompare shells out to abidiff for shared libraries,
+# and we haven't migrated abidiff to Bazel yet.
 #
 # We use .dockerenv to figure out whether we're in the slave.
 # If we're not in the slave, we shouldn't be installing anything.
@@ -64,8 +59,7 @@ EOF
 # Assert that we're not trying to build with Bazel.
 # Otherwise, we'd be comparing Bazel to itself.
 if [[ "${BUILD_WITH_BAZEL_WHEN_AVAILABLE:-n}" != "n" ]]; then
-  echo "ERROR: BUILD_WITH_BAZEL_WHEN_AVAILABLE must be 'n' here, or Make builds the" >&2
-  echo "       container images with Bazel and the comparison proves nothing." >&2
+  echo "ERROR: BUILD_WITH_BAZEL_WHEN_AVAILABLE must be disabled, otherwise we'll be comparing Bazel to itself." >&2
   exit 1
 fi
 
