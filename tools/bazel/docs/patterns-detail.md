@@ -160,7 +160,7 @@ tar(                                # From `@tar.bzl`
 
 oci_image(
 	name = "example_image",
-	layers = [
+	tars = [
 		":loose_files",
 		"@external_repo//pkg:dist_package",
 		...
@@ -193,7 +193,7 @@ tar(
 
 oci_image(
 	name = "example_image",
-	layers = [
+	tars = [
 		":loose_files", # Add it as a layer
 		...
 	],
@@ -244,7 +244,7 @@ This fits nicely with the structure of Debian packages. Their `data` sections we
 ```starlark
 oci_image(
 	name = "example_image",
-	layers = [
+	tars = [
 		"@trixie//libc6-dev:data", # Add it as a layer directly
 		...
 	],
@@ -267,7 +267,7 @@ flatten(
 
 oci_image(
 	name = "example_image",
-	layers = [
+	tars = [
 		":apt_deps", # Add all dependencies as a single layer
 		...
 	],
@@ -548,6 +548,9 @@ We may need to migrate:
 ```
 
 We may or may not need to migrate protobuf, depending on a series of factors. For instance, [protobuf is already in the BCR](https://registry-preview.bazel.build/modules/protobuf), which means we can pull it from there at build time if we find a suitable version. There is also a Debian package for protobuf, which means we could put _that package_ in the final runtime container.
+
+> [!note]
+> For `sonic-sysmgr` we settled on the second option. [`src/protobuf`](/src/protobuf/MODULE.bazel) fetches Debian's protobuf `.deb`s and exposes `@sonic_protobuf//:libprotobuf`, so `rebootbackend` compiles with the same `protoc` and links against the same `libprotobuf.so.32` the Make-built base layer carries.
 
 Now, we repeat the process with `rules/swss-common.mk`:
 

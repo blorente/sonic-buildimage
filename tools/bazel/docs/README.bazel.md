@@ -38,6 +38,21 @@ to make sure we can track and fix these issues later.
 As per the HLD, we will establish a CI pipeline to ensure the build is green.
 Until then, please run the [`./tools/bazel/test_working_targets.sh`](/tools/bazel/test_working_targets.sh) to test that all containers that are supposed to work continue to do so.
 
+### Equivalence With the Make Build
+
+We use [`./tools/bazel/test_equivalence.sh`](/tools/bazel/test_equivalence.sh) to make sure the Bazel and Make builds produce the same artifacts.
+It figures out which artifacts the Bazel build publishes, builds both versions, and compares them,
+so that a Bazel-built container is comparable to the Make-built one it replaces.
+
+It compares `.deb`s and container images file by file.
+Plain files and symlinks are expected to be bytwise equivalent,
+wherease ELF files are compares with with `elfcompare`.
+
+A difference is only allowed if a rule in [`tools/bazel/equivalence_checker/rules.py`](/tools/bazel/equivalence_checker/rules.py) names it and says why.
+We strongly prefer removing differences to accepting them.
+
+To avoid drift, the script refuses to run on a dirty tree. You can override that with `EQUIVALENCE_ALLOW_DIRTY=1`.
+
 ## Interaction With the Make-based Build System
 
 Even when building with Bazel, Docker images for SONiC services are driven by the Make build system.
@@ -110,7 +125,7 @@ All dependencies are declared in [`sonic-build-infra`](/src/sonic-build-infra/MO
 
 There are two sets:
 
-- `sysroot`: the C/C++ toolchain's sysroot (`libc6-dev`, `libgcc-12-dev`, `libstdc++-12-dev`, `linux-libc-dev`). Kept separate so the toolchain can resolve without fetching the entire package closure.
+- `sysroot`: the C/C++ toolchain's sysroot (`libc6-dev`, `libgcc-14-dev`, `libstdc++-14-dev`, `linux-libc-dev`). Kept separate so the toolchain can resolve without fetching the entire package closure.
 - `trixie`: everything else, both runtime and build-time dependencies.
 
 To add a new dependency, add it to that resolution list.
@@ -151,20 +166,24 @@ Each package in the hub repo is a `tar` target, so it can be used as a layer as-
 ```python
 # dockers/docker-sysmgr/BUILD.bazel
 
-oci_image(
-    name = "docker-sysmgr",
-    base = ":config_engine_base_layout",
+sonic_layer(
+    name = "apt_deps",
     tars = [
         "@trixie//libdbus-1-3",
         "@trixie//libprotobuf32t64",
     ],
 )
+
+oci_image(
+    name = "docker-sysmgr",
+    base = ":config_engine_base_layout",
+    tars = [":apt_deps"],
+)
 ```
 
-Every entry in `tars` becomes its own image layer.
-If you want several dependencies to go on the same layer, use `flatten()` (see [`dockers/docker-sysmgr/BUILD.bazel`](/dockers/docker-sysmgr/BUILD.bazel) for an example).
-
-Note that `deduplicate = True` is important when packages share files: Without it, `docker load` fails on duplicate paths.
+Every entry in an `oci_image`'s `tars` becomes its own image layer.
+To group packages, we use `sonic_layer`.
+It flattens them into one layer and then drops what `dpkg` would have filtered out (man pages and the like), so the layer holds what the Make image holds.
 
 To use them as build-time dependencies (e.g. to link against `uuid`), use the targets defined in the `-dev` packages.
 A `-dev` package exposes a `cc_library`-like target named after the library, so the label form is `@trixie//<package>-dev:<library>`:
