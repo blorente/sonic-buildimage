@@ -4,8 +4,6 @@ common --registry=https://raw.githubusercontent.com/blorente/sonic-bazel-registr
 common --registry=https://bcr.bazel.build/
 
 # Import the per-module override configs shared across sonic-buildimage submodules.
-# This module has no sonic-buildimage dependencies of its own to override, so no
-# --config=unpinned-* is enabled here; the import keeps them available.
 try-import %workspace%/../../tools/bazel/submodule-config.bazelrc
 
 test --test_output=errors

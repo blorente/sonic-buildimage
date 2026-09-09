@@ -2,16 +2,17 @@ load("//:defs.bzl", "PROTOC_TOOLS", "protoc_cmd")
 
 package(default_visibility = ["//visibility:public"])
 
-# libprotobuf 3.21.12: headers from libprotobuf-dev, the shared object from
-# libprotobuf32t64. Linking against the versioned `.so` rather than the `.a`
-# keeps the import in the binary, matching what the Make build produces.
+# Headers from libprotobuf-dev and the shared object from libprotobuf32t64.
+# Use this dependency if you need a cc target to link against libprotobuf.
 alias(
     name = "libprotobuf",
     actual = "@libprotobuf_dev//:libprotobuf",
 )
 
-# protobuf's headers without its shared object, for a target that compiles
-# against protobuf but leaves the symbols for its own consumer to resolve.
+# protobuf's headers without the .so file.
+# Some libraries, like librebootgnoi, compile against the headers but don't link against them.
+# Instead, they rely on every consumer to link against libprotobuf to make sure the symbols are resolved.
+# This is not behaviour we encourage, but it matches what Make does, so sometimes we need to do it.
 alias(
     name = "libprotobuf_headers",
     actual = "@libprotobuf_dev//:libprotobuf_headers",

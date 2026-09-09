@@ -1,4 +1,3 @@
 bazel-*
 
-# Resolved from the registries on demand, like every other module here.
 MODULE.bazel.lock

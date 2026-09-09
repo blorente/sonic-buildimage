@@ -35,9 +35,9 @@ WELL_KNOWN_PROTOS = [
 WELL_KNOWN_PROTO_PATH = "$$(dirname $$(dirname $$(dirname $(execpath {}))))".format(_DESCRIPTOR_PROTO)
 
 def protoc_cmd(args):
-    """Build a command to run protoc.
+    """Build a command to run protoc in a genrule.
 
-    Note that `PROTOC_TOOLS` needs to be in the action's `tools`.
+    Note that `PROTOC_TOOLS` needs to be in the genrule's `tools`.
 
     Args:
         args: the protoc command line, as a single string.

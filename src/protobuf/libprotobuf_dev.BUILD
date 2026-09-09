@@ -1,10 +1,11 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
-# BUILD file for the unpacked libprotobuf-dev `.deb`, used by the `extract_tar`
-# repo rule in //:MODULE.bazel.
+# BUILD file for the unpacked libprotobuf-dev `.deb`.
 #
 # `includes` is resolved against this repository's root, which is why the
 # cc_library lives here rather than in //protobuf:BUILD.bazel.
+#
+# This is similar to what `rules_distroless` would generate, but hand-crafted to match the Make build.
 cc_library(
     name = "libprotobuf",
     srcs = ["@libprotobuf32//:usr/lib/x86_64-linux-gnu/libprotobuf.so.32.0.12"],
