@@ -56,12 +56,8 @@ To avoid drift, the script refuses to run on a dirty tree. You can override that
 ## Interaction With the Make-based Build System
 
 Even when building with Bazel, Docker images for SONiC services are driven by the Make build system.
-There are two mechanisms for this:
-
-- The `BUILD_WITH_BAZEL_WHEN_AVAILABLE` Flag: A global flag that toggles whether every container that could be built with Bazel should be built with Bazel.
-- The `SONIC_BAZEL_DOCKER_IMAGES` Make Target: A new target type that will use `bazel build` to build the containers, instead of Make. This is documented in the [build system README](/README.buildsystem.md).
-
-To mark a container as buildable with Bazel, add it to `SONIC_BAZEL_DOCKER_IMAGES` only if `BUILD_WITH_BAZEL_WHEN_AVAILABLE` is enabled:
+A container opts in by joining the `SONIC_BAZEL_DOCKER_IMAGES` target group and declaring a Bazel readiness level, and the `BAZEL_MIN_READINESS` build knob decides which declarations are honoured.
+Both are documented in **Bazel readiness** in the [build system README](/README.buildsystem.md), and this section only sketches the shape:
 
 ```makefile
 # rules/docker-sysmgr.mk
@@ -71,19 +67,14 @@ $(DOCKER_SYSMGR)_PATH = $(DOCKERS_PATH)/$(DOCKER_SYSMGR_STEM)
 $(DOCKER_SYSMGR)_VERSION = 1.0.0
 $(DOCKER_SYSMGR)_PACKAGE_NAME = sysmgr
 
-ifeq ($(BUILD_WITH_BAZEL_WHEN_AVAILABLE),n)
+# Usual Make-based build, read only when the Bazel path is not selected
+$(DOCKER_SYSMGR)_DEPENDS += $(SYSMGR)
+$(DOCKER_SYSMGR)_LOAD_DOCKERS += $(DOCKER_CONFIG_ENGINE_TRIXIE)
 
-# Usual Make-based build
-...
-
-else
-
-# When BUILD_WITH_BAZEL_WHEN_AVAILABLE is enabled, build this docker with Bazel.
+# Bazel build
 $(DOCKER_SYSMGR)_BAZEL_BASE += $(DOCKER_CONFIG_ENGINE_TRIXIE)
+$(DOCKER_SYSMGR)_BAZEL_READINESS = experimental
 SONIC_BAZEL_DOCKER_IMAGES += $(DOCKER_SYSMGR)
-SONIC_BAZEL_DBG_DOCKER_IMAGES += $(DOCKER_SYSMGR_DBG)
-
-endif
 
 SONIC_DOCKER_IMAGES += $(DOCKER_SYSMGR)
 SONIC_INSTALL_DOCKER_IMAGES += $(DOCKER_SYSMGR)
@@ -91,6 +82,8 @@ SONIC_INSTALL_DOCKER_IMAGES += $(DOCKER_SYSMGR)
 SONIC_DOCKER_DBG_IMAGES += $(DOCKER_SYSMGR_DBG)
 SONIC_INSTALL_DOCKER_DBG_IMAGES += $(DOCKER_SYSMGR_DBG)
 ```
+
+Both sets of attributes are declared unconditionally. `slave.mk` picks a path per docker and leaves the other set unread.
 
 `_BAZEL_BASE` lists the Make-built images the Bazel build consumes as a base layer; `slave.mk` turns those into prerequisites of the Bazel target.
 
