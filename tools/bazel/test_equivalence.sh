@@ -66,9 +66,9 @@ EOF
 )
 
 # Assert that we're not trying to build with Bazel.
-# Otherwise, we'd be comparing Bazel to itself.
-if [[ "${BUILD_WITH_BAZEL_WHEN_AVAILABLE:-n}" != "n" ]]; then
-  echo "ERROR: BUILD_WITH_BAZEL_WHEN_AVAILABLE must be disabled, otherwise we'll be comparing Bazel to itself." >&2
+# Otherwise, the Make side would itself be Bazel-built, and we'd be comparing Bazel to itself.
+if [[ "${BAZEL_MIN_READINESS:-bazel_disabled}" != "bazel_disabled" ]]; then
+  echo "ERROR: BAZEL_MIN_READINESS must be bazel_disabled, otherwise we'll be comparing Bazel to itself." >&2
   exit 1
 fi
 
